@@ -3,7 +3,7 @@ package com.example.mediaplayer;
 public class constants {
     //action for opening service from activity or fragment.
     public static final String ACTION_FOREGROUND= BuildConfig.APPLICATION_ID+"foreground";
-    //action for opening ChosenSongFragment from service
+    //action for opening ChosenSongFragment with foreground  service
     public static final String ACTION_PLAYING_AUDIO_FOREGROUND= BuildConfig.APPLICATION_ID+"playAudio";
     //for actions coming from clicking on notification to open ChosenSongFragment
     public static final String AUDIO_FOREGROUND_NOTIFICATION= BuildConfig.APPLICATION_ID+"playAudioNotification";
