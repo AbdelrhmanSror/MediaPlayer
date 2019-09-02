@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">ExoPlayer code lab</string>
+    <string name="player_activity_name">Media player</string>
+    <string name="pause">Pause</string>
+    <string name="play">Play</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
+    <string name="shuffle">Shuffle</string>
+    <string name="repeat">Repeat</string>
+    <string name="no_audio_message">you must have at least one audio file on this device so app can work correctly</string>
+
+</resources>

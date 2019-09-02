@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/navigaion"
+    app:startDestination="@id/playListFragment">
+
+    <fragment
+        android:id="@+id/playListFragment"
+        android:name="com.example.mediaplayer.playlist.PlayListFragment"
+        android:label="PlayListFragment">
+        <action
+            android:id="@+id/action_playListFragment_to_chosenSongFragment"
+            app:destination="@id/chosenSongFragment"
+            app:enterAnim="@animator/slide_in_right"
+            app:exitAnim="@animator/slide_out_left"
+            app:launchSingleTop="true"
+            app:popEnterAnim="@animator/slide_in_left"
+            app:popExitAnim="@animator/slide_out_right" />
+
+    </fragment>
+    <fragment
+        android:id="@+id/chosenSongFragment"
+        android:name="com.example.mediaplayer.chosenSong.ChosenSongFragment"
+        android:label="ChosenSongFragment">
+        <action
+            android:id="@+id/action_chosenSongFragment_to_playListFragment"
+            app:destination="@id/playListFragment"
+            app:enterAnim="@animator/slide_in_right"
+            app:exitAnim="@animator/slide_out_left"
+            app:launchSingleTop="false"
+            app:popEnterAnim="@animator/slide_in_left"
+            app:popExitAnim="@animator/slide_out_right"
+            app:popUpTo="@+id/playListFragment" />
+
+    </fragment>
+
+
+</navigation>
