@@ -58,14 +58,15 @@ class PlayListFragment : Fragment() {
 
     private fun prepareMusicList() {
         val playListModels: List<PlayListModel>?
-        val factory = PlayListViewModelFactory(Objects.requireNonNull<FragmentActivity>(activity).application)
-        val playListViewModel = ViewModelProviders.of(Objects.requireNonNull<FragmentActivity>(activity), factory).get(PlayListViewModel::class.java)
+        val factory = PlayListViewModelFactory(activity!!.application)
+        val playListViewModel = ViewModelProviders.of(activity!!, factory).get(PlayListViewModel::class.java)
         playListModels = playListViewModel.playLists
         if (playListModels.isNullOrEmpty()) {
             binding.noAudioText.visibility = View.VISIBLE
+            return
         }
         //creating adapter and set it with the playlists
-        val adapter = PlaylistAdapter(playListModels!!, object : PlaylistAdapter.OnClickListener {
+        val adapter = PlaylistAdapter(playListModels, object : PlaylistAdapter.OnClickListener {
             override fun onClick(playLists: List<PlayListModel>, itemClickIndex: Int) {
                 navigate(playLists, itemClickIndex)
 

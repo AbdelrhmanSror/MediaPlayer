@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.mediaplayer.forgroundService.ChosenSongService
+import com.example.mediaplayer.foregroundService.ChosenSongService
 import com.example.mediaplayer.model.PlayListModel
 import java.util.*
 

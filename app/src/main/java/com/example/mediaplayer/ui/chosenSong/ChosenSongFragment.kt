@@ -18,8 +18,8 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.example.mediaplayer.*
 import com.example.mediaplayer.databinding.FragmentChosenSongBinding
-import com.example.mediaplayer.forgroundService.ChosenSongService
-import com.example.mediaplayer.forgroundService.ChosenSongService.SongBinder
+import com.example.mediaplayer.foregroundService.ChosenSongService
+import com.example.mediaplayer.foregroundService.ChosenSongService.SongBinder
 import com.example.mediaplayer.model.PlayListModel
 import com.example.mediaplayer.viewModels.ChosenSongViewModel
 import com.example.mediaplayer.viewModels.ChosenSongViewModelFactory
@@ -90,9 +90,9 @@ class ChosenSongFragment : Fragment() {
                         if (!viewModel.isServiceCreatedBefore && viewModel.purposeOfFragment != AUDIO_FOREGROUND_NOTIFICATION)
                             viewModel.playListModels?.let {
                                 service.setUpPlayer(it, index)
-                                binding.playerView.media_seek_bar.updateMediaSeekBarVal(service.player)
-
                             }
+                        binding.playerView.media_seek_bar.updateMediaSeekBarVal(service.player)
+
                         //whenever the chosen song index change we update the song info to reflect the current index of song
                         binding.playerView.songDetails(index)
                     }
