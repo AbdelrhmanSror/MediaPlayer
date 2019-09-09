@@ -1,4 +1,4 @@
-package com.example.mediaplayer.chosenSong
+package com.example.mediaplayer.forgroundService
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -10,9 +10,9 @@ import android.graphics.BitmapFactory
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import com.example.mediaplayer.R
-import com.example.mediaplayer.constants.*
-import com.example.mediaplayer.playlist.PlayListModel
+import com.example.mediaplayer.*
+import com.example.mediaplayer.model.PlayListModel
+import com.example.mediaplayer.ui.chosenSong.ChosenSongActivity
 import java.util.*
 
 class NotificationController(private val playListModels: ArrayList<PlayListModel>?
@@ -56,9 +56,9 @@ class NotificationController(private val playListModels: ArrayList<PlayListModel
         val albumCoverImage = BitmapFactory.decodeFile(item.albumCoverUri)
         return NotificationCompat.Builder(context, CHANNEL_ID)
                 // the metadata for the currently playing track
-                .setContentTitle(item.title)
+                .setContentTitle(item.Title)
                 .setContentText(item.actor)
-                .setSubText(item.title)
+                .setSubText(item.Title)
                 // Make the transport controls visible on the lockscreen
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 // Add an app icon and set its accent color
@@ -88,7 +88,7 @@ class NotificationController(private val playListModels: ArrayList<PlayListModel
         pauseIntent.action = PAUSE_ACTION
         val notificationPendingIntent = PendingIntent.getService(context,
                 NOTIFICATION_ID, pauseIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        return NotificationCompat.Action(R.drawable.ic_pause, context.getString(R.string.pause), notificationPendingIntent)
+        return NotificationCompat.Action(R.drawable.ic_pause_black_24dp, context.getString(R.string.pause), notificationPendingIntent)
     }
 
     private fun actionPrevious(): NotificationCompat.Action {
@@ -96,7 +96,7 @@ class NotificationController(private val playListModels: ArrayList<PlayListModel
         prevIntent.action = PREVIOUS_ACTION
         val notificationPendingIntent = PendingIntent.getService(context,
                 NOTIFICATION_ID, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        return NotificationCompat.Action(R.drawable.ic_previous, context.getString(R.string.previous), notificationPendingIntent)
+        return NotificationCompat.Action(R.drawable.ic_skip_previous_black_24dp, context.getString(R.string.previous), notificationPendingIntent)
     }
 
     private fun actionPlay(): NotificationCompat.Action {
@@ -104,7 +104,7 @@ class NotificationController(private val playListModels: ArrayList<PlayListModel
         playIntent.action = PLAY_ACTION
         val notificationPendingIntent = PendingIntent.getService(context,
                 NOTIFICATION_ID, playIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        return NotificationCompat.Action(R.drawable.ic_play, context.getString(R.string.play), notificationPendingIntent)
+        return NotificationCompat.Action(R.drawable.ic_play_arrow_black_24dp, context.getString(R.string.play), notificationPendingIntent)
     }
 
     private fun actionNext(): NotificationCompat.Action {
@@ -112,6 +112,6 @@ class NotificationController(private val playListModels: ArrayList<PlayListModel
         nextIntent.action = NEXT_ACTION
         val notificationPendingIntent = PendingIntent.getService(context,
                 NOTIFICATION_ID, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        return NotificationCompat.Action(R.drawable.ic_play_next, context.getString(R.string.next), notificationPendingIntent)
+        return NotificationCompat.Action(R.drawable.ic_skip_next_black_24dp, context.getString(R.string.next), notificationPendingIntent)
     }
 }

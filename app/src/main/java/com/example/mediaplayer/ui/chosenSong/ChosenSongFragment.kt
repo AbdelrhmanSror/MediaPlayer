@@ -1,4 +1,4 @@
-package com.example.mediaplayer.chosenSong
+package com.example.mediaplayer.ui.chosenSong
 
 import android.content.ComponentName
 import android.content.Context
@@ -6,20 +6,27 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.SeekBar
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.example.mediaplayer.chosenSong.ChosenSongService.SongBinder
-import com.example.mediaplayer.constants.*
+import com.example.mediaplayer.*
 import com.example.mediaplayer.databinding.FragmentChosenSongBinding
-import com.example.mediaplayer.playlist.PlayListModel
+import com.example.mediaplayer.forgroundService.ChosenSongService
+import com.example.mediaplayer.forgroundService.ChosenSongService.SongBinder
+import com.example.mediaplayer.model.PlayListModel
+import com.example.mediaplayer.viewModels.ChosenSongViewModel
+import com.example.mediaplayer.viewModels.ChosenSongViewModelFactory
 import com.google.android.exoplayer2.Player.EventListener
+import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ui.PlayerView
+import kotlinx.android.synthetic.main.custom_controller.view.*
 import kotlinx.android.synthetic.main.exo_player_view.view.*
 import java.util.*
 
@@ -35,6 +42,8 @@ class ChosenSongFragment : Fragment() {
     private lateinit var viewModel: ChosenSongViewModel
     private lateinit var binding: FragmentChosenSongBinding
     private lateinit var foregroundIntent: Intent
+    private lateinit var runnable: Runnable
+    private val handler: Handler? = Handler()
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -76,15 +85,19 @@ class ChosenSongFragment : Fragment() {
                 viewModel.chosenSongIndex.observe(viewLifecycleOwner, Observer { index ->
                     index.let {
                         //to avoid setup player again when configuration changes happen or if player fragment has opened  from notification
+                        //also to avoid infinite loop of setting  player again and again because when we setUp player the onSeekProcessed
+                        // will be called and  then this live data also will be called responding to onSeekProcessed so we avoid looping forever by this if statement
                         if (!viewModel.isServiceCreatedBefore && viewModel.purposeOfFragment != AUDIO_FOREGROUND_NOTIFICATION)
                             viewModel.playListModels?.let {
                                 service.setUpPlayer(it, index)
+                                binding.playerView.media_seek_bar.updateMediaSeekBarVal(service.player)
+
                             }
                         //whenever the chosen song index change we update the song info to reflect the current index of song
                         binding.playerView.songDetails(index)
                     }
                 })
-                //set this service as created before so we do not setupPlayer again
+                //set this service as created before so we do not setupPlayer again when configuration changes happened
                 viewModel.isServiceCreatedBefore = true
 
             }
@@ -94,11 +107,35 @@ class ChosenSongFragment : Fragment() {
 
 
     private fun PlayerView.songDetails(index: Int) {
-        this.songName.text = viewModel.playListModels!![index].title
+        this.songName.text = viewModel.playListModels!![index].Title
         this.songActor.text = viewModel.playListModels!![index].actor
 
 
     }
+
+    private fun SeekBar.updateMediaSeekBarVal(player: SimpleExoPlayer) {
+        runnable = Runnable {
+            max = (player.duration / 1000).toInt()
+            progress = (player.currentPosition / 1000).toInt()
+            handler?.postDelayed(runnable, 50)
+
+        }
+        handler?.postDelayed(runnable, 0)
+        setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, position: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    player.seekTo(position * 1000.toLong())
+                }
+            }
+
+            override fun onStartTrackingTouch(p0: SeekBar?) {
+            }
+
+            override fun onStopTrackingTouch(p0: SeekBar?) {
+            }
+        })
+    }
+
 
 
     private fun PlayerView.initializePlayer(service: ChosenSongService) {
@@ -108,8 +145,7 @@ class ChosenSongFragment : Fragment() {
         this.useController = true
         this.showController()
         this.controllerAutoShow = true
-        service.player.addListener(object : EventListener {
-
+        player.addListener(object : EventListener {
             override fun onSeekProcessed() {
                 viewModel.setChosenSongIndex(service.player.currentWindowIndex)
             }
@@ -125,6 +161,13 @@ class ChosenSongFragment : Fragment() {
         //binding this fragment to service
         Objects.requireNonNull<FragmentActivity>(activity).bindService(foregroundIntent, connection, Context.BIND_AUTO_CREATE)
 
+
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (::runnable.isInitialized)
+            handler?.removeCallbacks(runnable)
 
     }
 

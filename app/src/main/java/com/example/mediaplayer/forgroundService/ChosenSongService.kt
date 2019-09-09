@@ -1,4 +1,4 @@
-package com.example.mediaplayer.chosenSong
+package com.example.mediaplayer.forgroundService
 
 import android.app.Service
 import android.content.Context
@@ -6,11 +6,13 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import androidx.core.app.NotificationManagerCompat
-import com.example.mediaplayer.constants.*
-import com.example.mediaplayer.playlist.PlayListModel
-import com.google.android.exoplayer2.ExoPlayer
+import com.example.mediaplayer.*
+import com.example.mediaplayer.model.PlayListModel
+import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
@@ -18,9 +20,10 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import java.util.*
 
+
 class ChosenSongService : Service() {
 
-    lateinit var player: ExoPlayer
+    lateinit var player: SimpleExoPlayer
         private set
     private var mPlayWhenReady = true
     private var currentWindowIndex = 0
@@ -68,13 +71,17 @@ class ChosenSongService : Service() {
     }
 
     fun setUpPlayer(audioUris: ArrayList<PlayListModel>, chosenSongIndex: Int) {
-
         //to control to player the audio or video right now or wait user to play the audio himself
         player.playWhenReady = true
         val mediaSource = buildMediaSource(audioUris)
         player.prepare(mediaSource)
         //to control the starter location of audio
         player.seekTo(chosenSongIndex, 0)
+        //to handle audio focus changes
+        player.setAudioAttributes(AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.CONTENT_TYPE_MUSIC)
+                .build(), true)
 
 
     }

@@ -6,72 +6,79 @@
     <data>
         <variable
             name="playlistModel"
-            type="com.example.mediaplayer.playlist.PlayListModel" />
+            type="com.example.mediaplayer.model.PlayListModel" />
 
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <RelativeLayout
         android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.cardview.widget.CardView
         android:id="@+id/playlistContainer"
+            android:layout_width="match_parent"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+            app:cardUseCompatPadding="true"
+            app:cardBackgroundColor="@color/blue"
+            app:cardCornerRadius="@dimen/medium_horizontal_spacing"
+            app:cardElevation="@dimen/small_vertical_spacing">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:orientation="horizontal"
+                android:layout_margin="@dimen/large_vertical_spacing"
+                android:layout_height="match_parent">
 
         <ImageView
             android:id="@+id/AlbumArt"
             app:imageUri="@{playlistModel.albumCoverUri}"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_marginTop="16dp"
-            app:layout_constraintStart_toStartOf="@+id/guideline3"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_launcher_background" />
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            tools:layout_height="80dp"
+            tools:srcCompat="@drawable/default_image" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="3"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginStart="@dimen/medium_vertical_spacing"
+                    android:layout_marginEnd="@dimen/medium_vertical_spacing">
 
         <TextView
             android:id="@+id/title"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="28dp"
-            android:layout_marginEnd="8dp"
             android:fontFamily="@font/patua_one"
+            android:layout_marginTop="@dimen/large_vertical_spacing"
             android:text="@{playlistModel.title}"
-            android:textColor="@color/black"
-            android:textSize="20sp"
-            app:layout_constraintEnd_toStartOf="@+id/guideline"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toEndOf="@+id/AlbumArt"
-            app:layout_constraintTop_toTopOf="parent"
+            android:textColor="@color/white"
+            android:textSize="18sp"
             tools:text="StarBoy" />
 
         <TextView
             android:id="@+id/actor"
-            android:layout_width="wrap_content"
+            android:textColor="@color/white"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
             android:text="@{playlistModel.actor}"
-
-            android:layout_marginTop="12dp"
-            android:layout_marginEnd="8dp"
-            app:layout_constraintEnd_toStartOf="@+id/guideline"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toEndOf="@+id/AlbumArt"
-            app:layout_constraintTop_toBottomOf="@+id/title"
             tools:text="Calvin Harris" />
 
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintGuide_end="16dp" />
+                </LinearLayout>
 
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintGuide_begin="16dp" />
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:background="@color/blue"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/ic_play_arrow_black_24dp" />
 
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+    </RelativeLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -1,129 +1,132 @@
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/white"
-    tools:targetApi="28">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <LinearLayout
-        android:id="@+id/linearLayout3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="7dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingTop="4dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+    <data>
 
-        <ImageButton
-            android:id="@id/exo_shuffle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.3"
-            android:backgroundTint="@color/white"
-            app:srcCompat="@drawable/shuffle" />
-
-        <ImageButton
-            android:id="@id/exo_prev"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@color/white"
-            app:srcCompat="@drawable/ic_previous" />
-
-        <ImageButton
-            android:id="@id/exo_play"
-            android:layout_height="80dp"
-            android:layout_width="0dp"
-            android:layout_weight="1.2"
-            android:backgroundTint="@color/white"
-            android:scaleType="fitXY"
-            app:srcCompat="@drawable/ic_play" />
-
-        <ImageButton
-            android:id="@id/exo_pause"
-            android:layout_height="80dp"
-            android:layout_width="0dp"
-            android:layout_weight="1.2"
-            android:backgroundTint="@color/white"
-            android:scaleType="fitXY"
-            app:srcCompat="@drawable/ic_pause" />
-
-
-        <ImageButton
-            android:id="@id/exo_next"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:layout_width="0dp"
-            android:backgroundTint="@color/white"
-            app:srcCompat="@drawable/ic_play_next" />
-
-        <ImageButton
-            android:id="@id/exo_repeat_toggle"
-            style="@style/ExoMediaButton"
-            android:tint="#000000" />
-
-    </LinearLayout>
+    </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="44dp"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout3"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent">
+        android:layout_height="match_parent"
+        android:background="@color/white"
+        tools:targetApi="28">
 
-        <TextView
-            android:id="@id/exo_position"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/linearLayout3"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="3dp"
-            android:includeFontPadding="false"
-            android:paddingLeft="4dp"
-            android:paddingRight="4dp"
-            android:textColor="@color/black"
-            android:textSize="14sp"
-            android:textStyle="bold"
+            android:layout_marginBottom="7dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingTop="4dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/exo_progress_placeholder"
-            tools:text="3:55" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
 
-        <View
-            android:id="@id/exo_progress_placeholder"
-            android:layout_width="0dp"
-            android:layout_height="26dp"
-            android:layout_marginBottom="20dp"
-            android:layout_weight="1"
-            app:layout_constraintBottom_toBottomOf="parent"
+            <ImageButton
+                android:id="@id/exo_shuffle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/white"
+                app:srcCompat="@drawable/ic_shuffle_black_24dp" />
+
+            <ImageButton
+                android:id="@id/exo_prev"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/white"
+                app:srcCompat="@drawable/ic_skip_previous_black_24dp" />
+
+            <ImageButton
+                android:id="@id/exo_play"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:backgroundTint="@color/white"
+                android:scaleType="fitXY"
+                app:srcCompat="@drawable/ic_play_circle_filled_black_24dp" />
+
+            <ImageButton
+                android:id="@id/exo_pause"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:backgroundTint="@color/white"
+                android:scaleType="fitXY"
+                app:srcCompat="@drawable/ic_pause_circle_filled_black_24dp" />
+
+
+            <ImageButton
+                android:id="@id/exo_next"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:backgroundTint="@color/white"
+                app:srcCompat="@drawable/ic_skip_next_black_24dp" />
+
+            <ImageButton
+                android:id="@id/exo_repeat_toggle"
+                style="@style/ExoMediaButton"
+                app:srcCompat="@drawable/ic_loop_black_24dp"
+                android:tint="#000000" />
+
+        </LinearLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/medium_vertical_spacing"
+            android:layout_marginEnd="@dimen/medium_vertical_spacing"
+            android:layout_marginBottom="44dp"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toTopOf="@+id/linearLayout3"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent">
 
-        <TextView
-            android:id="@id/exo_duration"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="3dp"
-            android:includeFontPadding="false"
-            android:paddingLeft="4dp"
-            android:paddingRight="4dp"
-            android:textColor="@color/black"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/exo_progress_placeholder"
-            tools:text="22:49" />
+            <TextView
+                android:id="@id/exo_position"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="3dp"
+                android:includeFontPadding="false"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/media_seek_bar"
+                tools:text="3:55" />
+
+
+            <SeekBar
+                android:id="@+id/media_seek_bar"
+                android:layout_width="0dp"
+                android:layout_height="26dp"
+                android:layout_marginBottom="20dp"
+                android:layout_weight="1"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@id/exo_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="3dp"
+                android:includeFontPadding="false"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/media_seek_bar"
+                tools:text="22:49" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

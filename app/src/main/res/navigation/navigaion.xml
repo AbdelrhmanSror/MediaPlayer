@@ -6,7 +6,7 @@
 
     <fragment
         android:id="@+id/playListFragment"
-        android:name="com.example.mediaplayer.playlist.PlayListFragment"
+        android:name="com.example.mediaplayer.ui.playlist.PlayListFragment"
         android:label="PlayListFragment">
         <action
             android:id="@+id/action_playListFragment_to_chosenSongFragment"
@@ -20,7 +20,7 @@
     </fragment>
     <fragment
         android:id="@+id/chosenSongFragment"
-        android:name="com.example.mediaplayer.chosenSong.ChosenSongFragment"
+        android:name="com.example.mediaplayer.ui.chosenSong.ChosenSongFragment"
         android:label="ChosenSongFragment">
         <action
             android:id="@+id/action_chosenSongFragment_to_playListFragment"
