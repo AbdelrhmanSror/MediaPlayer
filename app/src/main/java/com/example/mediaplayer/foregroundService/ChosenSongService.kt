@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import com.example.mediaplayer.*
 import com.example.mediaplayer.model.PlayListModel
@@ -39,9 +40,12 @@ class ChosenSongService : Service() {
     private lateinit var foregroundNotification: ForegroundNotification
     //responsible for updating the notification
     private lateinit var mNotificationManager: NotificationManagerCompat
+    private var isServiceSetuped = false
 
 
     override fun onCreate() {
+        Log.v("mediaService", "serviceCreated")
+
         // The service is being created.
         player = ExoPlayerFactory.newSimpleInstance(applicationContext)
         mNotificationManager = NotificationManagerCompat.from(this@ChosenSongService)
@@ -154,7 +158,7 @@ class ChosenSongService : Service() {
         //playList of songs
         //getting the current playing song index
         intent.run {
-            return MediaInfo(getParcelableArrayListExtra(LIST_SONG), getIntExtra(CHOSEN_SONG_INDEX, 0))
+            return MediaInfo(getParcelableArrayListExtra(LIST_SONG)!!, getIntExtra(CHOSEN_SONG_INDEX, 0))
         }
     }
 
@@ -167,14 +171,25 @@ class ChosenSongService : Service() {
                         mCurrentWindowIndex = chosenSongIndex
                         foregroundNotification = ForegroundNotification(playListModels, application)
                         handlePlayerEvent()
+                        //so we do not setup the player again when any configurations happen
+                        if (!isServiceSetuped) {
+                            setUpPlayer(playListModels!!, chosenSongIndex)
+                            isServiceSetuped = true
+                        }
                         startForeground(NOTIFICATION_ID, getNotification())
                     }
 
                 }
-                PAUSE_ACTION -> player.playWhenReady = false
+                PAUSE_ACTION -> {
+                    player.playWhenReady = false
+                    //stop the foreground mode so if user can cancel the the media notification by swiping it away
+                    // as a result ,delete intent will be triggered so we kill the service
+                    stopForeground(false)
+                }
                 PLAY_ACTION -> player.playWhenReady = true
                 PREVIOUS_ACTION -> player.previous()
                 NEXT_ACTION -> player.next()
+                DELETE_ACTION -> stopSelf()
             }
         }
     }

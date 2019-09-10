@@ -10,7 +10,7 @@ import java.util.*
 
 
 class ChosenSongViewModel(val playListModels: ArrayList<PlayListModel>?
-                          , chosenSongIndex: Int, val purposeOfFragment: String?) : ViewModel() {
+                          , chosenSongIndex: Int) : ViewModel() {
     //to observe the changes with song index
     private val _chosenSongIndex = MutableLiveData<Int>()
     val chosenSongIndex: LiveData<Int>
@@ -19,7 +19,6 @@ class ChosenSongViewModel(val playListModels: ArrayList<PlayListModel>?
     private val _chosenSongService = MutableLiveData<ChosenSongService>()
     val chosenSongService: LiveData<ChosenSongService>
         get() = _chosenSongService
-    var isServiceCreatedBefore = false
 
     init {
         _chosenSongIndex.value = chosenSongIndex
@@ -37,13 +36,12 @@ class ChosenSongViewModel(val playListModels: ArrayList<PlayListModel>?
 }
 
 class ChosenSongViewModelFactory(private val playListModels: ArrayList<PlayListModel>?
-                                 , private val chosenSongIndex: Int
-                                 , private val purposeOfFragment: String?) : ViewModelProvider.Factory {
+                                 , private val chosenSongIndex: Int) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
 
         if (modelClass.isAssignableFrom(ChosenSongViewModel::class.java)) {
-            return ChosenSongViewModel(playListModels, chosenSongIndex, purposeOfFragment) as T
+            return ChosenSongViewModel(playListModels, chosenSongIndex) as T
 
         }
         throw IllegalArgumentException("unknown class")

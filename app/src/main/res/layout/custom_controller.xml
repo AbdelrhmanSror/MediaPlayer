@@ -29,14 +29,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:backgroundTint="@color/white"
-                app:srcCompat="@drawable/ic_shuffle_black_24dp" />
+                app:srcCompat="@drawable/shuffle" />
 
             <ImageButton
                 android:id="@id/exo_prev"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:backgroundTint="@color/white"
-                app:srcCompat="@drawable/ic_skip_previous_black_24dp" />
+                app:srcCompat="@drawable/previous" />
 
             <ImageButton
                 android:id="@id/exo_play"
@@ -44,7 +44,7 @@
                 android:layout_width="wrap_content"
                 android:backgroundTint="@color/white"
                 android:scaleType="fitXY"
-                app:srcCompat="@drawable/ic_play_circle_filled_black_24dp" />
+                app:srcCompat="@drawable/play_filled" />
 
             <ImageButton
                 android:id="@id/exo_pause"
@@ -52,7 +52,7 @@
                 android:layout_width="wrap_content"
                 android:backgroundTint="@color/white"
                 android:scaleType="fitXY"
-                app:srcCompat="@drawable/ic_pause_circle_filled_black_24dp" />
+                app:srcCompat="@drawable/pause_filled" />
 
 
             <ImageButton
@@ -60,12 +60,12 @@
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:backgroundTint="@color/white"
-                app:srcCompat="@drawable/ic_skip_next_black_24dp" />
+                app:srcCompat="@drawable/next" />
 
             <ImageButton
                 android:id="@id/exo_repeat_toggle"
                 style="@style/ExoMediaButton"
-                app:srcCompat="@drawable/ic_loop_black_24dp"
+                app:srcCompat="@drawable/repeat"
                 android:tint="#000000" />
 
         </LinearLayout>

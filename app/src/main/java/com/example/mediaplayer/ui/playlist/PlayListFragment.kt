@@ -21,6 +21,8 @@ import com.example.mediaplayer.databinding.PlaylistFragmentBinding
 import com.example.mediaplayer.model.PlayListModel
 import com.example.mediaplayer.viewModels.PlayListViewModel
 import com.example.mediaplayer.viewModels.PlayListViewModelFactory
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import kotlinx.android.synthetic.main.bottom_sheet_layout.view.*
 import java.util.*
 
 
@@ -39,6 +41,10 @@ class PlayListFragment : Fragment() {
         //find the nav controller so i can use it to navigate
         navController = Navigation.findNavController(Objects.requireNonNull<FragmentActivity>(activity), R.id.nav_host_fragment)
 
+        val bottomsheet = BottomSheetBehavior.from(binding.bottomSheetLayout.bottomSheet)
+        binding.bottomSheetLayout.bottomSheet.setOnClickListener {
+            bottomsheet.state = BottomSheetBehavior.STATE_EXPANDED
+        }
 
         return binding.root
     }
@@ -74,6 +80,7 @@ class PlayListFragment : Fragment() {
         })
         //setup recyclerview with adapter
         binding.playList.adapter = adapter
+        binding.bottomSheetLayout.playlist_bottom_sheet.adapter = adapter
 
     }
 

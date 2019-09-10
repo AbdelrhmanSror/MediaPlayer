@@ -63,7 +63,7 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
                 // Make the transport controls visible on the lockscreen
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 // Add an app icon and set its accent color
-                .setSmallIcon(R.drawable.exo_icon_play)
+                .setSmallIcon(R.drawable.play)
                 .setColor(ContextCompat.getColor(context, R.color.blue))
                 .setContentIntent(PendingIntent.getActivity(context,
                         NOTIFICATION_ID, songFragmentIntent, 0))
@@ -75,12 +75,13 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
                 .addAction(actionNext())     // #2
                 // Apply the media style template
                 .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
+                        /** cancel image button will show only on devices prior to lollipop*/
                         .setShowCancelButton(true)
+                        .setCancelButtonIntent(actionDelete())
                         .setShowActionsInCompactView(0, 1, 2))
                 .setPriority(NotificationCompat.PRIORITY_LOW)
-                .setOnlyAlertOnce(true)
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
-
+                .setDeleteIntent(actionDelete())
                 .setLargeIcon(albumCoverImage).build()
     }
 
@@ -89,7 +90,14 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
         pauseIntent.action = PAUSE_ACTION
         val notificationPendingIntent = PendingIntent.getService(context,
                 NOTIFICATION_ID, pauseIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        return NotificationCompat.Action(R.drawable.ic_pause_black_24dp, context.getString(R.string.pause), notificationPendingIntent)
+        return NotificationCompat.Action(R.drawable.pause, context.getString(R.string.pause), notificationPendingIntent)
+    }
+
+    private fun actionDelete(): PendingIntent {
+        val deleteIntent = Intent(context, ChosenSongService::class.java)
+        deleteIntent.action = DELETE_ACTION
+        return PendingIntent.getService(context,
+                NOTIFICATION_ID, deleteIntent, 0)
     }
 
     private fun actionPrevious(): NotificationCompat.Action {
@@ -97,7 +105,7 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
         prevIntent.action = PREVIOUS_ACTION
         val notificationPendingIntent = PendingIntent.getService(context,
                 NOTIFICATION_ID, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        return NotificationCompat.Action(R.drawable.ic_skip_previous_black_24dp, context.getString(R.string.previous), notificationPendingIntent)
+        return NotificationCompat.Action(R.drawable.previous, context.getString(R.string.previous), notificationPendingIntent)
     }
 
     private fun actionPlay(): NotificationCompat.Action {
@@ -105,7 +113,7 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
         playIntent.action = PLAY_ACTION
         val notificationPendingIntent = PendingIntent.getService(context,
                 NOTIFICATION_ID, playIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        return NotificationCompat.Action(R.drawable.ic_play_arrow_black_24dp, context.getString(R.string.play), notificationPendingIntent)
+        return NotificationCompat.Action(R.drawable.play, context.getString(R.string.play), notificationPendingIntent)
     }
 
     private fun actionNext(): NotificationCompat.Action {
@@ -113,6 +121,6 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
         nextIntent.action = NEXT_ACTION
         val notificationPendingIntent = PendingIntent.getService(context,
                 NOTIFICATION_ID, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        return NotificationCompat.Action(R.drawable.ic_skip_next_black_24dp, context.getString(R.string.next), notificationPendingIntent)
+        return NotificationCompat.Action(R.drawable.next, context.getString(R.string.next), notificationPendingIntent)
     }
 }

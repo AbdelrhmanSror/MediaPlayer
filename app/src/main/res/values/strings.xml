@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ExoPlayer code lab</string>
+    <string name="app_name">Hobo Player</string>
     <string name="player_activity_name">Media player</string>
     <string name="pause">Pause</string>
     <string name="play">Play</string>
