@@ -176,6 +176,10 @@ class ChosenSongService : Service() {
                             setUpPlayer(playListModels!!, chosenSongIndex)
                             isServiceSetuped = true
                         }
+                        //also we check if user pick another song then play the new one
+                        else if (mCurrentWindowIndex != player.currentWindowIndex) {
+                            player.seekTo(mCurrentWindowIndex, 0)
+                        }
                         startForeground(NOTIFICATION_ID, getNotification())
                     }
 

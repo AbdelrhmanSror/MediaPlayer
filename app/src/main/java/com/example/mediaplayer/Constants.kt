@@ -15,3 +15,5 @@ const val CHANNEL_ID = "5"
 const val NOTIFICATION_ID = 11
 const val LIST_SONG = "chosenSong"
 const val CHOSEN_SONG_INDEX = "chosenSongIndex"
+const val PLAYLIST_VIEWHOLDER = "playlistViewHolder"
+const val PLAYLIST_VIEWHOLDER_BOTTOMSHEET = "playlistViewHolderBottomSheet"

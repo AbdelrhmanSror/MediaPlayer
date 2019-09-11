@@ -8,4 +8,9 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="bottom_sheet_text" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:fontFamily">@font/roboto</item>
+    </style>
+
 </resources>

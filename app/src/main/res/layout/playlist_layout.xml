@@ -3,70 +3,63 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <data>
-        <variable
-            name="playlistModel"
-            type="com.example.mediaplayer.model.PlayListModel" />
-
-    </data>
-
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <androidx.cardview.widget.CardView
-        android:id="@+id/playlistContainer"
+            android:id="@+id/playlistContainer"
             android:layout_width="match_parent"
-            android:foreground="?android:attr/selectableItemBackground"
+            android:layout_height="wrap_content"
             android:clickable="true"
             android:focusable="true"
-        android:layout_height="wrap_content"
-            app:cardUseCompatPadding="true"
+            android:foreground="?android:attr/selectableItemBackground"
             app:cardBackgroundColor="@color/blue"
             app:cardCornerRadius="@dimen/medium_horizontal_spacing"
-            app:cardElevation="@dimen/small_vertical_spacing">
+            app:cardElevation="@dimen/small_vertical_spacing"
+            app:cardUseCompatPadding="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:orientation="horizontal"
+                android:layout_height="match_parent"
                 android:layout_margin="@dimen/large_vertical_spacing"
-                android:layout_height="match_parent">
+                android:orientation="horizontal">
 
-        <ImageView
-            android:id="@+id/AlbumArt"
-            app:imageUri="@{playlistModel.albumCoverUri}"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            tools:layout_height="80dp"
-            tools:srcCompat="@drawable/default_image" />
+                <ImageView
+                    android:id="@+id/AlbumArt"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    app:imageUri="@{playlistModel.albumCoverUri}"
+                    tools:layout_height="80dp"
+                    tools:srcCompat="@drawable/default_image" />
 
                 <LinearLayout
                     android:layout_width="0dp"
-                    android:layout_weight="3"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
                     android:layout_marginStart="@dimen/medium_vertical_spacing"
-                    android:layout_marginEnd="@dimen/medium_vertical_spacing">
+                    android:layout_marginEnd="@dimen/medium_vertical_spacing"
+                    android:layout_weight="3"
+                    android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/patua_one"
-            android:layout_marginTop="@dimen/large_vertical_spacing"
-            android:text="@{playlistModel.title}"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            tools:text="StarBoy" />
+                    <TextView
+                        android:id="@+id/title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/large_vertical_spacing"
+                        android:fontFamily="@font/patua_one"
+                        android:text="@{playlistModel.title}"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        tools:text="StarBoy" />
 
-        <TextView
-            android:id="@+id/actor"
-            android:textColor="@color/white"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@{playlistModel.actor}"
-            tools:text="Calvin Harris" />
+                    <TextView
+                        android:id="@+id/actor"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@{playlistModel.actor}"
+                        android:textColor="@color/white"
+                        tools:text="Calvin Harris" />
 
                 </LinearLayout>
 
@@ -80,5 +73,13 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
     </RelativeLayout>
+
+    <data>
+
+        <variable
+            name="playlistModel"
+            type="com.example.mediaplayer.model.PlayListModel" />
+
+    </data>
 
 </layout>

@@ -2,9 +2,13 @@ package com.example.mediaplayer.repositry
 
 import android.app.Application
 import android.content.ContentUris
+import android.database.Cursor
+import android.media.MediaMetadataRetriever
+import android.net.Uri
 import android.provider.MediaStore
 import com.example.mediaplayer.model.PlayListModel
 import java.util.*
+
 
 class Repository(private val application: Application) {
     /**
@@ -27,16 +31,9 @@ class Repository(private val application: Application) {
                 with(cursor)
                 {
                     do {
-                        val thisId = getLong(getColumnIndex(MediaStore.Audio.Media._ID))
-                        val title = getString(getColumnIndex(MediaStore.Audio.Media.TITLE))
-                        val actor = getString(getColumnIndex(MediaStore.Audio.Media.ARTIST))
-                        var albumPath = getAlbumArtPath(getString(getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)))
-                        if (albumPath.isNullOrEmpty()) {
-                            albumPath = "android.resource://" + application.packageName + "/drawable/default_image.jpg"
-                        }
-                        val contentUri = ContentUris.withAppendedId(
-                                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, thisId)
-                        playLists.add(PlayListModel(title, actor, contentUri, albumPath))
+                        val defaultImageUri = "android.resource://" + application.packageName + "/drawable/default_image.jpg"
+                        val audioUri = getAudioUri()
+                        playLists.add(PlayListModel(getAudioName(), getAudioArtist(), audioUri, getAlbumImageUri(defaultImageUri), getDuration(audioUri)))
                     } while (moveToNext())
                     close()
                     return playLists
@@ -45,6 +42,37 @@ class Repository(private val application: Application) {
 
             }
         }
+
+
+    private fun Cursor.getAudioUri(): Uri {
+        val audioId = this.getLong(getColumnIndex(MediaStore.Audio.Media._ID))
+        return ContentUris.withAppendedId(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, audioId)
+    }
+
+    private fun Cursor.getAudioName(): String {
+        return getString(getColumnIndex(MediaStore.Audio.Media.TITLE))
+    }
+
+    private fun Cursor.getAudioArtist(): String {
+        return getString(getColumnIndex(MediaStore.Audio.Media.ARTIST))
+    }
+
+    private fun Cursor.getAlbumImageUri(defaultImageUru: String): String {
+        val albumPath = getAlbumArtPath(getString(getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)))
+        //if there is no photo for the song then use preChosen one
+        if (albumPath.isNullOrEmpty()) {
+            return defaultImageUru
+        }
+        return albumPath
+    }
+
+    private fun getDuration(audioUri: Uri): Long {
+        val mmr = MediaMetadataRetriever()
+        mmr.setDataSource(application, audioUri)
+        val durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+        return durationStr.toLong()
+    }
 
     /**
      * method to get the album art image for specific audio
@@ -65,8 +93,8 @@ class Repository(private val application: Application) {
                 close()
                 return path
             }
+
         }
         return null
     }
-
 }

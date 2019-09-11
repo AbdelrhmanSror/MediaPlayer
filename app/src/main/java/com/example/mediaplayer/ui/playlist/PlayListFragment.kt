@@ -1,7 +1,9 @@
 package com.example.mediaplayer.ui.playlist
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,10 +16,9 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
-import com.example.mediaplayer.CHOSEN_SONG_INDEX
-import com.example.mediaplayer.LIST_SONG
-import com.example.mediaplayer.R
+import com.example.mediaplayer.*
 import com.example.mediaplayer.databinding.PlaylistFragmentBinding
+import com.example.mediaplayer.foregroundService.ChosenSongService
 import com.example.mediaplayer.model.PlayListModel
 import com.example.mediaplayer.viewModels.PlayListViewModel
 import com.example.mediaplayer.viewModels.PlayListViewModelFactory
@@ -46,6 +47,7 @@ class PlayListFragment : Fragment() {
             bottomsheet.state = BottomSheetBehavior.STATE_EXPANDED
         }
 
+
         return binding.root
     }
 
@@ -72,18 +74,34 @@ class PlayListFragment : Fragment() {
             return
         }
         //creating adapter and set it with the playlists
-        val adapter = PlaylistAdapter(playListModels, object : PlaylistAdapter.OnClickListener {
-            override fun onClick(playLists: List<PlayListModel>, itemClickIndex: Int) {
-                navigate(playLists, itemClickIndex)
+        val adapter = PlaylistAdapter(playListModels, PLAYLIST_VIEWHOLDER, OnClickListener { playLists, itemClickIndex ->
+            navigate(playLists, itemClickIndex)
 
-            }
+        })
+        //adapter for bottom sheet list
+        val adapterBottomSheet = PlaylistAdapter(playListModels, PLAYLIST_VIEWHOLDER_BOTTOMSHEET, OnClickListener { playLists, itemClickIndex ->
+            startForeground(playLists as ArrayList<PlayListModel>, itemClickIndex)
         })
         //setup recyclerview with adapter
         binding.playList.adapter = adapter
-        binding.bottomSheetLayout.playlist_bottom_sheet.adapter = adapter
+        binding.bottomSheetLayout.playlist_bottom_sheet.adapter = adapterBottomSheet
 
     }
 
+    private fun startForeground(playList: ArrayList<PlayListModel>, chosenSongIndex: Int) {
+        val foregroundIntent = Intent(activity, ChosenSongService::class.java)
+        foregroundIntent.action = ACTION_FOREGROUND
+        foregroundIntent.putExtra(CHOSEN_SONG_INDEX, chosenSongIndex)
+        foregroundIntent.putParcelableArrayListExtra(LIST_SONG, playList)
+        //Start service:
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            activity!!.startForegroundService(foregroundIntent)
+
+        } else {
+            activity!!.startService(foregroundIntent)
+
+        }
+    }
     private fun checkPermission() {
         // Here, thisActivity is the current activity
         if (ContextCompat.checkSelfPermission(Objects.requireNonNull<FragmentActivity>(activity),

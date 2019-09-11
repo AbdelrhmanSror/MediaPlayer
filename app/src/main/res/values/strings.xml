@@ -8,5 +8,5 @@
     <string name="shuffle">Shuffle</string>
     <string name="repeat">Repeat</string>
     <string name="no_audio_message">you must have at least one audio file on this device so app can work correctly</string>
-
+    <string name="duration_format"> %1$d:%2$d</string>
 </resources>
