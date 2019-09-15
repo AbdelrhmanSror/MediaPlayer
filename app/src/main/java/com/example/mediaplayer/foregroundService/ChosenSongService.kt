@@ -6,29 +6,20 @@ import android.content.Context
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
-import android.util.Log
 import androidx.core.app.NotificationManagerCompat
-import com.example.mediaplayer.*
-import com.example.mediaplayer.model.PlayListModel
+import com.example.mediaplayer.CHOSEN_SONG_INDEX
+import com.example.mediaplayer.LIST_SONG
+import com.example.mediaplayer.NOTIFICATION_ID
+import com.example.mediaplayer.PlayerActions
+import com.example.mediaplayer.foregroundService.audioFocus.AudioFocusCallBacks
+import com.example.mediaplayer.foregroundService.audioFocus.MediaAudioFocusCompat
+import com.example.mediaplayer.foregroundService.audioFocus.MediaAudioFocusCompatFactory
 import com.example.mediaplayer.ui.chosenSong.MediaInfo
-import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.ExoPlayerFactory
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.SimpleExoPlayer
-import com.google.android.exoplayer2.audio.AudioAttributes
-import com.google.android.exoplayer2.source.ConcatenatingMediaSource
-import com.google.android.exoplayer2.source.MediaSource
-import com.google.android.exoplayer2.source.ProgressiveMediaSource
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.util.Util
-import java.util.*
+
 
 class ChosenSongService : Service() {
-
-    lateinit var player: SimpleExoPlayer
+    lateinit var audioPlayer: AudioPlayer
         private set
-    private var mPlayWhenReady = true
-    private var mCurrentWindowIndex = 0
     private lateinit var application: Context
 
     // indicates how to behave if the service is killed.
@@ -41,104 +32,33 @@ class ChosenSongService : Service() {
     //responsible for updating the notification
     private lateinit var mNotificationManager: NotificationManagerCompat
     private var isServiceSetuped = false
+    private lateinit var mediaAudioFocus: MediaAudioFocusCompat
+    /**
+     * variable to indicate to the last state of player if audio focus happened
+     * so if the last state of player was true then continue playing the audio after the focus gained otherwise do nothing
+     * because user himself paused the player so it makes no sense to continue playing as it was already paused
+     */
+    private var prevPlayerState = false
 
 
     override fun onCreate() {
-        Log.v("mediaService", "serviceCreated")
-
         // The service is being created.
-        player = ExoPlayerFactory.newSimpleInstance(applicationContext)
         mNotificationManager = NotificationManagerCompat.from(this@ChosenSongService)
         application = applicationContext
+        mediaAudioFocus = MediaAudioFocusCompatFactory.create(applicationContext)
+        audioPlayer = AudioPlayer.create(applicationContext)
 
     }
 
-    //creating concatenating media source for media player to play
-    private fun buildMediaSource(audioUris: ArrayList<PlayListModel>?): MediaSource? {
-        // Produces DataSource instances through which media data is loaded.
-        val dataSourceFactory = DefaultDataSourceFactory(application,
-                Util.getUserAgent(application, "MediaPlayer"))
-        val concatenatingMediaSource = ConcatenatingMediaSource()
-        if (audioUris == null) {
-            return null
-        } else {
-            for (item in audioUris) {
-                concatenatingMediaSource.addMediaSource(ProgressiveMediaSource.Factory(dataSourceFactory)
-                        .createMediaSource(item.audioUri))
-            }
-        }
-        return concatenatingMediaSource
-    }
-
-    fun setUpPlayer(audioUris: ArrayList<PlayListModel>, chosenSongIndex: Int) {
-        player.run {
-            //to control to player the audio or video right now or wait user to play the audio himself
-            playWhenReady = true
-            val mediaSource = buildMediaSource(audioUris)
-            prepare(mediaSource)
-            //to control the starter location of audio
-            seekTo(chosenSongIndex, 0)
-            //to handle audio focus changes
-            setAudioAttributes(AudioAttributes.Builder()
-                    .setUsage(C.USAGE_MEDIA)
-                    .setContentType(C.CONTENT_TYPE_MUSIC)
-                    .build(), true)
-        }
-    }
 
     //handle the player when actions happen in notification
     private fun handlePlayerEvent() {
-        player.run {
-            addListener(object : Player.EventListener {
-                override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-                    when {
-                        isPlayerStopped() -> {
-                            mPlayWhenReady = false
+        audioPlayer.setOnPlayerStateChanged(object : OnPlayerStateChanged {
+            override fun onAudioStateChanged() {
+                mNotificationManager.notify(NOTIFICATION_ID, getNotification())
+            }
 
-                        }
-                        isPlayerPlaying() -> {
-                            mPlayWhenReady = true
-
-                        }
-                        isPlayerNext() -> {
-                            mCurrentWindowIndex = currentWindowIndex
-
-                        }
-                        isPlayerPrevious() -> {
-                            mCurrentWindowIndex = currentWindowIndex
-                        }
-                    }
-                    mNotificationManager.notify(NOTIFICATION_ID, getNotification())
-                }
-            })
-        }
-    }
-
-    private fun isPlayerStopped(): Boolean {
-        player.run {
-            return playWhenReady != mPlayWhenReady && !playWhenReady
-        }
-    }
-
-    private fun isPlayerPlaying(): Boolean {
-        player.run {
-            return playWhenReady != mPlayWhenReady && playWhenReady
-
-        }
-    }
-
-    private fun isPlayerNext(): Boolean {
-        player.run {
-            return currentWindowIndex != mCurrentWindowIndex && currentWindowIndex < mCurrentWindowIndex
-
-        }
-    }
-
-    private fun isPlayerPrevious(): Boolean {
-        player.run {
-            return currentWindowIndex != mCurrentWindowIndex && currentWindowIndex > mCurrentWindowIndex
-
-        }
+        })
     }
 
 
@@ -149,7 +69,7 @@ class ChosenSongService : Service() {
     }
 
     private fun getNotification(): Notification {
-        return foregroundNotification.build(mPlayWhenReady, mCurrentWindowIndex)
+        return foregroundNotification.build(audioPlayer.isPlaying, audioPlayer.currentAudioIndex)
     }
 
 
@@ -162,40 +82,64 @@ class ChosenSongService : Service() {
         }
     }
 
+    private fun requestFocus() {
+        mediaAudioFocus.requestAudioFocus(object : AudioFocusCallBacks {
+            override fun onAudioFocusGained() {
+                if (prevPlayerState)
+                    audioPlayer.play()
+
+            }
+
+            override fun onAudioFocusLost() {
+                prevPlayerState = audioPlayer.isPlaying
+                audioPlayer.pause()
+
+            }
+
+
+        })
+    }
+
     private fun handleIntent(intent: Intent?) {
         intent?.let {
             when (it.action) {
-                ACTION_FOREGROUND -> {
+                PlayerActions.ACTION_FOREGROUND.value -> {
                     with(intentData(it))
                     {
-                        mCurrentWindowIndex = chosenSongIndex
                         foregroundNotification = ForegroundNotification(playListModels, application)
                         handlePlayerEvent()
                         //so we do not setup the player again when any configurations happen
                         if (!isServiceSetuped) {
-                            setUpPlayer(playListModels!!, chosenSongIndex)
+                            audioPlayer.setUpPlayer(playListModels!!, chosenSongIndex)
                             isServiceSetuped = true
-                        }
-                        //also we check if user pick another song then play the new one
-                        else if (mCurrentWindowIndex != player.currentWindowIndex) {
-                            player.seekTo(mCurrentWindowIndex, 0)
-                        }
+                        } else
+                            audioPlayer.seekTo(chosenSongIndex)
+                        requestFocus()
                         startForeground(NOTIFICATION_ID, getNotification())
                     }
 
                 }
-                PAUSE_ACTION -> {
-                    player.playWhenReady = false
-                    //stop the foreground mode so if user can cancel the the media notification by swiping it away
-                    // as a result ,delete intent will be triggered so we kill the service
-                    stopForeground(false)
-                }
-                PLAY_ACTION -> player.playWhenReady = true
-                PREVIOUS_ACTION -> player.previous()
-                NEXT_ACTION -> player.next()
-                DELETE_ACTION -> stopSelf()
+                PlayerActions.PAUSE_ACTION.value -> pausePlayer()
+                PlayerActions.PLAY_ACTION.value -> startPlayer()
+                PlayerActions.PREVIOUS_ACTION.value -> audioPlayer.previous()
+                PlayerActions.NEXT_ACTION.value -> audioPlayer.next()
+                PlayerActions.DELETE_ACTION.value -> stopSelf()
             }
         }
+    }
+
+    private fun startPlayer() {
+        requestFocus()
+        //we start foreground again because we stop it in pause action
+        startForeground(NOTIFICATION_ID, getNotification())
+        audioPlayer.play()
+    }
+
+    private fun pausePlayer() {
+        audioPlayer.pause()
+        //stop the foreground mode so if user can cancel the the media notification by swiping it away
+        // as a result ,delete intent will be triggered so we kill the service
+        stopForeground(false)
     }
 
     override fun onStartCommand(intent: Intent?,
@@ -210,7 +154,7 @@ class ChosenSongService : Service() {
     }
 
     override fun onDestroy() {
-        player.release()
+        audioPlayer.release()
         super.onDestroy()
     }
 }

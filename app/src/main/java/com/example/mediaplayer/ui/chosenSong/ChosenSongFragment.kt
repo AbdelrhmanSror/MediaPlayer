@@ -15,24 +15,27 @@ import android.widget.SeekBar
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.example.mediaplayer.ACTION_FOREGROUND
 import com.example.mediaplayer.CHOSEN_SONG_INDEX
+import com.example.mediaplayer.FRAGMENT_PURPOSE
 import com.example.mediaplayer.LIST_SONG
+import com.example.mediaplayer.PlayerActions
 import com.example.mediaplayer.databinding.FragmentChosenSongBinding
 import com.example.mediaplayer.foregroundService.ChosenSongService
 import com.example.mediaplayer.foregroundService.ChosenSongService.SongBinder
 import com.example.mediaplayer.model.PlayListModel
 import com.example.mediaplayer.viewModels.ChosenSongViewModel
 import com.example.mediaplayer.viewModels.ChosenSongViewModelFactory
-import com.google.android.exoplayer2.Player.EventListener
+import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.source.TrackGroupArray
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.ui.PlayerView
 import kotlinx.android.synthetic.main.custom_controller.view.*
 import kotlinx.android.synthetic.main.exo_player_view.view.*
 
 
 data class MediaInfo(var playListModels: ArrayList<PlayListModel>? = arrayListOf(),
-                     var chosenSongIndex: Int = 0)
+                     var chosenSongIndex: Int = 0, var fragmentPurpose: String? = PlayerActions.ACTION_FOREGROUND.value)
 
 /**
  * A simple [Fragment] subclass.
@@ -59,10 +62,16 @@ class ChosenSongFragment : Fragment() {
         arguments?.let {
             val playListModels: ArrayList<PlayListModel>? = arguments!!.getParcelableArrayList(LIST_SONG)
             val chosenSongIndex = arguments!!.getInt(CHOSEN_SONG_INDEX, 0)
+            /**
+             * the purpose of this variable is to decide if the intent is coming through notification or regular fragment
+             * so if the action coming from notification we do not start foreground service because its already started
+             * else we start it as usual
+             */
+            val fragmentPurpose = arguments!!.getString(FRAGMENT_PURPOSE)
             //clearing the bundle so when fragment stops no huge parcelable error occurs
             //avoid causing TransactionTooLargeException
             arguments!!.clear()
-            return MediaInfo(playListModels, chosenSongIndex)
+            return MediaInfo(playListModels, chosenSongIndex, fragmentPurpose)
         }
 
         return MediaInfo()
@@ -70,7 +79,7 @@ class ChosenSongFragment : Fragment() {
 
     private fun setUpViewModel() {
         val info = getMediaInfo()
-        val factory = ChosenSongViewModelFactory(info.playListModels, info.chosenSongIndex)
+        val factory = ChosenSongViewModelFactory(info.playListModels, info.chosenSongIndex, info.fragmentPurpose)
         viewModel = ViewModelProviders.of(this, factory).get(ChosenSongViewModel::class.java)
         with(viewModel)
         {
@@ -81,7 +90,7 @@ class ChosenSongFragment : Fragment() {
                     //observe if the the the song was changed and based on that we reflect that change on ui
                     chosenSongIndex.observe(viewLifecycleOwner, Observer { index ->
                         // will be called and  then this live data also will be called responding to onSeekProcessed so we avoid looping forever by this if statement
-                        binding.playerView.media_seek_bar.updateMediaSeekBarVal(service.player)
+                        binding.playerView.media_seek_bar.updateMediaSeekBarVal(service.audioPlayer.player)
                         //whenever the chosen song index change we update the song info to reflect the current index of song
                         binding.playerView.songDetails(index)
                     })
@@ -127,17 +136,18 @@ class ChosenSongFragment : Fragment() {
 
 
     private fun PlayerView.initializePlayer(service: ChosenSongService) {
-        val player = service.player
+        val audioPlayer = service.audioPlayer
         //Attaching the player to a view
-        this.player = player
+        this.player = audioPlayer.player
         this.useController = true
         this.showController()
         this.controllerAutoShow = true
-        player.addListener(object : EventListener {
-            override fun onSeekProcessed() {
-                viewModel.setChosenSongIndex(service.player.currentWindowIndex)
-            }
+        viewModel.setChosenSongIndex(player.currentWindowIndex)
+        audioPlayer.player.addListener(object : Player.EventListener {
+            override fun onTracksChanged(trackGroups: TrackGroupArray?, trackSelections: TrackSelectionArray?) {
+                viewModel.setChosenSongIndex(player.currentWindowIndex)
 
+            }
         })
 
 
@@ -169,17 +179,21 @@ class ChosenSongFragment : Fragment() {
 
     private fun startForeground() {
         foregroundIntent = Intent(activity, ChosenSongService::class.java)
-        foregroundIntent.action = ACTION_FOREGROUND
+        foregroundIntent.action = PlayerActions.ACTION_FOREGROUND.value
         foregroundIntent.putExtra(CHOSEN_SONG_INDEX, viewModel.chosenSongIndex.value)
         foregroundIntent.putParcelableArrayListExtra(LIST_SONG, viewModel.playListModels)
-        //Start service:
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            activity!!.startForegroundService(foregroundIntent)
+        // if the purpose fragment is coming from notification then the service is already started ,no need to start it again
+        if (viewModel.fragmentPurpose != PlayerActions.AUDIO_FOREGROUND_NOTIFICATION.value) {
+            //Start service:
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                activity!!.startForegroundService(foregroundIntent)
 
-        } else {
-            activity!!.startService(foregroundIntent)
+            } else {
+                activity!!.startService(foregroundIntent)
 
+            }
         }
+
     }
 
     /**

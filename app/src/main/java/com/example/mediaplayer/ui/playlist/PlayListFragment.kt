@@ -42,10 +42,6 @@ class PlayListFragment : Fragment() {
         //find the nav controller so i can use it to navigate
         navController = Navigation.findNavController(Objects.requireNonNull<FragmentActivity>(activity), R.id.nav_host_fragment)
 
-        val bottomsheet = BottomSheetBehavior.from(binding.bottomSheetLayout.bottomSheet)
-        binding.bottomSheetLayout.bottomSheet.setOnClickListener {
-            bottomsheet.state = BottomSheetBehavior.STATE_EXPANDED
-        }
 
 
         return binding.root
@@ -55,6 +51,7 @@ class PlayListFragment : Fragment() {
         val bundle = Bundle()
         bundle.putParcelableArrayList(LIST_SONG, playListModels as ArrayList)
         bundle.putInt(CHOSEN_SONG_INDEX, itemClickedIndex)
+        bundle.putString(FRAGMENT_PURPOSE, PlayerActions.ACTION_FOREGROUND.value)
         navController.navigate(R.id.action_playListFragment_to_chosenSongFragment, bundle)
     }
 
@@ -71,26 +68,44 @@ class PlayListFragment : Fragment() {
         playListModels = playListViewModel.playLists
         if (playListModels.isNullOrEmpty()) {
             binding.noAudioText.visibility = View.VISIBLE
+            binding.bottomSheetLayout.visibility = View.GONE
             return
         }
+        //display the main list of media
+        setUpPlayList(playListModels)
+
+        //display the list of bottom sheet and setup bottom sheet behaviour
+        setUpBottomSheet(playListModels)
+
+    }
+
+    private fun setUpPlayList(playListModels: List<PlayListModel>) {
         //creating adapter and set it with the playlists
-        val adapter = PlaylistAdapter(playListModels, PLAYLIST_VIEWHOLDER, OnClickListener { playLists, itemClickIndex ->
+        val adapter = PlaylistAdapter(playListModels, ViewHolderType.PLAYLIST_VIEW_HOLDER, OnClickListener { playLists, itemClickIndex ->
             navigate(playLists, itemClickIndex)
 
         })
+        //setup recyclerview with adapter
+        binding.playList.adapter = adapter
+    }
+
+    private fun setUpBottomSheet(playListModels: List<PlayListModel>) {
+        val bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheetLayout.bottomSheet)
+        binding.bottomSheetLayout.bottomSheet.setOnClickListener {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+        }
+
         //adapter for bottom sheet list
-        val adapterBottomSheet = PlaylistAdapter(playListModels, PLAYLIST_VIEWHOLDER_BOTTOMSHEET, OnClickListener { playLists, itemClickIndex ->
+        val adapterBottomSheet = PlaylistAdapter(playListModels, ViewHolderType.PLAYLIST_VIEW_HOLDER_BOTTOM_SHEET, OnClickListener { playLists, itemClickIndex ->
             startForeground(playLists as ArrayList<PlayListModel>, itemClickIndex)
         })
         //setup recyclerview with adapter
-        binding.playList.adapter = adapter
         binding.bottomSheetLayout.playlist_bottom_sheet.adapter = adapterBottomSheet
-
     }
 
     private fun startForeground(playList: ArrayList<PlayListModel>, chosenSongIndex: Int) {
         val foregroundIntent = Intent(activity, ChosenSongService::class.java)
-        foregroundIntent.action = ACTION_FOREGROUND
+        foregroundIntent.action = PlayerActions.ACTION_FOREGROUND.value
         foregroundIntent.putExtra(CHOSEN_SONG_INDEX, chosenSongIndex)
         foregroundIntent.putParcelableArrayListExtra(LIST_SONG, playList)
         //Start service:

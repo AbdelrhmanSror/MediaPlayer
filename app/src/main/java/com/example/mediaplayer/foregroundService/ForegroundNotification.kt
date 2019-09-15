@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -22,7 +23,7 @@ class NotificationChannel : Application() {
 
     private fun createNotificationChannel() {
         val notifyManager = NotificationManagerCompat.from(this)
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Create a ForegroundNotification
             val notificationChannel = NotificationChannel(CHANNEL_ID,
                     "Media Notification", NotificationManager.IMPORTANCE_LOW)
@@ -50,10 +51,6 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
             actionPlay()
         }
         val item = playListModels!![chosenSongIndex]
-        val songFragmentIntent = Intent(context, ChosenSongActivity::class.java)
-        songFragmentIntent.action = AUDIO_FOREGROUND_NOTIFICATION
-        songFragmentIntent.putParcelableArrayListExtra(LIST_SONG, playListModels)
-        songFragmentIntent.putExtra(CHOSEN_SONG_INDEX, chosenSongIndex)
         val albumCoverImage = BitmapFactory.decodeFile(item.albumCoverUri)
         return NotificationCompat.Builder(context, CHANNEL_ID)
                 // the metadata for the currently playing track
@@ -66,7 +63,7 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
                 .setSmallIcon(R.drawable.play)
                 .setColor(ContextCompat.getColor(context, R.color.blue))
                 .setContentIntent(PendingIntent.getActivity(context,
-                        NOTIFICATION_ID, songFragmentIntent, 0))
+                        NOTIFICATION_ID, notificationClickedIntent(chosenSongIndex), 0))
                 //Add a previous button
                 .addAction(actionPrevious()) // #0
                 //Add a pause button
@@ -85,9 +82,17 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
                 .setLargeIcon(albumCoverImage).build()
     }
 
+    private fun notificationClickedIntent(chosenSongIndex: Int): Intent {
+        val intent = Intent(context, ChosenSongActivity::class.java)
+        intent.action = PlayerActions.AUDIO_FOREGROUND_NOTIFICATION.value
+        intent.putParcelableArrayListExtra(LIST_SONG, playListModels)
+        intent.putExtra(CHOSEN_SONG_INDEX, chosenSongIndex)
+
+        return intent
+    }
     private fun actionPause(): NotificationCompat.Action {
         val pauseIntent = Intent(context, ChosenSongService::class.java)
-        pauseIntent.action = PAUSE_ACTION
+        pauseIntent.action = PlayerActions.PAUSE_ACTION.value
         val notificationPendingIntent = PendingIntent.getService(context,
                 NOTIFICATION_ID, pauseIntent, PendingIntent.FLAG_UPDATE_CURRENT)
         return NotificationCompat.Action(R.drawable.pause, context.getString(R.string.pause), notificationPendingIntent)
@@ -95,14 +100,14 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
 
     private fun actionDelete(): PendingIntent {
         val deleteIntent = Intent(context, ChosenSongService::class.java)
-        deleteIntent.action = DELETE_ACTION
+        deleteIntent.action = PlayerActions.DELETE_ACTION.value
         return PendingIntent.getService(context,
                 NOTIFICATION_ID, deleteIntent, 0)
     }
 
     private fun actionPrevious(): NotificationCompat.Action {
         val prevIntent = Intent(context, ChosenSongService::class.java)
-        prevIntent.action = PREVIOUS_ACTION
+        prevIntent.action = PlayerActions.PREVIOUS_ACTION.value
         val notificationPendingIntent = PendingIntent.getService(context,
                 NOTIFICATION_ID, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT)
         return NotificationCompat.Action(R.drawable.previous, context.getString(R.string.previous), notificationPendingIntent)
@@ -110,7 +115,7 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
 
     private fun actionPlay(): NotificationCompat.Action {
         val playIntent = Intent(context, ChosenSongService::class.java)
-        playIntent.action = PLAY_ACTION
+        playIntent.action = PlayerActions.PLAY_ACTION.value
         val notificationPendingIntent = PendingIntent.getService(context,
                 NOTIFICATION_ID, playIntent, PendingIntent.FLAG_UPDATE_CURRENT)
         return NotificationCompat.Action(R.drawable.play, context.getString(R.string.play), notificationPendingIntent)
@@ -118,7 +123,7 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
 
     private fun actionNext(): NotificationCompat.Action {
         val nextIntent = Intent(context, ChosenSongService::class.java)
-        nextIntent.action = NEXT_ACTION
+        nextIntent.action = PlayerActions.NEXT_ACTION.value
         val notificationPendingIntent = PendingIntent.getService(context,
                 NOTIFICATION_ID, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT)
         return NotificationCompat.Action(R.drawable.next, context.getString(R.string.next), notificationPendingIntent)

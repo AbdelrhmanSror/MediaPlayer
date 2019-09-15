@@ -31,9 +31,8 @@ class Repository(private val application: Application) {
                 with(cursor)
                 {
                     do {
-                        val defaultImageUri = "android.resource://" + application.packageName + "/drawable/default_image.jpg"
                         val audioUri = getAudioUri()
-                        playLists.add(PlayListModel(getAudioName(), getAudioArtist(), audioUri, getAlbumImageUri(defaultImageUri), getDuration(audioUri)))
+                        playLists.add(PlayListModel(getAudioName(), getAudioArtist(), audioUri, getAlbumImageUri(), getDuration(audioUri)))
                     } while (moveToNext())
                     close()
                     return playLists
@@ -58,13 +57,8 @@ class Repository(private val application: Application) {
         return getString(getColumnIndex(MediaStore.Audio.Media.ARTIST))
     }
 
-    private fun Cursor.getAlbumImageUri(defaultImageUru: String): String {
-        val albumPath = getAlbumArtPath(getString(getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)))
-        //if there is no photo for the song then use preChosen one
-        if (albumPath.isNullOrEmpty()) {
-            return defaultImageUru
-        }
-        return albumPath
+    private fun Cursor.getAlbumImageUri(): String? {
+        return getAlbumArtPath(getString(getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)))
     }
 
     private fun getDuration(audioUri: Uri): Long {

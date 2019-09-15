@@ -10,7 +10,7 @@ import java.util.*
 
 
 class ChosenSongViewModel(val playListModels: ArrayList<PlayListModel>?
-                          , chosenSongIndex: Int) : ViewModel() {
+                          , chosenSongIndex: Int, val fragmentPurpose: String?) : ViewModel() {
     //to observe the changes with song index
     private val _chosenSongIndex = MutableLiveData<Int>()
     val chosenSongIndex: LiveData<Int>
@@ -36,12 +36,12 @@ class ChosenSongViewModel(val playListModels: ArrayList<PlayListModel>?
 }
 
 class ChosenSongViewModelFactory(private val playListModels: ArrayList<PlayListModel>?
-                                 , private val chosenSongIndex: Int) : ViewModelProvider.Factory {
+                                 , private val chosenSongIndex: Int, private val fragmentPurpose: String?) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
 
         if (modelClass.isAssignableFrom(ChosenSongViewModel::class.java)) {
-            return ChosenSongViewModel(playListModels, chosenSongIndex) as T
+            return ChosenSongViewModel(playListModels, chosenSongIndex, fragmentPurpose) as T
 
         }
         throw IllegalArgumentException("unknown class")

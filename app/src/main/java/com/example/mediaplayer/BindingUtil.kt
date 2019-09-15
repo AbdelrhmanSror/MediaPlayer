@@ -10,9 +10,10 @@ import com.bumptech.glide.request.RequestOptions
  * loading an image into imageView
  */
 @BindingAdapter("imageUri")
-fun setImageUri(imageView: ImageView, imageUri: String) {
-    Glide.with(imageView.context).load(imageUri)
-            /*.transform(new RoundedCorners(30))*/.apply(RequestOptions.circleCropTransform()
+fun setImageUri(imageView: ImageView, imageUri: String?) {
+    Glide.with(imageView.context)
+            .load(imageUri ?: R.drawable.default_image)
+            .apply(RequestOptions.circleCropTransform()
     ).into(imageView)
 
 }

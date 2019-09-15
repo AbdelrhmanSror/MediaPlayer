@@ -14,6 +14,7 @@
 package com.example.mediaplayer.ui.playlist
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
@@ -26,63 +27,98 @@ import com.example.mediaplayer.model.PlayListModel
 import kotlinx.android.synthetic.main.playlist_layout.view.*
 import kotlinx.android.synthetic.main.playlist_layout_bottom_sheet.view.*
 
-abstract class ViewHolder(binding: ViewDataBinding) : RecyclerView.ViewHolder(binding.root) {
+enum class ViewHolderType {
+    PLAYLIST_VIEW_HOLDER
+    ,
+    PLAYLIST_VIEW_HOLDER_BOTTOM_SHEET
+}
+
+/**
+ *
+ * for making viewHolder all u need just implement ViewHolderInterface
+ */
+class ViewHolder private constructor(rootView: View, private val viewHolder: ViewHolderInterface) : RecyclerView.ViewHolder(rootView) {
+
+
+    fun bind(itemClickedPosition: Int, playLists: List<PlayListModel>, listener: OnClickListener) {
+        viewHolder.bind(itemClickedPosition, playLists, listener)
+    }
+
+    companion object {
+        fun from(parent: ViewGroup, viewHolderType: ViewHolderType): ViewHolder {
+            val viewHolder = ViewHolderFactory.create(viewHolderType)
+            return ViewHolder(viewHolder.from(parent), viewHolder)
+        }
+
+    }
+}
+
+
+object ViewHolderFactory {
+    fun create(viewHolderType: ViewHolderType): ViewHolderInterface {
+        return when (viewHolderType) {
+            ViewHolderType.PLAYLIST_VIEW_HOLDER -> PlayListViewHolder()
+            ViewHolderType.PLAYLIST_VIEW_HOLDER_BOTTOM_SHEET -> BottomSheetViewHolder()
+        }
+    }
+}
+
+
+interface ViewHolderInterface {
 
     /**
      * method for binding the view with its data
      */
-    abstract fun bind(playLists: List<PlayListModel>, listener: OnClickListener)
+    fun bind(itemClickedPosition: Int, playLists: List<PlayListModel>, listener: OnClickListener)
 
-}
-
-interface PlayListViewHolderInterface {
     /**
-     * method reponsible for inflating the view using databinding
-     *
-     * @param parent to get context from
-     * @return ViewHolder object
+     * method responsible for inflating the view using data binding
+     * @return ViewDataBinding object
      */
 
-    fun from(parent: ViewGroup): ViewHolder
+    fun from(parent: ViewGroup): View
 
 }
 
-class PlayListViewHolder(private val binding: ViewDataBinding) : ViewHolder(binding) {
-    override fun bind(playLists: List<PlayListModel>, listener: OnClickListener) {
-        binding.setVariable(BR.playlistModel, playLists[adapterPosition])
-        binding.root.playlistContainer.setOnClickListener { listener.onClick(playLists, adapterPosition) }
+private class PlayListViewHolder : ViewHolderInterface {
+    private lateinit var binding: ViewDataBinding
+    override fun bind(itemClickedPosition: Int, playLists: List<PlayListModel>, listener: OnClickListener) {
+        if (::binding.isInitialized) {
+            binding.setVariable(BR.playlistModel, playLists[itemClickedPosition])
+            binding.root.playlistContainer.setOnClickListener { listener.onClick(playLists, itemClickedPosition) }
+        }
     }
 
 
-    companion object : PlayListViewHolderInterface {
-        override fun from(parent: ViewGroup): ViewHolder {
-            val inflater = LayoutInflater.from(parent.context)
-            val binding = DataBindingUtil.inflate<PlaylistLayoutBinding>(inflater, R.layout.playlist_layout, parent, false)
-            return PlayListViewHolder(binding)
-        }
+    override fun from(parent: ViewGroup): View {
+        val inflater = LayoutInflater.from(parent.context)
+        binding = DataBindingUtil.inflate<PlaylistLayoutBinding>(inflater, R.layout.playlist_layout, parent, false)
+        return binding.root
     }
 
 
 }
 
-class PlayListBottomSheetViewHolder(private val binding: ViewDataBinding) : ViewHolder(binding) {
-    override fun bind(playLists: List<PlayListModel>, listener: OnClickListener) {
-        binding.setVariable(BR.playlistModelB, playLists[adapterPosition])
-        //set for every song a number sequentially in bottom sheet
-        val songNumString: String = when (adapterPosition in 0..8) {
-            true -> "0${1 + adapterPosition}"
-            else -> "${1 + adapterPosition}"
+private class BottomSheetViewHolder : ViewHolderInterface {
+    private lateinit var binding: ViewDataBinding
+    override fun bind(itemClickedPosition: Int, playLists: List<PlayListModel>, listener: OnClickListener) {
+        if (::binding.isInitialized) {
+            binding.setVariable(BR.playlistModelB, playLists[itemClickedPosition])
+            //set for every song a number sequentially in bottom sheet
+            val songNumString: String = when (itemClickedPosition in 0..8) {
+                true -> "0${1 + itemClickedPosition}"
+                else -> "${1 + itemClickedPosition}"
+            }
+            binding.root.song_number_bottom_sheet.text = songNumString
+            binding.root.bottom_sheet_playlist_container.setOnClickListener { listener.onClick(playLists, itemClickedPosition) }
         }
-        binding.root.song_number_bottom_sheet.text = songNumString
-        binding.root.bottom_sheet_playlist_container.setOnClickListener { listener.onClick(playLists, adapterPosition) }
     }
 
-    companion object : PlayListViewHolderInterface {
-        override fun from(parent: ViewGroup): ViewHolder {
-            val inflater = LayoutInflater.from(parent.context)
-            val binding = DataBindingUtil.inflate<PlaylistLayoutBottomSheetBinding>(inflater, R.layout.playlist_layout_bottom_sheet, parent, false)
-            return PlayListBottomSheetViewHolder(binding)
-        }
+    override fun from(parent: ViewGroup): View {
+        val inflater = LayoutInflater.from(parent.context)
+        binding = DataBindingUtil.inflate<PlaylistLayoutBottomSheetBinding>(inflater, R.layout.playlist_layout_bottom_sheet, parent, false)
+        return binding.root
     }
+
 
 }

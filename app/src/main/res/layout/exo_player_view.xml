@@ -35,17 +35,17 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <TextView
-            android:id="@+id/songActor"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/medium_horizontal_spacing"
-            android:layout_marginTop="@dimen/medium_vertical_spacing"
-            android:layout_marginEnd="@dimen/medium_horizontal_spacing"
-            tools:text="Maher Zain"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/songName" />
+    <TextView
+        android:id="@+id/songActor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="@dimen/medium_vertical_spacing"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/songName"
+        tools:text="Maher Zain" />
 
         <TextView
             android:id="@+id/songName"
