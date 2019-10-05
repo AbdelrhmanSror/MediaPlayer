@@ -87,7 +87,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@null"
-                app:srcCompat="@drawable/previous" />
+                app:srcCompat="@drawable/previous_collapsed_notification" />
 
 
             <ToggleButton
@@ -95,7 +95,6 @@
                 android:layout_height="42dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
-                android:background="@drawable/pause_filled"
                 android:text=""
                 android:textOff=""
                 android:checked="true"
@@ -106,7 +105,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@null"
-                app:srcCompat="@drawable/next" />
+                app:srcCompat="@drawable/next_collapsed_notification" />
 
 
         </LinearLayout>

@@ -4,7 +4,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
@@ -15,23 +14,14 @@ import android.widget.SeekBar
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.example.mediaplayer.CHOSEN_SONG_INDEX
-import com.example.mediaplayer.FRAGMENT_PURPOSE
-import com.example.mediaplayer.LIST_SONG
-import com.example.mediaplayer.PlayerActions
-import com.example.mediaplayer.databinding.FragmentChosenSongBinding
-import com.example.mediaplayer.foregroundService.ChosenSongService
-import com.example.mediaplayer.foregroundService.ChosenSongService.SongBinder
+import com.example.mediaplayer.*
+import com.example.mediaplayer.databinding.ChosenSongFragmentBinding
+import com.example.mediaplayer.foregroundService.AudioForgregroundService
+import com.example.mediaplayer.foregroundService.AudioForgregroundService.SongBinder
 import com.example.mediaplayer.model.PlayListModel
 import com.example.mediaplayer.viewModels.ChosenSongViewModel
 import com.example.mediaplayer.viewModels.ChosenSongViewModelFactory
-import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
-import com.google.android.exoplayer2.source.TrackGroupArray
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray
-import com.google.android.exoplayer2.ui.PlayerView
-import kotlinx.android.synthetic.main.custom_controller.view.*
-import kotlinx.android.synthetic.main.exo_player_view.view.*
 
 
 data class MediaInfo(var playListModels: ArrayList<PlayListModel>? = arrayListOf(),
@@ -43,18 +33,19 @@ data class MediaInfo(var playListModels: ArrayList<PlayListModel>? = arrayListOf
 class ChosenSongFragment : Fragment() {
 
     private lateinit var viewModel: ChosenSongViewModel
-    private lateinit var binding: FragmentChosenSongBinding
+    private lateinit var binding: ChosenSongFragmentBinding
     private lateinit var foregroundIntent: Intent
     private lateinit var runnable: Runnable
     private val handler: Handler? = Handler()
 
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        binding = FragmentChosenSongBinding.inflate(inflater)
+        binding = ChosenSongFragmentBinding.inflate(inflater)
         setUpViewModel()
         startForeground()
+        binding.viewModel = viewModel
+        binding.lifecycleOwner = this
         return binding.root
     }
 
@@ -62,6 +53,7 @@ class ChosenSongFragment : Fragment() {
         arguments?.let {
             val playListModels: ArrayList<PlayListModel>? = arguments!!.getParcelableArrayList(LIST_SONG)
             val chosenSongIndex = arguments!!.getInt(CHOSEN_SONG_INDEX, 0)
+
             /**
              * the purpose of this variable is to decide if the intent is coming through notification or regular fragment
              * so if the action coming from notification we do not start foreground service because its already started
@@ -79,34 +71,25 @@ class ChosenSongFragment : Fragment() {
 
     private fun setUpViewModel() {
         val info = getMediaInfo()
-        val factory = ChosenSongViewModelFactory(info.playListModels, info.chosenSongIndex, info.fragmentPurpose)
+        val factory = ChosenSongViewModelFactory(info.playListModels, info.chosenSongIndex, info.fragmentPurpose, activity!!.application)
         viewModel = ViewModelProviders.of(this, factory).get(ChosenSongViewModel::class.java)
+
         with(viewModel)
         {
             //observe if the service is yet initialized or not  so we can synchronize it with ui
-            chosenSongService.observe(viewLifecycleOwner, Observer { service ->
+            audioForegroundService.observe(viewLifecycleOwner, Observer { service ->
                 service?.let {
-                    binding.playerView.initializePlayer(service)
+                    viewModel.initializePlayer()
                     //observe if the the the song was changed and based on that we reflect that change on ui
-                    chosenSongIndex.observe(viewLifecycleOwner, Observer { index ->
+                    chosenSongIndex.observe(viewLifecycleOwner, Observer {
                         // will be called and  then this live data also will be called responding to onSeekProcessed so we avoid looping forever by this if statement
-                        binding.playerView.media_seek_bar.updateMediaSeekBarVal(service.audioPlayer.player)
-                        //whenever the chosen song index change we update the song info to reflect the current index of song
-                        binding.playerView.songDetails(index)
+                        binding.playerLayout.playerController.mediaSeekBar.updateMediaSeekBarVal(service.audioPlayer.player)
                     })
 
                 }
 
             })
         }
-    }
-
-
-    private fun PlayerView.songDetails(index: Int) {
-        this.songName.text = viewModel.playListModels!![index].Title
-        this.songActor.text = viewModel.playListModels!![index].actor
-
-
     }
 
     private fun SeekBar.updateMediaSeekBarVal(player: SimpleExoPlayer) {
@@ -135,23 +118,6 @@ class ChosenSongFragment : Fragment() {
     }
 
 
-    private fun PlayerView.initializePlayer(service: ChosenSongService) {
-        val audioPlayer = service.audioPlayer
-        //Attaching the player to a view
-        this.player = audioPlayer.player
-        this.useController = true
-        this.showController()
-        this.controllerAutoShow = true
-        viewModel.setChosenSongIndex(player.currentWindowIndex)
-        audioPlayer.player.addListener(object : Player.EventListener {
-            override fun onTracksChanged(trackGroups: TrackGroupArray?, trackSelections: TrackSelectionArray?) {
-                viewModel.setChosenSongIndex(player.currentWindowIndex)
-
-            }
-        })
-
-
-    }
 
 
     override fun onStart() {
@@ -178,20 +144,15 @@ class ChosenSongFragment : Fragment() {
 
 
     private fun startForeground() {
-        foregroundIntent = Intent(activity, ChosenSongService::class.java)
+        foregroundIntent = Intent(activity, AudioForgregroundService::class.java)
         foregroundIntent.action = PlayerActions.ACTION_FOREGROUND.value
         foregroundIntent.putExtra(CHOSEN_SONG_INDEX, viewModel.chosenSongIndex.value)
         foregroundIntent.putParcelableArrayListExtra(LIST_SONG, viewModel.playListModels)
         // if the purpose fragment is coming from notification then the service is already started ,no need to start it again
-        if (viewModel.fragmentPurpose != PlayerActions.AUDIO_FOREGROUND_NOTIFICATION.value) {
-            //Start service:
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                activity!!.startForegroundService(foregroundIntent)
-
-            } else {
-                activity!!.startService(foregroundIntent)
-
-            }
+        //also the viewModel.isForegroundStarted to make sure when the configurations happen we do not start the foreground again
+        if (viewModel.fragmentPurpose != PlayerActions.AUDIO_FOREGROUND_NOTIFICATION.value && !viewModel.isForegroundStarted) {
+            activity?.startForeground(foregroundIntent)
+            viewModel.isForegroundStarted = true
         }
 
     }

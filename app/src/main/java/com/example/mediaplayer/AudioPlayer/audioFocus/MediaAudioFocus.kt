@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 
-package com.example.mediaplayer.foregroundService.audioFocus
+package com.example.mediaplayer.AudioPlayer.audioFocus
 
 import android.content.Context
 import android.media.AudioAttributes
@@ -55,7 +55,8 @@ class MediaAudioFocus private constructor(context: Context) : MediaAudioFocusCom
 
     override fun onAudioFocusChange(focusChange: Int) {
         when (focusChange) {
-            AudioManager.AUDIOFOCUS_GAIN ->
+            AudioManager.AUDIOFOCUS_GAIN -> {
+
                 if (playbackDelayed || resumeOnFocusGain) {
                     synchronized(focusLock) {
                         playbackDelayed = false
@@ -63,20 +64,20 @@ class MediaAudioFocus private constructor(context: Context) : MediaAudioFocusCom
                     }
                     audioFocusCallBacks.onAudioFocusGained()
                 }
+            }
             AudioManager.AUDIOFOCUS_LOSS -> {
                 synchronized(focusLock) {
                     resumeOnFocusGain = false
                     playbackDelayed = false
                 }
-                audioManager.abandonAudioFocusRequest(focusRequest)
-                audioFocusCallBacks.onAudioFocusLost()
+                audioFocusCallBacks.onAudioFocusLost(true)
             }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
                 synchronized(focusLock) {
                     resumeOnFocusGain = true
                     playbackDelayed = false
                 }
-                audioFocusCallBacks.onAudioFocusLost()
+                audioFocusCallBacks.onAudioFocusLost(false)
             }
 
         }
@@ -89,7 +90,9 @@ class MediaAudioFocus private constructor(context: Context) : MediaAudioFocusCom
         val res = audioManager.requestAudioFocus(focusRequest)
         synchronized(focusLock) {
             playbackNowAuthorized = when (res) {
-                AudioManager.AUDIOFOCUS_REQUEST_FAILED -> false
+                AudioManager.AUDIOFOCUS_REQUEST_FAILED -> {
+                    false
+                }
                 AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
                     audioFocusCallBacks.onAudioFocusGained()
                     true

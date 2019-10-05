@@ -1,4 +1,4 @@
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright 2019 Abdelrhman Sror. All rights reserved.
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -11,13 +11,16 @@
   ~ limitations under the License.
   -->
 
-<vector android:height="30dp"
-    android:tint="#EEF8FF"
-    android:viewportHeight="24.0"
-    android:viewportWidth="24.0"
-    android:width="30dp"
-    xmlns:android="http://schemas.android.com/apk/res/android">
-    <path
-        android:fillColor="#FF000000"
-        android:pathData="M10,16.5l6,-4.5 -6,-4.5v9zM12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM12,20c-4.41,0 -8,-3.59 -8,-8s3.59,-8 8,-8 8,3.59 8,8 -3.59,8 -8,8z" />
-</vector>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.favourite.FavouriteFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="@string/hello_blank_fragment" />
+
+</FrameLayout>

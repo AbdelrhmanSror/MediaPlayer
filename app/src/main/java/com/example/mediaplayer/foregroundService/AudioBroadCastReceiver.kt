@@ -11,29 +11,23 @@
  * limitations under the License.
  */
 
-package com.example.mediaplayer.foregroundService.audioFocus
+package com.example.mediaplayer.foregroundService
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
 import android.media.AudioManager
-import android.os.Build
+import com.example.mediaplayer.startForeground
 
-abstract class MediaAudioFocusCompat : AudioManager.OnAudioFocusChangeListener {
-    abstract fun requestAudioFocus(audioFocusCallBacks: AudioFocusCallBacks)
-
-}
-
-interface AudioFocusCallBacks {
-    fun onAudioFocusGained()
-    fun onAudioFocusLost()
-
-}
-
-object MediaAudioFocusCompatFactory {
-    fun create(context: Context): MediaAudioFocusCompat {
-        return when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> MediaAudioFocus.create(context)
-            else -> MediaAudioFocusPre.create(context)
+/**
+ * broadcast receiver to trigger when user plug off the headphone
+ */
+class AudioBroadCastReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
+            val intentService = Intent(context, AudioForgregroundService::class.java)
+            intentService.action = AudioManager.ACTION_AUDIO_BECOMING_NOISY
+            context.startForeground(intentService)
         }
-
     }
 }

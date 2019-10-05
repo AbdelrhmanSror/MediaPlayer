@@ -3,8 +3,8 @@ package com.example.mediaplayer.ui.playlist
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,12 +18,13 @@ import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import com.example.mediaplayer.*
 import com.example.mediaplayer.databinding.PlaylistFragmentBinding
-import com.example.mediaplayer.foregroundService.ChosenSongService
+import com.example.mediaplayer.foregroundService.AudioForgregroundService
 import com.example.mediaplayer.model.PlayListModel
 import com.example.mediaplayer.viewModels.PlayListViewModel
 import com.example.mediaplayer.viewModels.PlayListViewModelFactory
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.android.synthetic.main.bottom_sheet_layout.view.*
+import kotlinx.android.synthetic.main.playlist_layout_bottom_sheet.view.*
 import java.util.*
 
 
@@ -62,20 +63,21 @@ class PlayListFragment : Fragment() {
     }
 
     private fun prepareMusicList() {
-        val playListModels: List<PlayListModel>?
         val factory = PlayListViewModelFactory(activity!!.application)
         val playListViewModel = ViewModelProviders.of(activity!!, factory).get(PlayListViewModel::class.java)
-        playListModels = playListViewModel.playLists
-        if (playListModels.isNullOrEmpty()) {
-            binding.noAudioText.visibility = View.VISIBLE
-            binding.bottomSheetLayout.visibility = View.GONE
-            return
-        }
-        //display the main list of media
-        setUpPlayList(playListModels)
+        playListViewModel.playLists.observe(viewLifecycleOwner, androidx.lifecycle.Observer {
+            if (it.isNullOrEmpty()) {
+                binding.noAudioText.visibility = View.VISIBLE
+                binding.bottomSheetLayout.visibility = View.GONE
+            } else {
+                //display the main list of media
+                setUpPlayList(it)
 
-        //display the list of bottom sheet and setup bottom sheet behaviour
-        setUpBottomSheet(playListModels)
+                //display the list of bottom sheet and setup bottom sheet behaviour
+                setUpPlayListBottomSheet(it)
+            }
+
+        })
 
     }
 
@@ -89,7 +91,8 @@ class PlayListFragment : Fragment() {
         binding.playList.adapter = adapter
     }
 
-    private fun setUpBottomSheet(playListModels: List<PlayListModel>) {
+    private fun setUpPlayListBottomSheet(playListModels: List<PlayListModel>) {
+        var itemClickedPosition = 0
         val bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheetLayout.bottomSheet)
         binding.bottomSheetLayout.bottomSheet.setOnClickListener {
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
@@ -98,25 +101,33 @@ class PlayListFragment : Fragment() {
         //adapter for bottom sheet list
         val adapterBottomSheet = PlaylistAdapter(playListModels, ViewHolderType.PLAYLIST_VIEW_HOLDER_BOTTOM_SHEET, OnClickListener { playLists, itemClickIndex ->
             startForeground(playLists as ArrayList<PlayListModel>, itemClickIndex)
+            val view = binding.bottomSheetLayout.playlist_bottom_sheet.findViewHolderForAdapterPosition(itemClickIndex)
+            view?.itemView?.apply {
+                itemClickedPosition = itemClickIndex
+                equalizer_replacement.visibility = View.GONE
+                binding.bottomSheetLayout.playlist_bottom_sheet.setRecyclerListener {
+
+                    if (it.itemView == view) {
+                        Log.v("recleradapter", "${it.adapterPosition}")
+                        it.itemView.equalizer_replacement.visibility = View.GONE
+                    } else
+                        it.itemView.equalizer_replacement.visibility = View.VISIBLE
+
+                }
+            }
         })
         //setup recyclerview with adapter
         binding.bottomSheetLayout.playlist_bottom_sheet.adapter = adapterBottomSheet
     }
 
     private fun startForeground(playList: ArrayList<PlayListModel>, chosenSongIndex: Int) {
-        val foregroundIntent = Intent(activity, ChosenSongService::class.java)
+        val foregroundIntent = Intent(activity, AudioForgregroundService::class.java)
         foregroundIntent.action = PlayerActions.ACTION_FOREGROUND.value
         foregroundIntent.putExtra(CHOSEN_SONG_INDEX, chosenSongIndex)
         foregroundIntent.putParcelableArrayListExtra(LIST_SONG, playList)
-        //Start service:
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            activity!!.startForegroundService(foregroundIntent)
-
-        } else {
-            activity!!.startService(foregroundIntent)
-
-        }
+        activity?.startForeground(foregroundIntent)
     }
+
     private fun checkPermission() {
         // Here, thisActivity is the current activity
         if (ContextCompat.checkSelfPermission(Objects.requireNonNull<FragmentActivity>(activity),

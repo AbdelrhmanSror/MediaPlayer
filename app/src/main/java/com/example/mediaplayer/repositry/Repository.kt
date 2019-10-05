@@ -18,29 +18,27 @@ class Repository(private val application: Application) {
      */
     // query failed, handle error.
     // no media on the device
-    //if there is no album for this audio replace it with default one
-    val mediaData: List<PlayListModel>?
-        get() {
-            val contentResolver = application.contentResolver
-            val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-            val cursor = contentResolver.query(uri, null, null, null, null)
-            if (cursor == null || !cursor.moveToFirst()) {
-                return null
-            } else {
-                val playLists = ArrayList<PlayListModel>()
-                with(cursor)
-                {
-                    do {
-                        val audioUri = getAudioUri()
-                        playLists.add(PlayListModel(getAudioName(), getAudioArtist(), audioUri, getAlbumImageUri(), getDuration(audioUri)))
-                    } while (moveToNext())
-                    close()
-                    return playLists
-                }
-
-
+    fun mediaData(): List<PlayListModel>? {
+        val contentResolver = application.contentResolver
+        val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        val cursor = contentResolver.query(uri, null, null, null, null)
+        if (cursor == null || !cursor.moveToFirst()) {
+            return null
+        } else {
+            val playLists = ArrayList<PlayListModel>()
+            with(cursor)
+            {
+                do {
+                    val audioUri = getAudioUri()
+                    playLists.add(PlayListModel(getAudioName(), getAudioArtist(), audioUri, getAlbumImageUri(), getDuration(audioUri)))
+                } while (moveToNext())
+                close()
+                return playLists
             }
+
+
         }
+    }
 
 
     private fun Cursor.getAudioUri(): Uri {

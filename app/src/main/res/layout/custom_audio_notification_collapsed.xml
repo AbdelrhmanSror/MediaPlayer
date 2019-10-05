@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright 2019 Abdelrhman Sror. All rights reserved.
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_marginEnd="@dimen/medium_horizontal_spacing"
+    android:layout_height="64dp"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:layout_width="10dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/medium_vertical_spacing"
+        android:layout_weight="2"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/notification_title"
+            style="@style/TextAppearance.Compat.Notification.Title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLength="20"
+            android:maxLines="1"
+            tools:text="Ghafir" />
+
+        <TextView
+            android:id="@+id/notification_subtitle"
+            style="@style/TextAppearance.Compat.Notification.Info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLength="10"
+            android:maxLines="1"
+            tools:text="OurQuraan.Com-Khalid Galil" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center_vertical|start"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/notification_prev"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/dark_gray"
+            tools:background="@drawable/previous_collapsed_notification" />
+
+        <ImageButton
+            android:id="@+id/notification_play_pause_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/dark_gray"
+            android:layout_marginStart="@dimen/medium_horizontal_spacing"
+            android:layout_marginEnd="@dimen/medium_horizontal_spacing"
+            tools:background="@drawable/pause_collapsed_notification" />
+
+        <ImageButton
+            android:id="@+id/notification_next"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/dark_gray"
+            tools:background="@drawable/next_collapsed_notification" />
+
+        <ImageButton
+            android:id="@+id/notification_close"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/dark_gray"
+            android:layout_gravity="top|end"
+            android:scaleType="centerCrop"
+            tools:background="@drawable/close_collapsed_notification" />
+
+    </LinearLayout>
+</LinearLayout>

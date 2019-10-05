@@ -8,10 +8,10 @@ enum class PlayerActions(val value: String) {
     //for actions coming from clicking on notification to open ChosenSongFragment
     AUDIO_FOREGROUND_NOTIFICATION(BuildConfig.APPLICATION_ID + "playAudioNotification"),
 
-    PLAY_ACTION("${BuildConfig.APPLICATION_ID}.play"),
-    PAUSE_ACTION("${BuildConfig.APPLICATION_ID}.pause"),
+    PLAY_ACTION("${BuildConfig.APPLICATION_ID}.play_collapsed_notification"),
+    PAUSE_ACTION("${BuildConfig.APPLICATION_ID}.pause_collapsed_notification"),
     PREVIOUS_ACTION("${BuildConfig.APPLICATION_ID}.prev"),
-    NEXT_ACTION("${BuildConfig.APPLICATION_ID}.next"),
+    NEXT_ACTION("${BuildConfig.APPLICATION_ID}.next_collapsed_notification"),
     DELETE_ACTION("${BuildConfig.APPLICATION_ID}.delete"),
 
 }

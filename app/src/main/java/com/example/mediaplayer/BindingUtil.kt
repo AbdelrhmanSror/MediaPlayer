@@ -1,21 +1,25 @@
 package com.example.mediaplayer
 
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.databinding.BindingAdapter
+import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 /**
  * loading an image into imageView
+ * if there is no album for this audio replace it with default one
  */
 @BindingAdapter("imageUri")
 fun setImageUri(imageView: ImageView, imageUri: String?) {
     Glide.with(imageView.context)
-            .load(imageUri ?: R.drawable.default_image)
-            .apply(RequestOptions.circleCropTransform()
-    ).into(imageView)
-
+            .load(imageUri
+                    ?: R.drawable.default_image).transform(RoundedCorners(40).apply { RequestOptions.fitCenterTransform() }
+            ).into(imageView)
 }
 
 /**
@@ -25,6 +29,72 @@ fun setImageUri(imageView: ImageView, imageUri: String?) {
 fun setDuration(textView: TextView, milliSec: Long) {
     val minutes = milliSec.div(1000).div(60).toInt()
     val second = milliSec.div(1000).rem(60).toInt()
-    val durationFormat = textView.context.resources.getString(R.string.duration_format, minutes, second)
+    val durationFormat = textView.context.resources.getString(R.string.duration_format, minutes.twoDigitNumber(), second.twoDigitNumber())
     textView.text = durationFormat
+}
+
+/**
+ * binding adapter for changing the repeat button shape when user clicks on it
+ */
+@BindingAdapter("repeatMode")
+fun adjustRepeat(imageButton: ImageButton, enable: Boolean) {
+    imageButton.apply {
+        if (!enable) {
+            setImageResource(R.drawable.ic_repeat_transparent)
+        } else {
+            setImageResource(R.drawable.ic_repeat)
+
+        }
+    }
+}
+
+/**
+ * binding adapter for changing the shuffle button shape when user clicks on it
+ */
+@BindingAdapter("shuffleMode")
+fun adjustShuffle(imageButton: ImageButton, enable: Boolean) {
+    imageButton.apply {
+        if (!enable) {
+            setImageResource(R.drawable.ic_shuffle_transparent)
+        } else {
+            setImageResource(R.drawable.ic_shuffle)
+
+        }
+    }
+}
+
+/**
+ * binding adapter for changing the play pause button shape when user clicks on it
+ */
+@BindingAdapter("playPauseOption")
+fun playPauseAnimation(imageButton: ImageButton, playing: Boolean) {
+    imageButton.apply {
+        val animatedVector = if (playing) {
+            AnimatedVectorDrawableCompat.create(context, R.drawable.pause_play_media)
+
+        } else {
+            AnimatedVectorDrawableCompat.create(context, R.drawable.play_pause_media)
+        }
+        setImageDrawable(animatedVector)
+        animatedVector?.start()
+    }
+
+}
+
+/**
+ * binding adapter for changing the favourite button shape when user clicks on it
+ */
+@BindingAdapter("favouriteOption")
+fun favouriteAnimation(fab: FloatingActionButton, addToFavourite: Boolean) {
+    fab.apply {
+        val animatedVector = if (addToFavourite) {
+            AnimatedVectorDrawableCompat.create(context, R.drawable.like_drawable)
+
+        } else {
+            AnimatedVectorDrawableCompat.create(context, R.drawable.dislike_drawable)
+        }
+        setImageDrawable(animatedVector)
+        animatedVector?.start()
+    }
+
 }

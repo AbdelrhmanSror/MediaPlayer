@@ -11,9 +11,12 @@
  * limitations under the License.
  */
 
-package com.example.mediaplayer.foregroundService
+package com.example.mediaplayer.AudioPlayer
 
 import android.content.Context
+import android.content.IntentFilter
+import android.media.AudioManager
+import com.example.mediaplayer.foregroundService.AudioBroadCastReceiver
 import com.example.mediaplayer.model.PlayListModel
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.Player
@@ -35,7 +38,26 @@ class AudioPlayer(private val application: Context) {
         private set
     var currentAudioIndex = 0
         private set
+    /**
+     * intent filter to setup with broadcast receiver so when user disconnect the headphone we pause_collapsed_notification the player
+     */
+    private val intentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+    private val myNoisyAudioStreamReceiver = AudioBroadCastReceiver()
+    var repeatModeActivated: Boolean = false
+        set(value) {
+            if (value) {
+                player.repeatMode = Player.REPEAT_MODE_ALL
+            } else {
+                player.repeatMode = Player.REPEAT_MODE_OFF
 
+            }
+            field = value
+        }
+    var shuffleModeActivated: Boolean = false
+        set(value) {
+            player.shuffleModeEnabled = value
+            field = value
+        }
 
     companion object {
         fun create(application: Context): AudioPlayer {
@@ -43,7 +65,7 @@ class AudioPlayer(private val application: Context) {
         }
     }
 
-    //creating concatenating media source for media player to play
+    //creating concatenating media source for media player to play_collapsed_notification
     private fun buildMediaSource(audioUris: ArrayList<PlayListModel>?): MediaSource? {
         // Produces DataSource instances through which media data is loaded.
         val dataSourceFactory = DefaultDataSourceFactory(application,
@@ -61,13 +83,16 @@ class AudioPlayer(private val application: Context) {
 
     fun setUpPlayer(audioUris: ArrayList<PlayListModel>, chosenAudioIndex: Int) {
         currentAudioIndex = chosenAudioIndex
+        android.util.Log.v("playerrepeat", "${player.repeatMode}")
         player.apply {
-            //to control to player the audio or video right now or wait user to play the audio himself
+            //to control to player the audio or video right now or wait user to play_collapsed_notification the audio himself
             playWhenReady = true
             val mediaSource = buildMediaSource(audioUris)
             prepare(mediaSource)
             //to control the starter location of audio
             seekTo(chosenAudioIndex, 0)
+            application.registerReceiver(myNoisyAudioStreamReceiver, intentFilter)
+
         }
     }
 
@@ -82,7 +107,7 @@ class AudioPlayer(private val application: Context) {
                     when {
                         isPlayerNext() || isPlayerPrevious() -> {
                             currentAudioIndex = currentWindowIndex
-                            onPlayerStateChanged.onAudioStateChanged()
+                            onPlayerStateChanged.onAudioChanged()
 
                         }
                     }
@@ -91,13 +116,15 @@ class AudioPlayer(private val application: Context) {
                 override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
                     when {
                         isPlayerStopped() -> {
+                            application.unregisterReceiver(myNoisyAudioStreamReceiver)
                             isPlaying = false
-                            onPlayerStateChanged.onAudioStateChanged()
+                            onPlayerStateChanged.onStop()
 
                         }
                         isPlayerPlaying() -> {
+                            application.registerReceiver(myNoisyAudioStreamReceiver, intentFilter)
                             isPlaying = true
-                            onPlayerStateChanged.onAudioStateChanged()
+                            onPlayerStateChanged.onPlay()
 
                         }
 
@@ -165,9 +192,8 @@ class AudioPlayer(private val application: Context) {
 }
 
 interface OnPlayerStateChanged {
-    /**
-     * whenever the state of audio changed this method will be called on playing , pausing,previous,next
-     */
-    fun onAudioStateChanged()
+    fun onPlay()
+    fun onStop()
+    fun onAudioChanged()
 
 }

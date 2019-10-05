@@ -11,8 +11,13 @@
   ~ limitations under the License.
   -->
 
-<selector xmlns:android="http://schemas.android.com/apk/res/android" android:enterFadeDuration="@android:integer/config_shortAnimTime" android:exitFadeDuration="@android:integer/config_shortAnimTime">
-    <item android:state_checked="false" android:drawable="@drawable/pause_outline" />
-    <item android:state_checked="true" android:drawable="@drawable/play_outline" />
-
-</selector>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@id/favourite_dest"
+        android:icon="@drawable/ic_favorite"
+        android:title="@string/favourite" />
+    <item
+        android:id="@id/playList_dest"
+        android:icon="@drawable/ic_playlist"
+        android:title="@string/playList" />
+</menu>

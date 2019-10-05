@@ -1,8 +1,47 @@
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
 xmlns:app="http://schemas.android.com/apk/res-auto"
-android:id="@+id/nav_host_fragment"
-android:name="androidx.navigation.fragment.NavHostFragment"
-android:layout_width="match_parent"
-android:layout_height="match_parent"
-app:defaultNavHost="true"
-app:navGraph="@navigation/navigaion" />
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/coordinator"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".ui.MainActivity">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/AppTheme.AppBarOverlay">
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@color/blue"
+                app:popupTheme="@style/AppTheme.PopupOverlay" />
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <fragment
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            android:id="@+id/nav_host_fragment"
+            android:name="androidx.navigation.fragment.NavHostFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:defaultNavHost="true" />
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottom_nav_view"
+            android:layout_width="match_parent"
+            android:layout_gravity="bottom"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            app:itemIconTint="@drawable/bottom_nav_state"
+            android:elevation="8dp"
+            app:itemTextColor="@drawable/bottom_nav_state"
+            app:menu="@menu/player_menu" />
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+
+</layout>

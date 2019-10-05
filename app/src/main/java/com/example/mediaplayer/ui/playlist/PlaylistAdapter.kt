@@ -15,6 +15,7 @@ class PlaylistAdapter(private val playLists: List<PlayListModel>
 
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+
         holder.bind(position, playLists, listener)
     }
 
@@ -25,6 +26,9 @@ class PlaylistAdapter(private val playLists: List<PlayListModel>
 
 }
 
+/**
+ * click listener for every item in recycler view
+ */
 class OnClickListener(val clickListener: (playLists: List<PlayListModel>, itemClickIndex: Int) -> Unit) {
     fun onClick(playLists: List<PlayListModel>, itemClickIndex: Int) = clickListener(playLists, itemClickIndex)
 }

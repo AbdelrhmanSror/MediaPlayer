@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/navigaion"
-    app:startDestination="@id/playListFragment">
+    app:startDestination="@id/playList_dest"
+    tools:ignore="UnusedNavigation">
 
     <fragment
-        android:id="@+id/playListFragment"
+        android:id="@+id/playList_dest"
         android:name="com.example.mediaplayer.ui.playlist.PlayListFragment"
         android:label="PlayListFragment">
         <action
             android:id="@+id/action_playListFragment_to_chosenSongFragment"
-            app:destination="@id/chosenSongFragment"
+            app:destination="@id/chosenSong_dest"
             app:enterAnim="@animator/slide_in_right"
             app:exitAnim="@animator/slide_out_left"
             app:launchSingleTop="true"
@@ -19,20 +21,25 @@
 
     </fragment>
     <fragment
-        android:id="@+id/chosenSongFragment"
+        android:id="@+id/chosenSong_dest"
         android:name="com.example.mediaplayer.ui.chosenSong.ChosenSongFragment"
         android:label="ChosenSongFragment">
         <action
             android:id="@+id/action_chosenSongFragment_to_playListFragment"
-            app:destination="@id/playListFragment"
+            app:destination="@id/playList_dest"
             app:enterAnim="@animator/slide_in_right"
             app:exitAnim="@animator/slide_out_left"
             app:launchSingleTop="false"
             app:popEnterAnim="@animator/slide_in_left"
             app:popExitAnim="@animator/slide_out_right"
-            app:popUpTo="@+id/playListFragment" />
+            app:popUpTo="@+id/playList_dest" />
 
     </fragment>
+    <fragment
+        android:id="@+id/favourite_dest"
+        android:name="com.example.mediaplayer.ui.favourite.FavouriteFragment"
+        android:label="fragment_favourite"
+        tools:layout="@layout/fragment_favourite" />
 
 
 </navigation>

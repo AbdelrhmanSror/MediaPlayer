@@ -90,6 +90,9 @@ private class PlayListViewHolder : ViewHolderInterface {
     }
 
 
+    /**
+     * return the view that viewHolder will hold
+     */
     override fun from(parent: ViewGroup): View {
         val inflater = LayoutInflater.from(parent.context)
         binding = DataBindingUtil.inflate<PlaylistLayoutBinding>(inflater, R.layout.playlist_layout, parent, false)

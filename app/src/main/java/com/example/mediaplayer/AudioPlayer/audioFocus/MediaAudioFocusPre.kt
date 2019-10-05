@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 
-package com.example.mediaplayer.foregroundService.audioFocus
+package com.example.mediaplayer.AudioPlayer.audioFocus
 
 import android.content.Context
 import android.media.AudioManager
@@ -43,7 +43,7 @@ class MediaAudioFocusPre(context: Context) : MediaAudioFocusCompat() {
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             audioFocusCallBacks.onAudioFocusGained()
         } else if (result == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
-            audioFocusCallBacks.onAudioFocusLost()
+            audioFocusCallBacks.onAudioFocusLost(true)
         }
     }
 
@@ -58,15 +58,15 @@ class MediaAudioFocusPre(context: Context) : MediaAudioFocusCompat() {
                 // Permanent loss of audio focus
                 // Pause playback immediately
                 abandonAudioFocus()
-                audioFocusCallBacks.onAudioFocusLost()
+                audioFocusCallBacks.onAudioFocusLost(true)
             }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-                audioFocusCallBacks.onAudioFocusLost()
+                audioFocusCallBacks.onAudioFocusLost(false)
 
             }
             AudioManager.AUDIOFOCUS_GAIN -> {
                 // Your app has been granted audio focus again
-                audioFocusCallBacks.onAudioFocusLost()
+                audioFocusCallBacks.onAudioFocusGained()
 
             }
         }

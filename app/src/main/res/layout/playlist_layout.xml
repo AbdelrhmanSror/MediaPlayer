@@ -28,7 +28,7 @@
                 <ImageView
                     android:id="@+id/AlbumArt"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="100dp"
                     android:layout_weight="1"
                     app:imageUri="@{playlistModel.albumCoverUri}"
                     tools:layout_height="80dp"
@@ -62,14 +62,6 @@
                         tools:text="Calvin Harris" />
 
                 </LinearLayout>
-
-                <!-- <ImageButton
-                     android:layout_width="wrap_content"
-                     android:background="@color/blue"
-                     android:layout_height="wrap_content"
-                     android:layout_gravity="center"
-                     app:srcCompat="@drawable/play" />
- -->
             </LinearLayout>
         </androidx.cardview.widget.CardView>
     </RelativeLayout>

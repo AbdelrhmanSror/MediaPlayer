@@ -4,20 +4,23 @@ import android.app.Notification
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.os.Binder
 import android.os.IBinder
 import androidx.core.app.NotificationManagerCompat
+import com.example.mediaplayer.AudioPlayer.AudioPlayer
+import com.example.mediaplayer.AudioPlayer.OnPlayerStateChanged
+import com.example.mediaplayer.AudioPlayer.audioFocus.AudioFocusCallBacks
+import com.example.mediaplayer.AudioPlayer.audioFocus.MediaAudioFocusCompat
+import com.example.mediaplayer.AudioPlayer.audioFocus.MediaAudioFocusCompatFactory
 import com.example.mediaplayer.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.LIST_SONG
 import com.example.mediaplayer.NOTIFICATION_ID
 import com.example.mediaplayer.PlayerActions
-import com.example.mediaplayer.foregroundService.audioFocus.AudioFocusCallBacks
-import com.example.mediaplayer.foregroundService.audioFocus.MediaAudioFocusCompat
-import com.example.mediaplayer.foregroundService.audioFocus.MediaAudioFocusCompatFactory
 import com.example.mediaplayer.ui.chosenSong.MediaInfo
 
 
-class ChosenSongService : Service() {
+class AudioForgregroundService : Service() {
     lateinit var audioPlayer: AudioPlayer
         private set
     private lateinit var application: Context
@@ -39,11 +42,13 @@ class ChosenSongService : Service() {
      * because user himself paused the player so it makes no sense to continue playing as it was already paused
      */
     private var prevPlayerState = false
+    //var indicates if the focus is permanently lost so we can request focus again
+    private var isFocusPermanentLost = false
 
 
     override fun onCreate() {
         // The service is being created.
-        mNotificationManager = NotificationManagerCompat.from(this@ChosenSongService)
+        mNotificationManager = NotificationManagerCompat.from(this@AudioForgregroundService)
         application = applicationContext
         mediaAudioFocus = MediaAudioFocusCompatFactory.create(applicationContext)
         audioPlayer = AudioPlayer.create(applicationContext)
@@ -51,27 +56,38 @@ class ChosenSongService : Service() {
     }
 
 
+    private fun setNotification(): Notification {
+        return foregroundNotification.build(audioPlayer.isPlaying, audioPlayer.currentAudioIndex)
+    }
+
     //handle the player when actions happen in notification
     private fun handlePlayerEvent() {
         audioPlayer.setOnPlayerStateChanged(object : OnPlayerStateChanged {
-            override fun onAudioStateChanged() {
-                mNotificationManager.notify(NOTIFICATION_ID, getNotification())
+            override fun onAudioChanged() {
+                mNotificationManager.notify(NOTIFICATION_ID, setNotification())
             }
 
+            override fun onPlay() {
+                if (isFocusPermanentLost)
+                    requestFocus()
+                startForeground(NOTIFICATION_ID, setNotification())
+
+
+            }
+
+            override fun onStop() {
+                mNotificationManager.notify(NOTIFICATION_ID, setNotification())
+
+            }
         })
     }
 
 
     internal inner class SongBinder : Binder() {
-        val service: ChosenSongService
-            get() = this@ChosenSongService
+        val service: AudioForgregroundService
+            get() = this@AudioForgregroundService
 
     }
-
-    private fun getNotification(): Notification {
-        return foregroundNotification.build(audioPlayer.isPlaying, audioPlayer.currentAudioIndex)
-    }
-
 
     /**data class can be founded in chosenSongFragment*/
     private fun intentData(intent: Intent): MediaInfo {
@@ -90,13 +106,11 @@ class ChosenSongService : Service() {
 
             }
 
-            override fun onAudioFocusLost() {
+            override fun onAudioFocusLost(Permanent: Boolean) {
                 prevPlayerState = audioPlayer.isPlaying
                 audioPlayer.pause()
-
+                isFocusPermanentLost = Permanent
             }
-
-
         })
     }
 
@@ -108,38 +122,36 @@ class ChosenSongService : Service() {
                     {
                         foregroundNotification = ForegroundNotification(playListModels, application)
                         handlePlayerEvent()
-                        //so we do not setup the player again when any configurations happen
+                        //so we do not setup the player again when any configurations happen in activity
                         if (!isServiceSetuped) {
                             audioPlayer.setUpPlayer(playListModels!!, chosenSongIndex)
                             isServiceSetuped = true
-                        } else
+                        } else {
                             audioPlayer.seekTo(chosenSongIndex)
+                            //if the player was being stopped then play
+                            if (!audioPlayer.isPlaying) {
+                                audioPlayer.play()
+                            }
+                        }
                         requestFocus()
-                        startForeground(NOTIFICATION_ID, getNotification())
+                        startForeground(NOTIFICATION_ID, setNotification())
                     }
 
                 }
-                PlayerActions.PAUSE_ACTION.value -> pausePlayer()
-                PlayerActions.PLAY_ACTION.value -> startPlayer()
+                PlayerActions.PAUSE_ACTION.value, AudioManager.ACTION_AUDIO_BECOMING_NOISY -> audioPlayer.pause()
+                PlayerActions.PLAY_ACTION.value -> audioPlayer.play()
                 PlayerActions.PREVIOUS_ACTION.value -> audioPlayer.previous()
                 PlayerActions.NEXT_ACTION.value -> audioPlayer.next()
-                PlayerActions.DELETE_ACTION.value -> stopSelf()
+                PlayerActions.DELETE_ACTION.value -> {
+                    //remove the notification and stop the service when user press the close button on notification
+                    stopForeground(false)
+                    audioPlayer.pause()
+                    mNotificationManager.cancelAll()
+                    stopSelf()
+                }
+
             }
         }
-    }
-
-    private fun startPlayer() {
-        requestFocus()
-        //we start foreground again because we stop it in pause action
-        startForeground(NOTIFICATION_ID, getNotification())
-        audioPlayer.play()
-    }
-
-    private fun pausePlayer() {
-        audioPlayer.pause()
-        //stop the foreground mode so if user can cancel the the media notification by swiping it away
-        // as a result ,delete intent will be triggered so we kill the service
-        stopForeground(false)
     }
 
     override fun onStartCommand(intent: Intent?,
@@ -157,4 +169,5 @@ class ChosenSongService : Service() {
         audioPlayer.release()
         super.onDestroy()
     }
+
 }

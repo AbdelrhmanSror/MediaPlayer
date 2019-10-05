@@ -8,6 +8,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/bottomSheet"
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="500dp"
         android:background="@color/indigo"
@@ -31,7 +32,6 @@
             android:layout_height="30dp"
             android:layout_marginTop="@dimen/large_vertical_spacing"
             android:layout_marginEnd="@dimen/large_horizontal_spacing"
-            android:background="@drawable/play_pause_bottom_sheet"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
