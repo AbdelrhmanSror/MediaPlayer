@@ -10,7 +10,7 @@
             type="com.example.mediaplayer.viewModels.ChosenSongViewModel" />
     </data>
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/coordinator"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -20,23 +20,17 @@
         <include
             android:id="@+id/playerLayout"
             layout="@layout/player_layout"
-            app:viewModel="@{viewModel}"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginBottom="100dp"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:viewModel="@{viewModel}" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center"
-            android:layout_margin="@dimen/large_horizontal_spacing"
-            android:backgroundTint="@color/white"
-            android:onClick="@{()->viewModel.addToFavouriteListener()}"
-            app:borderWidth="0dp"
-            app:favouriteOption="@{viewModel.favouriteTriggered}"
-            app:srcCompat="@drawable/like_drawable" />
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 
 </layout>

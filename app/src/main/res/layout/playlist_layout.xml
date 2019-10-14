@@ -70,7 +70,7 @@
 
         <variable
             name="playlistModel"
-            type="com.example.mediaplayer.model.PlayListModel" />
+            type="com.example.mediaplayer.model.SongModel" />
 
     </data>
 

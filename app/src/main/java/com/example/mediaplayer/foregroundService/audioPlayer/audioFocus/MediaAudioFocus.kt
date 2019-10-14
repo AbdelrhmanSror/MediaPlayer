@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 
-package com.example.mediaplayer.AudioPlayer.audioFocus
+package com.example.mediaplayer.foregroundService.audioPlayer.audioFocus
 
 import android.content.Context
 import android.media.AudioAttributes

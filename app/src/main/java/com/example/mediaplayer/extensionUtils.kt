@@ -17,6 +17,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import android.widget.ImageButton
+import androidx.paging.PagedList
+import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 
 
 /**
@@ -43,4 +46,29 @@ fun Int.twoDigitNumber(): String {
     } else
         this.toString()
 }
+
+fun <T> PagedList<out T>?.toArrayList(): List<T> {
+
+    return if (this.isNullOrEmpty()) {
+        emptyList()
+    } else {
+        ArrayList(this)
+    }
+}
+
+//start animation of like or dislike audio
+fun ImageButton.startFavouriteAnimation(addToFavourite: Boolean) {
+    this.apply {
+        val animatedVector = if (addToFavourite) {
+            AnimatedVectorDrawableCompat.create(context, R.drawable.ic_favourite)
+
+        } else {
+            AnimatedVectorDrawableCompat.create(context, R.drawable.ic_favourite_stroke)
+        }
+        setImageDrawable(animatedVector)
+        animatedVector?.start()
+    }
+
+}
+
 

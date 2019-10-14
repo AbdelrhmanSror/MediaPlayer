@@ -1,43 +1,19 @@
 package com.example.mediaplayer.foregroundService
 
-import android.app.*
-import android.app.NotificationChannel
+import android.app.Notification
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
-import android.os.Build
 import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.example.mediaplayer.*
-import com.example.mediaplayer.model.PlayListModel
+import com.example.mediaplayer.model.SongModel
 import java.util.*
 
-class NotificationChannel : Application() {
-
-    override fun onCreate() {
-        super.onCreate()
-        createNotificationChannel()
-    }
-
-    private fun createNotificationChannel() {
-        val notifyManager = NotificationManagerCompat.from(this)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Create a ForegroundNotification
-            val notificationChannel = NotificationChannel(CHANNEL_ID,
-                    "Media Notification", NotificationManager.IMPORTANCE_HIGH).apply {
-                setSound(null, null)
-
-            }
-            notificationChannel.description = "MediaPlayer"
-            notifyManager.createNotificationChannel(notificationChannel)
-        }
-    }
-}
-
-class ForegroundNotification(private val playListModels: ArrayList<PlayListModel>?
+class ForegroundNotification(private val songModels: ArrayList<SongModel>?
                              , private val context: Context) {
     private val customCollapsedNotification = RemoteViews(context.packageName, R.layout.custom_audio_notification_collapsed).apply {
         setImageViewResource(R.id.notification_prev, R.drawable.previous_collapsed_notification)
@@ -68,9 +44,9 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
      * @return notification
      */
     fun build(isPlaying: Boolean, chosenSongIndex: Int): Notification {
-        val item = playListModels!![chosenSongIndex]
+        val item = songModels!![chosenSongIndex]
         customCollapsedNotification.apply {
-            setTextViewText(R.id.notification_title, item.Title)
+            setTextViewText(R.id.notification_title, item.title)
             setTextViewText(R.id.notification_subtitle, item.actor)
             when (isPlaying) {
                 true -> {
@@ -85,7 +61,7 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
         }
 
         customExpandedNotification.apply {
-            setTextViewText(R.id.notification_title, item.Title)
+            setTextViewText(R.id.notification_title, item.title)
             setTextViewText(R.id.notification_subtitle, item.actor)
             when (isPlaying) {
                 true -> {
@@ -102,7 +78,7 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
                 ?: BitmapFactory.decodeResource(context.resources, R.drawable.default_image)
         return NotificationCompat.Builder(context, CHANNEL_ID)
                 // the metadata for the currently playing track
-                .setSubText(item.Title)
+                .setSubText(item.title)
                 .setCustomContentView(customCollapsedNotification)
                 .setCustomBigContentView(customExpandedNotification)
                 // Make the transport controls visible on the lockscreen
@@ -117,13 +93,14 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setDeleteIntent(pendingIntentDelete())
                 .setLargeIcon(albumCoverImage)
+                .setOnlyAlertOnce(true)
                 .build()
     }
 
     private fun notificationClickedIntent(chosenSongIndex: Int): Intent {
         val intent = Intent(context, MainActivity::class.java)
         val bundle = Bundle()
-        bundle.putParcelableArrayList(LIST_SONG, playListModels)
+        bundle.putParcelableArrayList(LIST_SONG, songModels)
         bundle.putInt(CHOSEN_SONG_INDEX, chosenSongIndex)
         bundle.putString(FRAGMENT_PURPOSE, PlayerActions.AUDIO_FOREGROUND_NOTIFICATION.value)
         intent.putExtras(bundle)
@@ -131,35 +108,35 @@ class ForegroundNotification(private val playListModels: ArrayList<PlayListModel
     }
 
     private fun pendingIntentPause(): PendingIntent {
-        val pauseIntent = Intent(context, AudioForgregroundService::class.java)
+        val pauseIntent = Intent(context, AudioForegroundService::class.java)
         pauseIntent.action = PlayerActions.PAUSE_ACTION.value
         return PendingIntent.getService(context,
                 NOTIFICATION_ID, pauseIntent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
     private fun pendingIntentDelete(): PendingIntent {
-        val deleteIntent = Intent(context, AudioForgregroundService::class.java)
+        val deleteIntent = Intent(context, AudioForegroundService::class.java)
         deleteIntent.action = PlayerActions.DELETE_ACTION.value
         return PendingIntent.getService(context,
                 NOTIFICATION_ID, deleteIntent, 0)
     }
 
     private fun pendingIntentPrevious(): PendingIntent {
-        val prevIntent = Intent(context, AudioForgregroundService::class.java)
+        val prevIntent = Intent(context, AudioForegroundService::class.java)
         prevIntent.action = PlayerActions.PREVIOUS_ACTION.value
         return PendingIntent.getService(context,
                 NOTIFICATION_ID, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
     private fun pendingIntentPlay(): PendingIntent {
-        val playIntent = Intent(context, AudioForgregroundService::class.java)
+        val playIntent = Intent(context, AudioForegroundService::class.java)
         playIntent.action = PlayerActions.PLAY_ACTION.value
         return PendingIntent.getService(context,
                 NOTIFICATION_ID, playIntent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
     private fun pendingIntentNext(): PendingIntent {
-        val nextIntent = Intent(context, AudioForgregroundService::class.java)
+        val nextIntent = Intent(context, AudioForegroundService::class.java)
         nextIntent.action = PlayerActions.NEXT_ACTION.value
         return PendingIntent.getService(context,
                 NOTIFICATION_ID, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT)

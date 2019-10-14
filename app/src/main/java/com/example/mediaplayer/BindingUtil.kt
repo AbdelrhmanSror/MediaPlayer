@@ -1,5 +1,6 @@
 package com.example.mediaplayer
 
+import android.util.Log
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
@@ -8,7 +9,7 @@ import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.exoplayer2.Player
 
 /**
  * loading an image into imageView
@@ -16,9 +17,11 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
  */
 @BindingAdapter("imageUri")
 fun setImageUri(imageView: ImageView, imageUri: String?) {
+    Log.v("imageadapterpor", "hi")
+
     Glide.with(imageView.context)
             .load(imageUri
-                    ?: R.drawable.default_image).transform(RoundedCorners(40).apply { RequestOptions.fitCenterTransform() }
+                    ?: R.drawable.default_image).transform(RoundedCorners(40).apply { RequestOptions.centerCropTransform() }
             ).into(imageView)
 }
 
@@ -37,13 +40,13 @@ fun setDuration(textView: TextView, milliSec: Long) {
  * binding adapter for changing the repeat button shape when user clicks on it
  */
 @BindingAdapter("repeatMode")
-fun adjustRepeat(imageButton: ImageButton, enable: Boolean) {
+fun adjustRepeat(imageButton: ImageButton, repeatMode: Int) {
     imageButton.apply {
-        if (!enable) {
-            setImageResource(R.drawable.ic_repeat_transparent)
-        } else {
+        if (repeatMode == Player.REPEAT_MODE_ALL) {
             setImageResource(R.drawable.ic_repeat)
 
+        } else {
+            setImageResource(R.drawable.ic_repeat_transparent)
         }
     }
 }
@@ -70,10 +73,34 @@ fun adjustShuffle(imageButton: ImageButton, enable: Boolean) {
 fun playPauseAnimation(imageButton: ImageButton, playing: Boolean) {
     imageButton.apply {
         val animatedVector = if (playing) {
-            AnimatedVectorDrawableCompat.create(context, R.drawable.pause_play_media)
+            AnimatedVectorDrawableCompat.create(context, R.drawable.play_pause_media)
 
         } else {
-            AnimatedVectorDrawableCompat.create(context, R.drawable.play_pause_media)
+            AnimatedVectorDrawableCompat.create(context, R.drawable.pause_play_media)
+        }
+        setImageDrawable(animatedVector)
+        animatedVector?.start()
+
+    }
+}
+
+
+/**
+ * binding adapter for changing the favourite button shape when user clicks on it
+ */
+@BindingAdapter("startFavouriteAnimation")
+fun startFavouriteAnimation(imageButton: ImageButton, addToFavourite: Boolean) {
+    Log.v("heyfroObserver", "startfavouirte")
+    imageButton.apply {
+
+        val animatedVector = if (addToFavourite) {
+            Log.v("favouriteSize", "livedatafavourie")
+            AnimatedVectorDrawableCompat.create(context, R.drawable.ic_favourite)
+
+        } else {
+            Log.v("favouriteSize", "livedatafavourienot")
+
+            AnimatedVectorDrawableCompat.create(context, R.drawable.ic_favourite_stroke)
         }
         setImageDrawable(animatedVector)
         animatedVector?.start()
@@ -81,20 +108,11 @@ fun playPauseAnimation(imageButton: ImageButton, playing: Boolean) {
 
 }
 
-/**
- * binding adapter for changing the favourite button shape when user clicks on it
- */
-@BindingAdapter("favouriteOption")
-fun favouriteAnimation(fab: FloatingActionButton, addToFavourite: Boolean) {
-    fab.apply {
-        val animatedVector = if (addToFavourite) {
-            AnimatedVectorDrawableCompat.create(context, R.drawable.like_drawable)
-
-        } else {
-            AnimatedVectorDrawableCompat.create(context, R.drawable.dislike_drawable)
-        }
-        setImageDrawable(animatedVector)
-        animatedVector?.start()
+@BindingAdapter("setInitialFavourite")
+fun setInitialFavourite(imageButton: ImageButton, isFavourite: Boolean) {
+    if (!isFavourite) {
+        imageButton.setImageResource(R.drawable.ic_favourite_stroke)
+    } else {
+        imageButton.setImageResource(R.drawable.ic_favourite)
     }
-
 }

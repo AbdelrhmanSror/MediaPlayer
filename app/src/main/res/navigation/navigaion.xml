@@ -39,7 +39,11 @@
         android:id="@+id/favourite_dest"
         android:name="com.example.mediaplayer.ui.favourite.FavouriteFragment"
         android:label="fragment_favourite"
-        tools:layout="@layout/fragment_favourite" />
+        tools:layout="@layout/fragment_favourite">
+        <action
+            android:id="@+id/action_favourite_dest_to_chosenSong_dest"
+            app:destination="@id/chosenSong_dest" />
+    </fragment>
 
 
 </navigation>

@@ -3,7 +3,9 @@
     <array name="preloaded_fonts" translatable="false">
         <item>@font/arbutus</item>
         <item>@font/archivo_black</item>
+        <item>@font/cairo_semibold</item>
         <item>@font/patua_one</item>
         <item>@font/roboto</item>
+        <item>@font/scada_italic</item>
     </array>
 </resources>

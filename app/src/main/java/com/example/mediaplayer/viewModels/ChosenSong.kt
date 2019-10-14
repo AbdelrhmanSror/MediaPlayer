@@ -2,171 +2,164 @@ package com.example.mediaplayer.viewModels
 
 import android.app.Application
 import android.graphics.drawable.Drawable
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.*
-import com.example.mediaplayer.AudioPlayer.AudioPlayer
 import com.example.mediaplayer.R
-import com.example.mediaplayer.foregroundService.AudioForgregroundService
-import com.example.mediaplayer.model.PlayListModel
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.source.TrackGroupArray
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray
-import java.util.*
+import com.example.mediaplayer.database.toSongModel
+import com.example.mediaplayer.foregroundService.AudioForegroundService
+import com.example.mediaplayer.model.SongModel
+import com.example.mediaplayer.repositry.Repository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-class ChosenSongViewModel(val playListModels: ArrayList<PlayListModel>?
-                          , chosenSongIndex: Int, val fragmentPurpose: String?, application: Application) : AndroidViewModel(application) {
-    private var audioPlayer: AudioPlayer? = null
-    var isLikedTemp = false
-    var isForegroundStarted: Boolean = false
-    //to observe the changes with song index
-    private val _chosenSongIndex = MutableLiveData<Int>()
-    val chosenSongIndex: LiveData<Int>
-        get() = _chosenSongIndex
-    private val _chosenSongService = MutableLiveData<AudioForgregroundService>()
-    val audioForegroundService: LiveData<AudioForgregroundService>
-        get() = _chosenSongService
-    //whenever the chosen song index change we update the song info to reflect the current index of song
-    val songName = Transformations.map(_chosenSongIndex)
-    {
-        playListModels!![it].Title
-    }
-    val songActor = Transformations.map(_chosenSongIndex)
-    {
-        playListModels!![it].actor
-    }
-    val albumArtImage = Transformations.map(_chosenSongIndex)
-    {
-        playListModels!![it].albumCoverUri
-    }
-    val playerDuration: LiveData<Long> = Transformations.map(_chosenSongIndex)
-    {
-        playListModels!![_chosenSongIndex.value!!].duration
+class ChosenSongViewModel(application: Application) : AndroidViewModel(application) {
+
+
+    private val repository = Repository(application)
+
+    private val _audioService = MutableLiveData<AudioForegroundService>()
+
+    val audioForegroundService: LiveData<AudioForegroundService>
+        get() = _audioService
+
+    val listOfSong: LiveData<List<SongModel>> = Transformations.map(repository.getListOfSongs()) {
+        Log.v("listofsong", "hey")
+        it.toSongModel()
     }
 
-    val repeatMode: LiveData<Boolean>
-        get() = _repeatMode
-
-    val shuffleMode: LiveData<Boolean>
-        get() = _shuffleMode
-
-    private val _repeatMode = MutableLiveData<Boolean>()
-    private val _shuffleMode = MutableLiveData<Boolean>()
-
-
-    private val _playPauseTriggered = MutableLiveData<Boolean>()
-    val playPauseTriggered = Transformations.map(_playPauseTriggered)
-    {
-        if (it) {
-            audioPlayer?.pause()
-        } else {
-            audioPlayer?.play()
+    //get the list album art uris
+    val imageCoverUris: ArrayList<String?> by lazy {
+        val imageUris: ArrayList<String?> = ArrayList()
+        for (item in listOfSong.value!!) {
+            imageUris.add(item.albumCoverUri)
         }
-        _playPauseTriggered
+        imageUris
     }
+    //to observe when the current song track is changed
+    val chosenSongIndex = Transformations.switchMap(_audioService)
+    {
+        _audioService.value!!.trackChanged
+    }
+
+    val playerDuration: LiveData<Long> = Transformations.map(chosenSongIndex)
+    {
+        listOfSong.value!![it].duration
+    }
+
+    // when service is initialized so we pass the live data to be observed and update the repeatMod,shuffleMode,playPauseButton Ui
+    val repeatMode = Transformations.switchMap(_audioService) {
+        audioForegroundService.value!!.repeatModeChanged
+    }
+
+    val shuffleMode = Transformations.switchMap(_audioService) {
+        audioForegroundService.value!!.shuffleModeChanged
+    }
+
+    val playPauseAnimation = Transformations.switchMap(_audioService) {
+        _audioService.value!!.playerStateChanged
+    }
+
     private val _playPauseInitial = MutableLiveData<Drawable>()
     val playPauseInitial: LiveData<Drawable>
         get() = _playPauseInitial
 
-
-    private val _favouriteTriggered = MutableLiveData<Boolean>()
-    val favouriteTriggered: LiveData<Boolean>
-        get() = _favouriteTriggered
-
-
-    //for when user clicks on repeat and shuffle button
-    fun repeatModeListener() {
-        (audioPlayer as AudioPlayer).apply {
-            repeatModeActivated = !audioPlayer!!.repeatModeActivated
-            _repeatMode.value = repeatModeActivated
-        }
-    }
-
-    fun shuffleModeListener() {
-        (audioPlayer as AudioPlayer).apply {
-            this.shuffleModeActivated = !this.shuffleModeActivated
-            _shuffleMode.value = this.shuffleModeActivated
-        }
-    }
-
-    fun playPauseListener() {
-        _playPauseTriggered.value = audioPlayer!!.isPlaying
-    }
-
-    fun previousListener() {
-        audioPlayer?.previous()
-    }
-
-    fun nextListener() {
-        audioPlayer?.next()
-    }
-
-    fun addToFavouriteListener() {
-        isLikedTemp = !isLikedTemp
-        _favouriteTriggered.value = isLikedTemp
-    }
-
-
     //set initial shape drawable to play pause button when first launched
     private fun playPauseInitial() {
-        return if (audioPlayer!!.isPlaying) {
+        return if (isAudioPlaying()) {
             _playPauseInitial.value = ContextCompat.getDrawable(getApplication(), R.drawable.pause_play_media)
         } else {
             _playPauseInitial.value = ContextCompat.getDrawable(getApplication(), R.drawable.play_pause_media)
         }
     }
 
+    fun setFavouriteAudio(chosenSongIndex: Int) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO)
+            {
+                if (listOfSong.value!![chosenSongIndex].isFavourite) {
+                    repository.deleteFromFavouriteSongs(listOfSong.value!![chosenSongIndex].title)
+                } else {
+                    repository.insertIntoFavouriteSongs(listOfSong.value!![chosenSongIndex])
+                }
 
-    init {
-        _chosenSongIndex.value = chosenSongIndex
+            }
+        }
+    }
 
+
+    private fun changeRepeatMode() {
+        _audioService.value!!.changeRepeatMode()
+    }
+
+    private fun changeShuffleMode() {
+        _audioService.value!!.changeShuffleMode()
+    }
+
+    private fun changeAudioState() {
+        _audioService.value!!.changeAudioState()
 
     }
 
-    fun setChosenSongService(service: AudioForgregroundService) {
-        _chosenSongService.value = service
+    private fun goToPrevious() {
+        _audioService.value!!.goToPrevious()
+    }
+
+    private fun goToNext() {
+        _audioService.value!!.goToNext()
+    }
+
+    fun seekTo(index: Int) {
+        _audioService.value!!.seekTo(index)
+    }
+
+    private fun isAudioPlaying(): Boolean {
+        return _audioService.value!!.isAudioPlaying()
+    }
+
+
+    //for when user clicks on repeat and shuffle button
+    fun repeatModeListener() {
+        changeRepeatMode()
+    }
+
+    fun shuffleModeListener() {
+        changeShuffleMode()
+    }
+
+    fun playPauseListener() {
+        changeAudioState()
+    }
+
+    fun previousListener() {
+        goToPrevious()
+    }
+
+    fun nextListener() {
+        goToNext()
+    }
+
+
+    fun setChosenSongService(service: AudioForegroundService) {
+        _audioService.value = service
     }
 
     fun initializePlayer() {
-        audioPlayer = _chosenSongService.value?.audioPlayer
-        audioPlayer?.apply {
-            _repeatMode.value = this.repeatModeActivated
-            _shuffleMode.value = this.shuffleModeActivated
-            playPauseInitial()
-
-        }
-
-        audioPlayer?.player?.apply {
-            _chosenSongIndex.value = currentWindowIndex
-            addListener(object : Player.EventListener {
-                override fun onTracksChanged(trackGroups: TrackGroupArray?, trackSelections: TrackSelectionArray?) {
-                    _chosenSongIndex.value = (audioPlayer as AudioPlayer).player.currentWindowIndex
+        playPauseInitial()
 
 
-                }
-
-                override fun onRepeatModeChanged(repeatMode: Int) {
-                    _repeatMode.value = repeatMode == Player.REPEAT_MODE_ALL
-                }
-
-                override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
-                    _shuffleMode.value = shuffleModeEnabled
-
-                }
-            })
-
-        }
     }
-
 
 }
 
-class ChosenSongViewModelFactory(private val playListModels: ArrayList<PlayListModel>?
-                                 , private val chosenSongIndex: Int, private val fragmentPurpose: String?, private val application: Application) : ViewModelProvider.Factory {
+class ChosenSongViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
 
+    @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
 
         if (modelClass.isAssignableFrom(ChosenSongViewModel::class.java)) {
-            return ChosenSongViewModel(playListModels, chosenSongIndex, fragmentPurpose, application) as T
+            return ChosenSongViewModel(application) as T
 
         }
         throw IllegalArgumentException("unknown class")

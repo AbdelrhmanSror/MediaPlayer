@@ -23,7 +23,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        //reference to nav host fragment
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        ////reference to nav controller
         navController = navHostFragment.navController
         val inflater = navController.navInflater
         val graph = inflater.inflate(R.navigation.navigaion)
@@ -58,10 +60,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupBottomNavMenu() {
         val bottomNav = binding.bottomNavView
-        bottomNav?.setupWithNavController(navController)
+        bottomNav.setupWithNavController(navController)
     }
 
-    //preventing navigation drawer from being swiped anywhere other than the start destination
+    //preventing bottom navigation  from showing anywhere other than the main destinations
     private fun setUpBottomNavAppearance() {
         navController.addOnDestinationChangedListener { _, nd: NavDestination, _ ->
             if (nd.id == R.id.playList_dest || nd.id == R.id.favourite_dest) {

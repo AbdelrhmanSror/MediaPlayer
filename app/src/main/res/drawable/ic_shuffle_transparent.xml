@@ -12,10 +12,10 @@
   -->
 
 <vector android:alpha="0.5"
-    android:height="24dp"
+    android:height="18dp"
     android:viewportHeight="490.75"
     android:viewportWidth="490.75"
-    android:width="24dp"
+    android:width="18dp"
     xmlns:android="http://schemas.android.com/apk/res/android">
     <path
         android:fillColor="#FF000000"

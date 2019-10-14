@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright 2019 Abdelrhman Sror. All rights reserved.
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:clipToPadding="false"
+        android:focusable="true">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/chosen_song_list_container"
+            style="@style/Widget.MaterialComponents.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            app:cardCornerRadius="@dimen/small_horizontal_spacing"
+            app:cardElevation="4dp"
+            app:cardUseCompatPadding="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <View
+                    android:id="@+id/divider"
+                    android:layout_width="3dp"
+                    android:layout_height="wrap_content"
+                    android:background="@color/blue"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/song_number"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/medium_horizontal_spacing"
+                    android:layout_marginTop="@dimen/large_horizontal_spacing"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    tools:text="1." />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="@dimen/medium_horizontal_spacing"
+                    android:layout_marginTop="@dimen/medium_vertical_spacing"
+                    android:layout_marginBottom="@dimen/medium_vertical_spacing"
+                    android:layout_weight="3"
+                    android:orientation="vertical">
+
+
+                    <TextView
+                        android:id="@+id/title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:maxLines="1"
+                        android:text="@{playlistModel.title}"
+                        android:textColor="@color/black"
+                        android:textSize="14sp"
+                        tools:text="StarBoy" />
+
+                    <TextView
+                        android:id="@+id/actor"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:maxLines="1"
+                        android:text="@{playlistModel.actor}"
+                        android:textSize="12sp"
+                        tools:text="Calvin Harris" />
+
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/favourite_shape"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center_vertical|end"
+                    android:layout_margin="@dimen/medium_vertical_spacing"
+                    android:backgroundTint="@color/white"
+                    app:borderWidth="0dp"
+                    app:setInitialFavourite="@{playlistModel.favourite}"
+                    app:srcCompat="@drawable/ic_favourite_stroke" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </RelativeLayout>
+
+    <data>
+
+        <variable
+            name="playlistModel"
+            type="com.example.mediaplayer.model.SongModel" />
+    </data>
+
+</layout>

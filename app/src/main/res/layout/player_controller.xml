@@ -12,133 +12,123 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
         tools:targetApi="28">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/constraintLayout2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/medium_vertical_spacing"
-            android:layout_marginEnd="@dimen/medium_vertical_spacing"
-            android:layout_marginBottom="40dp"
-            android:orientation="horizontal"
-            app:layout_constraintBottom_toTopOf="@+id/linearLayout3"
+
+        <TextView
+            android:id="@+id/position"
+            android:layout_width="wrap_content"
+            android:layout_height="15dp"
+            android:includeFontPadding="false"
+            android:paddingLeft="4dp"
+            android:paddingRight="4dp"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@+id/media_seek_bar"
+            app:layout_constraintEnd_toStartOf="@+id/media_seek_bar"
+            tools:text="3:55" />
+
+
+        <SeekBar
+            android:id="@+id/media_seek_bar"
+            android:layout_width="250dp"
+            android:layout_height="15dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/play"
+            app:layout_constraintEnd_toEndOf="@+id/shuffle"
+            app:layout_constraintHorizontal_bias="0.388"
+            app:layout_constraintStart_toStartOf="@+id/repeat" />
+
+        <TextView
+            android:id="@+id/duration"
+            android:layout_width="wrap_content"
+            android:layout_height="15dp"
+            android:includeFontPadding="false"
+            android:paddingLeft="4dp"
+            android:paddingRight="4dp"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:duration="@{viewModel.playerDuration}"
+            app:layout_constraintBottom_toBottomOf="@+id/media_seek_bar"
+            app:layout_constraintStart_toEndOf="@+id/media_seek_bar"
+            tools:text="22:49" />
+
+        <ImageButton
+            android:id="@+id/shuffle"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginBottom="8dp"
+            android:backgroundTint="@color/white"
+            android:onClick="@{()->viewModel.shuffleModeListener()}"
+            android:tint="@color/black"
+            app:elevation="1dp"
+            app:layout_constraintBottom_toBottomOf="@+id/next"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toStartOf="parent">
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/next"
+            app:shuffleMode="@{viewModel.shuffleMode}"
+            tools:srcCompat="@drawable/ic_shuffle_transparent" />
 
-            <TextView
-                android:id="@+id/position"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="3dp"
-                android:includeFontPadding="false"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
-                android:textColor="@color/black"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/media_seek_bar"
-                tools:text="3:55" />
+        <ImageButton
+            android:id="@+id/prev"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/ripple_v21"
+            android:elevation="1dp"
+            android:onClick="@{()->viewModel.previousListener()}"
+            app:layout_constraintBottom_toBottomOf="@+id/play"
+            app:layout_constraintEnd_toStartOf="@+id/play"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/repeat"
+            app:srcCompat="@drawable/ic_previous" />
 
-            <SeekBar
-                android:id="@+id/media_seek_bar"
-                android:layout_width="0dp"
-                android:layout_height="26dp"
-                android:layout_marginBottom="20dp"
-                android:layout_weight="1"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="parent" />
+        <ImageButton
+            android:id="@+id/play"
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/ripple_v21"
+            android:elevation="8dp"
+            android:onClick="@{()->viewModel.playPauseListener()}"
+            android:src="@{viewModel.playPauseInitial}"
+            app:backgroundTint="@color/blue"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/next"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/prev"
+            app:playPauseOption="@{viewModel.playPauseAnimation}"
+            tools:srcCompat="@drawable/play_pause_media" />
 
-            <TextView
-                android:id="@+id/duration"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="3dp"
-                android:includeFontPadding="false"
-                android:paddingLeft="4dp"
-                app:duration="@{viewModel.playerDuration}"
-                android:paddingRight="4dp"
-                android:textColor="@color/black"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/media_seek_bar"
-                tools:text="22:49" />
+        <ImageButton
+            android:id="@+id/next"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/ripple_v21"
+            android:elevation="1dp"
+            android:onClick="@{()->viewModel.nextListener()}"
+            app:layout_constraintBottom_toBottomOf="@+id/play"
+            app:layout_constraintEnd_toStartOf="@+id/shuffle"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/play"
+            app:srcCompat="@drawable/ic_next" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <LinearLayout
-            android:id="@+id/linearLayout3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:paddingTop="4dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
+        <ImageButton
+            android:id="@+id/repeat"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginBottom="8dp"
+            android:backgroundTint="@color/white"
+            android:onClick="@{()->viewModel.repeatModeListener()}"
+            android:tint="#000000"
+            app:elevation="1dp"
+            app:layout_constraintBottom_toBottomOf="@+id/prev"
+            app:layout_constraintEnd_toStartOf="@+id/prev"
+            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/constraintLayout2">
-
-            <ImageButton
-                android:id="@+id/shuffle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:backgroundTint="@color/white"
-                android:onClick="@{()->viewModel.shuffleModeListener()}"
-                app:shuffleMode="@{viewModel.shuffleMode}"
-                tools:srcCompat="@drawable/ic_shuffle_transparent" />
-
-            <ImageButton
-                android:id="@+id/prev"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:backgroundTint="@color/white"
-                android:onClick="@{()->viewModel.previousListener()}"
-                app:srcCompat="@drawable/ic_previous" />
-
-            <ImageButton
-                android:id="@+id/play"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:background="@color/white"
-                android:onClick="@{()->viewModel.playPauseListener()}"
-                android:src="@{viewModel.playPauseInitial}"
-                app:playPauseOption="@{viewModel.playPauseTriggered}"
-                tools:srcCompat="@drawable/play_pause_media" />
-
-
-            <ImageButton
-                android:id="@+id/next"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:backgroundTint="@color/white"
-                android:onClick="@{()->viewModel.nextListener()}"
-                app:srcCompat="@drawable/ic_next" />
-
-            <ImageButton
-                android:id="@+id/repeat"
-                android:layout_width="0dp"
-                android:layout_height="47dp"
-                android:layout_weight="1"
-                android:backgroundTint="@color/white"
-                android:onClick="@{()->viewModel.repeatModeListener()}"
-                android:tint="#000000"
-                app:repeatMode="@{viewModel.repeatMode}"
-                tools:srcCompat="@drawable/ic_repeat_transparent" />
-
-        </LinearLayout>
+            app:repeatMode="@{viewModel.repeatMode}"
+            tools:srcCompat="@drawable/ic_repeat_transparent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

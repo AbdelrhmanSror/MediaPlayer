@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
 
@@ -15,60 +14,48 @@
         android:id="@+id/exoPlayerContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white">
+        android:background="@drawable/ic_untitled_2">
 
-
-        <ImageView
-            android:id="@+id/artwork"
-            android:layout_width="170dp"
-            android:layout_height="170dp"
-            android:scaleType="fitXY"
-            android:layout_marginBottom="112dp"
-            app:imageUri="@{viewModel.albumArtImage}"
-            app:layout_constraintBottom_toBottomOf="parent"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/list_image"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="32dp"
+            app:layout_constraintBottom_toTopOf="@+id/list_song"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.497"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.202"
-            tools:srcCompat="@drawable/default_image" />
+            app:layout_constraintVertical_bias="1.0" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/list_song"
+            android:layout_width="0dp"
+            android:layout_height="190dp"
+            android:background="#00000000"
+            android:fadingEdge="vertical"
+            android:fadingEdgeLength="20dp"
+            android:fillViewport="false"
+            android:requiresFadingEdge="vertical"
+            app:layout_constraintBottom_toTopOf="@+id/playerController"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0">
+
+        </androidx.recyclerview.widget.RecyclerView>
 
         <include
             android:id="@+id/playerController"
             layout="@layout/player_controller"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/artwork"
-            app:layout_constraintVertical_bias="0.783"
             app:viewModel="@{viewModel}" />
 
-        <TextView
-            android:id="@+id/songActor"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@{viewModel.songActor}"
-            app:layout_constraintEnd_toEndOf="@+id/songName"
-            app:layout_constraintStart_toStartOf="@+id/songName"
-            app:layout_constraintTop_toBottomOf="@+id/songName"
-            tools:text="Maher Zain" />
-
-        <TextView
-            android:id="@+id/songName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-            android:text="@{viewModel.songName}"
-            android:textAllCaps="true"
-            android:textColor="@color/black"
-            app:layout_constraintEnd_toEndOf="@+id/artwork"
-            app:layout_constraintHorizontal_bias="0.509"
-            app:layout_constraintStart_toStartOf="@+id/artwork"
-            app:layout_constraintTop_toBottomOf="@+id/artwork"
-            tools:text="Taki Taki" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

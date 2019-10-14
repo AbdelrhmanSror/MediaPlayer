@@ -25,7 +25,7 @@ import com.example.mediaplayer.startForeground
 class AudioBroadCastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
-            val intentService = Intent(context, AudioForgregroundService::class.java)
+            val intentService = Intent(context, AudioForegroundService::class.java)
             intentService.action = AudioManager.ACTION_AUDIO_BECOMING_NOISY
             context.startForeground(intentService)
         }

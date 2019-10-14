@@ -3,14 +3,14 @@
     <aapt:attr name="android:drawable">
         <vector
             android:name="vector"
-            android:width="40dp"
-            android:height="40dp"
+            android:width="24dp"
+            android:height="24dp"
             android:viewportWidth="512"
             android:viewportHeight="512">
             <path
                 android:name="path_1"
                 android:pathData="M 195.987 446.377 C 195.987 486.269 163.644 518.612 123.751 518.612 C 83.859 518.612 51.516 486.269 51.516 446.377 L 51.516 72.236 C 51.516 32.343 83.859 0 123.751 0 C 163.644 0 195.987 32.343 195.987 72.236 L 195.987 446.377 Z M 467.086 446.377 C 467.086 486.269 434.742 518.612 394.85 518.612 C 354.958 518.612 322.614 486.269 322.614 446.377 L 322.614 72.236 C 322.625 32.343 354.969 0 394.85 0 C 434.742 0 467.086 32.343 467.086 72.236 L 467.086 446.377 Z"
-                android:fillColor="#000"
+                android:fillColor="#fff"
                 android:strokeWidth="1" />
         </vector>
     </aapt:attr>

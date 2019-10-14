@@ -14,17 +14,22 @@ import android.widget.SeekBar
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.example.mediaplayer.*
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.mediaplayer.PlayerActions
 import com.example.mediaplayer.databinding.ChosenSongFragmentBinding
-import com.example.mediaplayer.foregroundService.AudioForgregroundService
-import com.example.mediaplayer.foregroundService.AudioForgregroundService.SongBinder
-import com.example.mediaplayer.model.PlayListModel
+import com.example.mediaplayer.foregroundService.AudioForegroundService
+import com.example.mediaplayer.foregroundService.AudioForegroundService.SongBinder
+import com.example.mediaplayer.model.SongModel
+import com.example.mediaplayer.ui.OnItemClickListener
+import com.example.mediaplayer.ui.chosenSong.adapter.CenterZoomLayoutManager
+import com.example.mediaplayer.ui.chosenSong.adapter.ImageListAdapter
+import com.example.mediaplayer.ui.chosenSong.adapter.SongListAdapter
 import com.example.mediaplayer.viewModels.ChosenSongViewModel
 import com.example.mediaplayer.viewModels.ChosenSongViewModelFactory
 import com.google.android.exoplayer2.SimpleExoPlayer
 
 
-data class MediaInfo(var playListModels: ArrayList<PlayListModel>? = arrayListOf(),
+data class MediaInfo(var songList: ArrayList<SongModel>? = arrayListOf(),
                      var chosenSongIndex: Int = 0, var fragmentPurpose: String? = PlayerActions.ACTION_FOREGROUND.value)
 
 /**
@@ -34,56 +39,37 @@ class ChosenSongFragment : Fragment() {
 
     private lateinit var viewModel: ChosenSongViewModel
     private lateinit var binding: ChosenSongFragmentBinding
-    private lateinit var foregroundIntent: Intent
-    private lateinit var runnable: Runnable
-    private val handler: Handler? = Handler()
+    private lateinit var mRunnable: Runnable
+    private val mHandler: Handler? = Handler()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         binding = ChosenSongFragmentBinding.inflate(inflater)
         setUpViewModel()
-        startForeground()
         binding.viewModel = viewModel
         binding.lifecycleOwner = this
         return binding.root
     }
 
-    private fun getMediaInfo(): MediaInfo {
-        arguments?.let {
-            val playListModels: ArrayList<PlayListModel>? = arguments!!.getParcelableArrayList(LIST_SONG)
-            val chosenSongIndex = arguments!!.getInt(CHOSEN_SONG_INDEX, 0)
-
-            /**
-             * the purpose of this variable is to decide if the intent is coming through notification or regular fragment
-             * so if the action coming from notification we do not start foreground service because its already started
-             * else we start it as usual
-             */
-            val fragmentPurpose = arguments!!.getString(FRAGMENT_PURPOSE)
-            //clearing the bundle so when fragment stops no huge parcelable error occurs
-            //avoid causing TransactionTooLargeException
-            arguments!!.clear()
-            return MediaInfo(playListModels, chosenSongIndex, fragmentPurpose)
-        }
-
-        return MediaInfo()
-    }
-
     private fun setUpViewModel() {
-        val info = getMediaInfo()
-        val factory = ChosenSongViewModelFactory(info.playListModels, info.chosenSongIndex, info.fragmentPurpose, activity!!.application)
+        val factory = ChosenSongViewModelFactory(activity!!.application)
         viewModel = ViewModelProviders.of(this, factory).get(ChosenSongViewModel::class.java)
-
         with(viewModel)
         {
             //observe if the service is yet initialized or not  so we can synchronize it with ui
             audioForegroundService.observe(viewLifecycleOwner, Observer { service ->
                 service?.let {
-                    viewModel.initializePlayer()
                     //observe if the the the song was changed and based on that we reflect that change on ui
                     chosenSongIndex.observe(viewLifecycleOwner, Observer {
+                        setUpSongRecyclerView()
+                        setUpImageRecyclerView()
+                        listOfSong.observe(viewLifecycleOwner, Observer {
+                            (binding.playerLayout.listSong.adapter as SongListAdapter).submitList(it)
+                        })
+                        viewModel.initializePlayer()
                         // will be called and  then this live data also will be called responding to onSeekProcessed so we avoid looping forever by this if statement
-                        binding.playerLayout.playerController.mediaSeekBar.updateMediaSeekBarVal(service.audioPlayer.player)
+                        binding.playerLayout.playerController.mediaSeekBar.updateMediaSeekBarVal(service.audioPlayer.player!!)
                     })
 
                 }
@@ -92,16 +78,75 @@ class ChosenSongFragment : Fragment() {
         }
     }
 
+
+    private fun setUpSongRecyclerView() {
+
+        var adapter = binding.playerLayout.listSong.adapter
+        if (adapter == null) {
+            /**creating adapter and set it with the recyclerview
+            when user clicks on item in recycler view it will play the audio with that index
+            and internally the adapter will focus this item and scroll to it if necessary*/
+            adapter = SongListAdapter(object : OnItemClickListener {
+                override fun onClick(itemClickIndex: Int) {
+                    viewModel.seekTo(itemClickIndex)
+
+                }
+
+                override fun onFavouriteClick(itemClickIndex: Int) {
+                    viewModel.setFavouriteAudio(itemClickIndex)
+                }
+            })
+            binding.playerLayout.listSong.layoutManager = CenterZoomLayoutManager(context!!)
+            //setup recyclerview with adapter
+            binding.playerLayout.listSong.adapter = adapter
+
+            //select the current focused position to focus and scroll to
+            adapter.setCurrentSelectedPosition(viewModel.chosenSongIndex.value!!)
+
+
+        } else {
+            //update the adapter to reflect the current selected song
+            adapter = binding.playerLayout.listSong.adapter
+            adapter.setCurrentSelectedPosition(viewModel.chosenSongIndex.value!!)
+        }
+    }
+
+    private fun setUpImageRecyclerView() {
+        var adapter = binding.playerLayout.listImage.adapter
+        if (adapter == null) {
+            val linearLayoutManager = CenterZoomLayoutManager(context!!, LinearLayoutManager.HORIZONTAL, false)
+            /**creating adapter and set it with the recyclerview
+            internally the adapter will focus this item and scroll to it if necessary*/
+            adapter = ImageListAdapter(viewModel.imageCoverUris, object : OnItemClickListener {
+                override fun onClick(itemClickIndex: Int) {
+                    viewModel.seekTo(itemClickIndex)
+
+                }
+            })
+            binding.playerLayout.listImage.layoutManager = linearLayoutManager
+            //setup recyclerview with adapter
+            binding.playerLayout.listImage.adapter = adapter
+            //select the current focused position to focus and scroll to
+            adapter.setCurrentSelectedPosition(viewModel.chosenSongIndex.value!!)
+
+
+        } else {
+            //update the adapter to reflect the current selected song
+            adapter = binding.playerLayout.listImage.adapter
+            adapter.setCurrentSelectedPosition(viewModel.chosenSongIndex.value!!)
+        }
+    }
+
     private fun SeekBar.updateMediaSeekBarVal(player: SimpleExoPlayer) {
-        runnable = Runnable {
+        mRunnable = Runnable {
             with(player)
             {
                 max = (duration / 1000).toInt()
                 progress = (currentPosition / 1000).toInt()
-                handler?.postDelayed(runnable, 50)
+                mHandler?.postDelayed(mRunnable, 50)
             }
         }
-        handler?.postDelayed(runnable, 0)
+        handler?.postDelayed(mRunnable, 0)
         setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, position: Int, fromUser: Boolean) {
                 if (fromUser) {
@@ -118,20 +163,18 @@ class ChosenSongFragment : Fragment() {
     }
 
 
-
-
     override fun onStart() {
         super.onStart()
         //binding this fragment to service
-        activity!!.bindService(foregroundIntent, connection, Context.BIND_AUTO_CREATE)
+        activity!!.bindService(Intent(activity, AudioForegroundService::class.java), connection, Context.BIND_AUTO_CREATE)
 
 
     }
 
     override fun onPause() {
         super.onPause()
-        if (::runnable.isInitialized)
-            handler?.removeCallbacks(runnable)
+        if (::mRunnable.isInitialized)
+            mHandler?.removeCallbacks(mRunnable)
 
     }
 
@@ -139,21 +182,6 @@ class ChosenSongFragment : Fragment() {
         super.onStop()
         //un Bind fragment from service
         activity!!.unbindService(connection)
-
-    }
-
-
-    private fun startForeground() {
-        foregroundIntent = Intent(activity, AudioForgregroundService::class.java)
-        foregroundIntent.action = PlayerActions.ACTION_FOREGROUND.value
-        foregroundIntent.putExtra(CHOSEN_SONG_INDEX, viewModel.chosenSongIndex.value)
-        foregroundIntent.putParcelableArrayListExtra(LIST_SONG, viewModel.playListModels)
-        // if the purpose fragment is coming from notification then the service is already started ,no need to start it again
-        //also the viewModel.isForegroundStarted to make sure when the configurations happen we do not start the foreground again
-        if (viewModel.fragmentPurpose != PlayerActions.AUDIO_FOREGROUND_NOTIFICATION.value && !viewModel.isForegroundStarted) {
-            activity?.startForeground(foregroundIntent)
-            viewModel.isForegroundStarted = true
-        }
 
     }
 
@@ -166,7 +194,10 @@ class ChosenSongFragment : Fragment() {
                                         service: IBinder) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             val binder = service as SongBinder
-            viewModel.setChosenSongService(binder.service)
+            viewModel.listOfSong.observe(viewLifecycleOwner, Observer {
+                viewModel.setChosenSongService(binder.service)
+
+            })
 
         }
 
