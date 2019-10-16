@@ -38,13 +38,24 @@ class AudioForegroundService : Service() {
     private lateinit var mNotificationManager: NotificationManagerCompat
 
     //whenever the audio track changes this live data will trigger and we observe it in ui component to update ui
-    val trackChanged = MutableLiveData<Int>()
+    private val _trackChanged = MutableLiveData<Int>()
+    val trackChanged: LiveData<Int>
+        get() = _trackChanged
+
     //whenever the audio shuffle changes this live data will trigger and we observe it in ui component to update ui
-    val shuffleModeChanged = MutableLiveData<Boolean>()
+    private val _shuffleModeChanged = MutableLiveData<Boolean>()
+    val shuffleModeChanged: LiveData<Boolean>
+        get() = _shuffleModeChanged
+
     //whenever the audio shuffle changes this live data will trigger and we observe it in ui component to update ui
-    val repeatModeChanged = MutableLiveData<Int>()
+    private val _repeatModeChanged = MutableLiveData<Int>()
+    val repeatModeChanged: LiveData<Int>
+        get() = _repeatModeChanged
+
     //whenever the audio state changes (play =true/pause=false) this live data will trigger and we observe it in ui component to update ui
-    val playerStateChanged = MutableLiveData<Boolean>()
+    private val _playerStateChanged = MutableLiveData<Boolean>()
+    val playerStateChanged: LiveData<Boolean>
+        get() = _playerStateChanged
 
     //live data of list of song to observe and update it when necessary
     private val _listOfSong = MutableLiveData<MutableList<SongModel>>()
@@ -62,6 +73,7 @@ class AudioForegroundService : Service() {
     fun updateElementOfListOfSong(index: Int) {
         _listOfSong.value!![index].isFavourite = !_listOfSong.value!![index].isFavourite
     }
+
     fun changeRepeatMode() {
         audioPlayer.repeatModeEnable()
     }
@@ -103,29 +115,29 @@ class AudioForegroundService : Service() {
         return object : OnPlayerStateChanged {
             override fun onAudioChanged() {
                 mNotificationManager.notify(NOTIFICATION_ID, getNotification())
-                trackChanged.value = audioPlayer.currentAudioIndex
+                _trackChanged.value = audioPlayer.currentAudioIndex
             }
 
             override fun onPlay() {
                 startForeground(NOTIFICATION_ID, getNotification())
-                playerStateChanged.value = true
+                _playerStateChanged.value = true
 
 
             }
 
             override fun onPause() {
                 mNotificationManager.notify(NOTIFICATION_ID, getNotification())
-                playerStateChanged.value = false
+                _playerStateChanged.value = false
 
 
             }
 
             override fun onShuffleModeChanged(enable: Boolean) {
-                shuffleModeChanged.value = enable
+                _shuffleModeChanged.value = enable
             }
 
             override fun onRepeatModeChanged(shuffleMode: Int) {
-                repeatModeChanged.value = shuffleMode
+                _repeatModeChanged.value = shuffleMode
             }
 
             override fun onAudioListCompleted() {
