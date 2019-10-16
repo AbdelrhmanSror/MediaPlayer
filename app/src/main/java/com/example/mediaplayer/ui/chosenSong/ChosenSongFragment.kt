@@ -7,6 +7,7 @@ import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,6 +28,9 @@ import com.example.mediaplayer.ui.chosenSong.adapter.SongListAdapter
 import com.example.mediaplayer.viewModels.ChosenSongViewModel
 import com.example.mediaplayer.viewModels.ChosenSongViewModelFactory
 import com.google.android.exoplayer2.SimpleExoPlayer
+import kotlinx.android.synthetic.main.chosen_song_fragment.view.*
+import kotlinx.android.synthetic.main.fragment_favourite.view.list_song
+import kotlinx.android.synthetic.main.player_layout.view.*
 
 
 data class MediaInfo(var songList: ArrayList<SongModel>? = arrayListOf(),
@@ -58,18 +62,19 @@ class ChosenSongFragment : Fragment() {
         with(viewModel)
         {
             //observe if the service is yet initialized or not  so we can synchronize it with ui
-            audioForegroundService.observe(viewLifecycleOwner, Observer { service ->
+            audioService.observe(viewLifecycleOwner, Observer { service ->
                 service?.let {
                     //observe if the the the song was changed and based on that we reflect that change on ui
                     chosenSongIndex.observe(viewLifecycleOwner, Observer {
                         setUpSongRecyclerView()
                         setUpImageRecyclerView()
                         listOfSong.observe(viewLifecycleOwner, Observer {
-                            (binding.playerLayout.listSong.adapter as SongListAdapter).submitList(it)
+                            Log.v("listOfSong", "changed")
+                            (binding.root.playerLayout.list_song.adapter as SongListAdapter).submitList(it)
                         })
                         viewModel.initializePlayer()
                         // will be called and  then this live data also will be called responding to onSeekProcessed so we avoid looping forever by this if statement
-                        binding.playerLayout.playerController.mediaSeekBar.updateMediaSeekBarVal(service.audioPlayer.player!!)
+                        updateMediaSeekBarVal(service.audioPlayer.player!!)
                     })
 
                 }
@@ -81,7 +86,7 @@ class ChosenSongFragment : Fragment() {
 
     private fun setUpSongRecyclerView() {
 
-        var adapter = binding.playerLayout.listSong.adapter
+        var adapter = binding.root.playerLayout.list_song.adapter
         if (adapter == null) {
             /**creating adapter and set it with the recyclerview
             when user clicks on item in recycler view it will play the audio with that index
@@ -93,12 +98,13 @@ class ChosenSongFragment : Fragment() {
                 }
 
                 override fun onFavouriteClick(itemClickIndex: Int) {
+                    //updating the database to reverse variable is favourite of current song
                     viewModel.setFavouriteAudio(itemClickIndex)
                 }
             })
-            binding.playerLayout.listSong.layoutManager = CenterZoomLayoutManager(context!!)
+            binding.root.playerLayout.list_song.layoutManager = CenterZoomLayoutManager(context!!)
             //setup recyclerview with adapter
-            binding.playerLayout.listSong.adapter = adapter
+            binding.root.playerLayout.list_song.adapter = adapter
 
             //select the current focused position to focus and scroll to
             adapter.setCurrentSelectedPosition(viewModel.chosenSongIndex.value!!)
@@ -106,13 +112,13 @@ class ChosenSongFragment : Fragment() {
 
         } else {
             //update the adapter to reflect the current selected song
-            adapter = binding.playerLayout.listSong.adapter
+            adapter = binding.root.playerLayout.list_song.adapter as SongListAdapter
             adapter.setCurrentSelectedPosition(viewModel.chosenSongIndex.value!!)
         }
     }
 
     private fun setUpImageRecyclerView() {
-        var adapter = binding.playerLayout.listImage.adapter
+        var adapter = binding.root.playerLayout.list_image.adapter
         if (adapter == null) {
             val linearLayoutManager = CenterZoomLayoutManager(context!!, LinearLayoutManager.HORIZONTAL, false)
             /**creating adapter and set it with the recyclerview
@@ -123,43 +129,45 @@ class ChosenSongFragment : Fragment() {
 
                 }
             })
-            binding.playerLayout.listImage.layoutManager = linearLayoutManager
+            binding.root.playerLayout.list_image.layoutManager = linearLayoutManager
             //setup recyclerview with adapter
-            binding.playerLayout.listImage.adapter = adapter
+            binding.root.playerLayout.list_image.adapter = adapter
             //select the current focused position to focus and scroll to
             adapter.setCurrentSelectedPosition(viewModel.chosenSongIndex.value!!)
 
 
         } else {
             //update the adapter to reflect the current selected song
-            adapter = binding.playerLayout.listImage.adapter
+            adapter = binding.root.playerLayout.list_image.adapter as ImageListAdapter
             adapter.setCurrentSelectedPosition(viewModel.chosenSongIndex.value!!)
         }
     }
 
-    private fun SeekBar.updateMediaSeekBarVal(player: SimpleExoPlayer) {
-        mRunnable = Runnable {
-            with(player)
-            {
-                max = (duration / 1000).toInt()
-                progress = (currentPosition / 1000).toInt()
-                mHandler?.postDelayed(mRunnable, 50)
-            }
-        }
-        handler?.postDelayed(mRunnable, 0)
-        setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, position: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    player.seekTo(position * 1000.toLong())
+    private fun updateMediaSeekBarVal(player: SimpleExoPlayer) {
+        with(binding.playerController.mediaSeekBar) {
+            mRunnable = Runnable {
+                with(player)
+                {
+                    max = (duration / 1000).toInt()
+                    progress = (currentPosition / 1000).toInt()
+                    mHandler?.postDelayed(mRunnable, 50)
                 }
             }
+            handler?.postDelayed(mRunnable, 0)
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, position: Int, fromUser: Boolean) {
+                    if (fromUser) {
+                        player.seekTo(position * 1000.toLong())
+                    }
+                }
 
-            override fun onStartTrackingTouch(p0: SeekBar?) {
-            }
+                override fun onStartTrackingTouch(p0: SeekBar?) {
+                }
 
-            override fun onStopTrackingTouch(p0: SeekBar?) {
-            }
-        })
+                override fun onStopTrackingTouch(p0: SeekBar?) {
+                }
+            })
+        }
     }
 
 
@@ -194,10 +202,8 @@ class ChosenSongFragment : Fragment() {
                                         service: IBinder) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             val binder = service as SongBinder
-            viewModel.listOfSong.observe(viewLifecycleOwner, Observer {
-                viewModel.setChosenSongService(binder.service)
+            viewModel.setChosenSongService(binder.service)
 
-            })
 
         }
 

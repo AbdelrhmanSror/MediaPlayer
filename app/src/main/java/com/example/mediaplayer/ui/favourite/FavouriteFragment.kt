@@ -16,7 +16,6 @@ package com.example.mediaplayer.ui.favourite
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -61,7 +60,6 @@ class FavouriteFragment : Fragment() {
         setUpPlayList()
 
         favouriteSongViewModel.playLists.observe(viewLifecycleOwner, Observer {
-            Log.v("favouriteSize", "${it.size}")
             it?.let {
                 playList = it.toSongModel()
                 (binding.listSong.adapter as FavouriteSongAdapter).submitList(playList)

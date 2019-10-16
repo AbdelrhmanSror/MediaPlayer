@@ -70,8 +70,8 @@ class CenterZoomLayoutManager : LinearLayoutManager {
                 val childMidpoint = (getDecoratedRight(child!!) + getDecoratedLeft(child)) / 2f
                 val d = min(d1, abs(midpoint - childMidpoint))
                 val scale = s0 + (s1 - s0) * (d - d0) / (d1 - d0)
-                child.scaleX = scale * 1.2f
-                child.scaleY = scale * 1.2f
+                child.scaleX = scale * 1.15f
+                child.scaleY = scale * 1.15f
             }
             return scrolled
         } else {

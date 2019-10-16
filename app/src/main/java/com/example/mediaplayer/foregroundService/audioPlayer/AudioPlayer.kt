@@ -114,10 +114,9 @@ class AudioPlayer(private val application: Context, private val onPlayerStateCha
 
     fun startPlayer(audioList: ArrayList<Uri>, chosenAudioIndex: Int) {
         //only re setup the player when the playlist changes
-        if (mSongList != audioList) {
+        if (audioList != mSongList) {
             mSongList = audioList
             setUpPlayer(chosenAudioIndex)
-
         } else {
             seekTo(chosenAudioIndex)
             //if the player was being stopped then play
@@ -218,11 +217,21 @@ class AudioPlayer(private val application: Context, private val onPlayerStateCha
 
     }
 
+    /**
+     * seek to different track
+     */
     fun seekTo(index: Int) {
         currentAudioIndex = index
         player?.seekTo(currentAudioIndex, 0)
         onPlayerStateChanged.onAudioChanged()
 
+    }
+
+    /**
+     * seek to different position
+     */
+    fun seekToSecond(milliSecond: Long) {
+        player?.seekTo(milliSecond * 1000.toLong())
     }
 
     fun play() {

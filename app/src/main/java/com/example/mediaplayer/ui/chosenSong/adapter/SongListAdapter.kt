@@ -14,7 +14,6 @@
 package com.example.mediaplayer.ui.chosenSong.adapter
 
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -64,12 +63,6 @@ class SongListAdapter(private val listener: OnItemClickListener) : ListAdapter<S
      *with minimum changes it can do
      */
     object DiffCallBack : DiffUtil.ItemCallback<SongModel>() {
-        override fun getChangePayload(oldItem: SongModel, newItem: SongModel): Any? {
-            Log.v("changespayload", "olditem ${oldItem.isFavourite}")
-            Log.v("changespayload", "newitem ${newItem.isFavourite}")
-
-            return super.getChangePayload(oldItem, newItem)
-        }
 
         override fun areItemsTheSame(oldItem: SongModel, newItem: SongModel): Boolean {
             return oldItem.title == newItem.title
@@ -143,7 +136,6 @@ class SongListAdapter(private val listener: OnItemClickListener) : ListAdapter<S
         super.onAttachedToRecyclerView(recyclerView)
         this.recyclerView = recyclerView
         snapHelper.attachToRecyclerView(recyclerView)
-        (recyclerView.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
         isSnapAttached = true
         context = recyclerView.context
 

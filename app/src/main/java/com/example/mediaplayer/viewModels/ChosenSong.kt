@@ -2,13 +2,10 @@ package com.example.mediaplayer.viewModels
 
 import android.app.Application
 import android.graphics.drawable.Drawable
-import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.*
 import com.example.mediaplayer.R
-import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.foregroundService.AudioForegroundService
-import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.repositry.Repository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -21,18 +18,17 @@ class ChosenSongViewModel(application: Application) : AndroidViewModel(applicati
 
     private val _audioService = MutableLiveData<AudioForegroundService>()
 
-    val audioForegroundService: LiveData<AudioForegroundService>
+    val audioService: LiveData<AudioForegroundService>
         get() = _audioService
 
-    val listOfSong: LiveData<List<SongModel>> = Transformations.map(repository.getListOfSongs()) {
-        Log.v("listofsong", "hey")
-        it.toSongModel()
+    val listOfSong = Transformations.switchMap(_audioService) {
+        _audioService.value!!.listOfSong
     }
 
     //get the list album art uris
     val imageCoverUris: ArrayList<String?> by lazy {
         val imageUris: ArrayList<String?> = ArrayList()
-        for (item in listOfSong.value!!) {
+        for (item in _audioService.value!!.listOfSong.value!!) {
             imageUris.add(item.albumCoverUri)
         }
         imageUris
@@ -45,16 +41,16 @@ class ChosenSongViewModel(application: Application) : AndroidViewModel(applicati
 
     val playerDuration: LiveData<Long> = Transformations.map(chosenSongIndex)
     {
-        listOfSong.value!![it].duration
+        _audioService.value!!.listOfSong.value!![it].duration
     }
 
     // when service is initialized so we pass the live data to be observed and update the repeatMod,shuffleMode,playPauseButton Ui
     val repeatMode = Transformations.switchMap(_audioService) {
-        audioForegroundService.value!!.repeatModeChanged
+        audioService.value!!.repeatModeChanged
     }
 
     val shuffleMode = Transformations.switchMap(_audioService) {
-        audioForegroundService.value!!.shuffleModeChanged
+        audioService.value!!.shuffleModeChanged
     }
 
     val playPauseAnimation = Transformations.switchMap(_audioService) {
@@ -83,7 +79,9 @@ class ChosenSongViewModel(application: Application) : AndroidViewModel(applicati
                 } else {
                     repository.insertIntoFavouriteSongs(listOfSong.value!![chosenSongIndex])
                 }
-
+                //updating the specific element of list of song in foreground service so the update can be reflected to our ui
+                //because foreground service is considered as source of listOfSong
+                _audioService.value!!.updateElementOfListOfSong(chosenSongIndex)
             }
         }
     }

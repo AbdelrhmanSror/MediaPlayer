@@ -8,7 +8,9 @@ import android.media.AudioManager
 import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.mediaplayer.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.LIST_SONG
@@ -16,6 +18,7 @@ import com.example.mediaplayer.NOTIFICATION_ID
 import com.example.mediaplayer.PlayerActions
 import com.example.mediaplayer.foregroundService.audioPlayer.AudioPlayer
 import com.example.mediaplayer.foregroundService.audioPlayer.OnPlayerStateChanged
+import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.ui.chosenSong.MediaInfo
 
 
@@ -43,6 +46,10 @@ class AudioForegroundService : Service() {
     //whenever the audio state changes (play =true/pause=false) this live data will trigger and we observe it in ui component to update ui
     val playerStateChanged = MutableLiveData<Boolean>()
 
+    //live data of list of song to observe and update it when necessary
+    private val _listOfSong = MutableLiveData<MutableList<SongModel>>()
+    val listOfSong: LiveData<MutableList<SongModel>>
+        get() = _listOfSong
 
     override fun onCreate() {
         // The service is being created.
@@ -52,6 +59,9 @@ class AudioForegroundService : Service() {
 
     }
 
+    fun updateElementOfListOfSong(index: Int) {
+        _listOfSong.value!![index].isFavourite = !_listOfSong.value!![index].isFavourite
+    }
     fun changeRepeatMode() {
         audioPlayer.repeatModeEnable()
     }
@@ -166,6 +176,8 @@ class AudioForegroundService : Service() {
     private fun setUpPlayerForeground(intent: Intent) {
         with(intentData(intent))
         {
+            _listOfSong.value = songList
+            Log.v("listOfSong", "${_listOfSong.value!!.size}")
             val songListUris: ArrayList<Uri> = ArrayList()
             for (item in songList as ArrayList) {
                 songListUris.add(item.audioUri)

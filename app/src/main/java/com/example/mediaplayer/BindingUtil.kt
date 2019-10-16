@@ -25,6 +25,7 @@ fun setImageUri(imageView: ImageView, imageUri: String?) {
             ).into(imageView)
 }
 
+
 /**
  *  for formatting duration of audio file
  */
@@ -85,28 +86,7 @@ fun playPauseAnimation(imageButton: ImageButton, playing: Boolean) {
 }
 
 
-/**
- * binding adapter for changing the favourite button shape when user clicks on it
- */
-@BindingAdapter("startFavouriteAnimation")
-fun startFavouriteAnimation(imageButton: ImageButton, addToFavourite: Boolean) {
-    Log.v("heyfroObserver", "startfavouirte")
-    imageButton.apply {
 
-        val animatedVector = if (addToFavourite) {
-            Log.v("favouriteSize", "livedatafavourie")
-            AnimatedVectorDrawableCompat.create(context, R.drawable.ic_favourite)
-
-        } else {
-            Log.v("favouriteSize", "livedatafavourienot")
-
-            AnimatedVectorDrawableCompat.create(context, R.drawable.ic_favourite_stroke)
-        }
-        setImageDrawable(animatedVector)
-        animatedVector?.start()
-    }
-
-}
 
 @BindingAdapter("setInitialFavourite")
 fun setInitialFavourite(imageButton: ImageButton, isFavourite: Boolean) {
