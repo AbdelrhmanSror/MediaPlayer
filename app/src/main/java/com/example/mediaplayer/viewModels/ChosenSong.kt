@@ -5,6 +5,7 @@ import android.graphics.drawable.Drawable
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.*
 import com.example.mediaplayer.R
+import com.example.mediaplayer.database.SongEntity
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.repositry.Repository
 import kotlinx.coroutines.Dispatchers
@@ -61,6 +62,9 @@ class ChosenSongViewModel(application: Application) : AndroidViewModel(applicati
     val playPauseInitial: LiveData<Drawable>
         get() = _playPauseInitial
 
+    private val _listSong = MutableLiveData<List<SongEntity>>()
+    val listSong: LiveData<List<SongEntity>>
+        get() = _listSong
     //set initial shape drawable to play pause button when first launched
     private fun playPauseInitial() {
         return if (isAudioPlaying()) {

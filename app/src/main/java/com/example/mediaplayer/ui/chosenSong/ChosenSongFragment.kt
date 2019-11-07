@@ -61,6 +61,10 @@ class ChosenSongFragment : Fragment() {
         viewModel = ViewModelProviders.of(this, factory).get(ChosenSongViewModel::class.java)
         with(viewModel)
         {
+            listSong.observe(this@ChosenSongFragment, Observer {
+                Log.v("serviceIsCalled", "again")
+
+            })
             //observe if the service is yet initialized or not  so we can synchronize it with ui
             audioService.observe(viewLifecycleOwner, Observer { service ->
                 service?.let {
@@ -83,8 +87,8 @@ class ChosenSongFragment : Fragment() {
     }
 
 
-    private fun setUpSongRecyclerView() {
-        var adapter = binding.root.playerLayout.list_song.adapter
+    private fun setUpSongRecyclerView(): SongListAdapter {
+        var adapter = binding.root.playerLayout.list_song.adapter as SongListAdapter?
         if (adapter == null) {
             /**creating adapter and set it with the recycler view
             when user clicks on item in recycler view it will play the audio with that index
@@ -110,13 +114,13 @@ class ChosenSongFragment : Fragment() {
 
         } else {
             //update the adapter to reflect the current selected song
-            adapter = binding.root.playerLayout.list_song.adapter as SongListAdapter
             adapter.setCurrentSelectedPosition(viewModel.chosenSongIndex.value!!)
         }
+        return adapter
     }
 
-    private fun setUpImageRecyclerView() {
-        var adapter = binding.root.playerLayout.list_image.adapter
+    private fun setUpImageRecyclerView(): ImageListAdapter {
+        var adapter = binding.root.playerLayout.list_image.adapter as ImageListAdapter?
         if (adapter == null) {
             val linearLayoutManager = CenterZoomLayoutManager(context!!, LinearLayoutManager.HORIZONTAL, false)
             /**creating adapter and set it with the recyclerview
@@ -137,9 +141,9 @@ class ChosenSongFragment : Fragment() {
 
         } else {
             //update the adapter to reflect the current selected song
-            adapter = binding.root.playerLayout.list_image.adapter as ImageListAdapter
             adapter.setCurrentSelectedPosition(viewModel.chosenSongIndex.value!!)
         }
+        return adapter
     }
 
     private fun updateMediaSeekBarVal(player: SimpleExoPlayer) {
