@@ -1,12 +1,14 @@
 package com.example.mediaplayer.ui.playlist
 
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mediaplayer.R
 import com.example.mediaplayer.databinding.PlaylistLayoutBinding
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.ui.OnItemClickListener
@@ -33,6 +35,34 @@ class PlaylistAdapter(private val itemListener: OnItemClickListener) : ListAdapt
     class ViewHolder(val binding: PlaylistLayoutBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: SongModel, listener: OnItemClickListener) {
             binding.playlistModel = item
+            binding.spinner.setOnClickListener {
+                //creating a popup menu
+                val popup = PopupMenu(binding.spinner.context, binding.spinner)
+                //inflating menu from xml resource
+                popup.inflate(R.menu.track_option_menu)
+                popup.setOnMenuItemClickListener { item ->
+                    when (item.itemId) {
+                        R.id.edit -> {
+                            Toast.makeText(binding.spinner.context, "edit", Toast.LENGTH_LONG).show()
+                            true
+                        }
+                        R.id.delete -> {
+                            Toast.makeText(binding.spinner.context, "delete", Toast.LENGTH_LONG).show()
+                            true
+                        }
+                        R.id.add_to_favourite -> {
+                            Toast.makeText(binding.spinner.context, "add to favourite", Toast.LENGTH_LONG).show()
+                            true
+                        }
+                        else -> false
+                    }
+
+                }
+
+                //displaying the popup
+                popup.show()
+
+            }
             binding.root.playlistContainer.setOnClickListener { listener.onClick(adapterPosition) }
         }
 
@@ -57,8 +87,6 @@ class PlaylistAdapter(private val itemListener: OnItemClickListener) : ListAdapt
 
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        Log.v("PlaylistBind", "binding")
-
         holder.bind(getItem(position)!!, itemListener)
     }
 

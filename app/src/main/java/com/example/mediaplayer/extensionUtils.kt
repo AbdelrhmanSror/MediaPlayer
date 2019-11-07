@@ -13,11 +13,18 @@
 
 package com.example.mediaplayer
 
+import android.Manifest
+import android.app.Activity
+import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import android.widget.ImageButton
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.MutableLiveData
 import androidx.paging.PagedList
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 
@@ -71,6 +78,25 @@ fun ImageButton.startFavouriteAnimation(addToFavourite: Boolean) {
 
 }
 
-infix fun <T> Collection<T>.sameContentWith(collection: Collection<T>?) = collection?.let { this.size == it.size && this.containsAll(it) }
+/**
+ * call it from background
+ */
+fun <T> MutableLiveData<T>.notifyObserver() {
+    this.postValue(this.value)
+}
+
+fun Activity.disableActionBarTitle() {
+    //to disable the action bar title and use my own custom title.
+    (this as AppCompatActivity).supportActionBar?.setDisplayShowTitleEnabled(false)
+}
 
 
+/**
+ * extension function to check if user granted the permissions
+ */
+fun Application.isAudioFilesPermissionGranted(): Boolean {
+    return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.READ_EXTERNAL_STORAGE
+    ) == PackageManager.PERMISSION_GRANTED
+}

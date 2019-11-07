@@ -1,17 +1,11 @@
 package com.example.mediaplayer.ui.playlist
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
@@ -32,7 +26,6 @@ import java.util.*
 class PlayListFragment : Fragment() {
     private lateinit var navController: NavController
     private lateinit var binding: PlaylistFragmentBinding
-
     private lateinit var playList: List<SongModel>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -40,22 +33,11 @@ class PlayListFragment : Fragment() {
         // Inflate the layout for this fragment
         binding = PlaylistFragmentBinding.inflate(inflater)
         //find the nav controller so i can use it to navigate
-        navController = Navigation.findNavController(Objects.requireNonNull<FragmentActivity>(activity), R.id.nav_host_fragment)
-
-
-
+        navController = Navigation.findNavController(activity!!, R.id.nav_host_fragment)
+        prepareMusicList()
         return binding.root
     }
 
-    private fun navigate() {
-        navController.navigate(R.id.action_playListFragment_to_chosenSongFragment)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        checkPermission()
-
-    }
 
     private fun prepareMusicList() {
         val factory = PlayListViewModelFactory(activity!!.application)
@@ -78,14 +60,14 @@ class PlayListFragment : Fragment() {
     }
 
     private fun setUpPlayList() {
-        //creating adapter and set it with the playlists
+        //creating adapter and set it with the playlist
         val adapter = PlaylistAdapter(object : OnItemClickListener {
             override fun onClick(itemClickIndex: Int) {
                 startForeground(playList as ArrayList, itemClickIndex)
-                navigate()
+                navController.navigate(R.id.action_playListFragment_to_chosenSongFragment)
             }
         })
-        //setup recyclerview with adapter
+        //setup recycler view with adapter
         binding.listSong.adapter = adapter
 
     }
@@ -127,50 +109,7 @@ class PlayListFragment : Fragment() {
         activity?.startForeground(foregroundIntent)
     }
 
-    private fun checkPermission() {
-        // Here, thisActivity is the current activity
-        if (ContextCompat.checkSelfPermission(Objects.requireNonNull<FragmentActivity>(activity),
-                        Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            // Permission is not granted
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(activity!!,
-                            Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                Toast.makeText(activity, "You should grant this permission so application can access your audio files", Toast.LENGTH_LONG).show()
-                // No explanation needed; request the permission
-                requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                        Permission.MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE.value)
-
-            } else {
-                // No explanation needed; request the permission
-                requestPermissions(
-                        arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                        Permission.MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE.value)
-
-            }
-        } else {
-
-            // Permission has already been granted
-            prepareMusicList()
-
-        }
-    }
-
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == Permission.MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE.value) {
-            // If request is cancelled, the result arrays are empty.
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission has already been granted
-                prepareMusicList()
-            }
-        }
-
-    }
-
-    enum class Permission(val value: Int) {
-        MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE(5)
-    }
-
-
 }// Required empty public constructor
+
+
+

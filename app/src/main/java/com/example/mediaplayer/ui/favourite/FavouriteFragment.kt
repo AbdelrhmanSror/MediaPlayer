@@ -49,7 +49,6 @@ class FavouriteFragment : Fragment() {
         binding = FragmentFavouriteBinding.inflate(inflater)
         //find the nav controller so i can use it to navigate
         navController = Navigation.findNavController(Objects.requireNonNull<FragmentActivity>(activity), R.id.nav_host_fragment)
-
         prepareMusicList()
         return binding.root
     }

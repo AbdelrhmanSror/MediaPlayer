@@ -5,19 +5,18 @@ buildscript {
     repositories {
         google()
         jcenter()
-        
+
     }
-    ext{
+    ext {
         nav_version = "2.2.0-alpha03"
         version_coroutine = "1.1.0"
         version_room = "2.1.0"
         pagingVersion = "2.1.0"
 
 
-
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.1'
+        classpath 'com.android.tools.build:gradle:3.5.2'
         classpath "androidx.navigation:navigation-safe-args-gradle-plugin:$nav_version"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
@@ -30,7 +29,7 @@ allprojects {
     repositories {
         google()
         jcenter()
-        
+
     }
 }
 

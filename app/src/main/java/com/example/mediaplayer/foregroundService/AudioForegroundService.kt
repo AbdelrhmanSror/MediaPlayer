@@ -12,12 +12,9 @@ import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.mediaplayer.CHOSEN_SONG_INDEX
-import com.example.mediaplayer.LIST_SONG
-import com.example.mediaplayer.NOTIFICATION_ID
-import com.example.mediaplayer.PlayerActions
-import com.example.mediaplayer.foregroundService.audioPlayer.AudioPlayer
-import com.example.mediaplayer.foregroundService.audioPlayer.OnPlayerStateChanged
+import com.example.mediaplayer.*
+import com.example.mediaplayer.audioPlayer.AudioPlayer
+import com.example.mediaplayer.audioPlayer.OnPlayerStateChanged
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.ui.chosenSong.MediaInfo
 
@@ -70,8 +67,10 @@ class AudioForegroundService : Service() {
 
     }
 
+
     fun updateElementOfListOfSong(index: Int) {
         _listOfSong.value!![index].isFavourite = !_listOfSong.value!![index].isFavourite
+        _listOfSong.notifyObserver()
     }
 
     fun changeRepeatMode() {

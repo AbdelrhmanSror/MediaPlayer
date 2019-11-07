@@ -9,9 +9,11 @@ import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavDeepLinkBuilder
 import com.example.mediaplayer.*
 import com.example.mediaplayer.model.SongModel
 import java.util.*
+
 
 class ForegroundNotification(private val songModels: ArrayList<SongModel>?
                              , private val context: Context) {
@@ -86,8 +88,7 @@ class ForegroundNotification(private val songModels: ArrayList<SongModel>?
                 // Add an app icon and set its accent color
                 .setSmallIcon(R.drawable.play_collapsed_notification)
                 .setColor(ContextCompat.getColor(context, R.color.blue))
-                .setContentIntent(PendingIntent.getActivity(context,
-                        NOTIFICATION_ID, notificationClickedIntent(chosenSongIndex), 0))
+                .setContentIntent(onNotificationClickedIntent(chosenSongIndex))
                 .setStyle(androidx.media.app.NotificationCompat.DecoratedMediaCustomViewStyle())
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
@@ -97,14 +98,16 @@ class ForegroundNotification(private val songModels: ArrayList<SongModel>?
                 .build()
     }
 
-    private fun notificationClickedIntent(chosenSongIndex: Int): Intent {
-        val intent = Intent(context, MainActivity::class.java)
+    private fun onNotificationClickedIntent(chosenSongIndex: Int): PendingIntent {
         val bundle = Bundle()
         bundle.putParcelableArrayList(LIST_SONG, songModels)
         bundle.putInt(CHOSEN_SONG_INDEX, chosenSongIndex)
-        bundle.putString(FRAGMENT_PURPOSE, PlayerActions.AUDIO_FOREGROUND_NOTIFICATION.value)
-        intent.putExtras(bundle)
-        return intent
+        //using deep links to navigate to chosen song fragment
+        return NavDeepLinkBuilder(context)
+                .setGraph(R.navigation.navigaion)
+                .setDestination(R.id.chosenSong_dest)
+                .setArguments(bundle)
+                .createPendingIntent()
     }
 
     private fun pendingIntentPause(): PendingIntent {

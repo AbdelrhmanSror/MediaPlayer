@@ -66,22 +66,15 @@
 
                     <TextView
                         android:id="@+id/title"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:maxLines="1"
                         android:text="@{playlistModel.title}"
-                        android:textColor="@color/black"
-                        android:textSize="14sp"
-                        tools:text="StarBoy" />
+                        tools:text="StarBoy"
+                        style="@style/media_title_style" />
 
                     <TextView
                         android:id="@+id/actor"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:maxLines="1"
                         android:text="@{playlistModel.actor}"
-                        android:textSize="12sp"
-                        tools:text="Calvin Harris" />
+                        tools:text="Calvin Harris"
+                        style="@style/media_subtitle_style" />
 
                 </LinearLayout>
 

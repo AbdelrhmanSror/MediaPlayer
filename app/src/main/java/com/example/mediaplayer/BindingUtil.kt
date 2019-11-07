@@ -25,6 +25,17 @@ fun setImageUri(imageView: ImageView, imageUri: String?) {
             ).into(imageView)
 }
 
+/**
+ * loading an image into imageView
+ * if there is no album for this audio replace it with default one
+ */
+@BindingAdapter("circularImageUri")
+fun setCircularImageUri(imageView: ImageView, imageUri: String?) {
+    Glide.with(imageView.context)
+            .load(imageUri
+                    ?: R.drawable.default_image).apply(RequestOptions.circleCropTransform().apply { RequestOptions.centerCropTransform() }).into(imageView)
+}
+
 
 /**
  *  for formatting duration of audio file
@@ -86,8 +97,6 @@ fun playPauseAnimation(imageButton: ImageButton, playing: Boolean) {
 }
 
 
-
-
 @BindingAdapter("setInitialFavourite")
 fun setInitialFavourite(imageButton: ImageButton, isFavourite: Boolean) {
     if (!isFavourite) {
@@ -96,3 +105,5 @@ fun setInitialFavourite(imageButton: ImageButton, isFavourite: Boolean) {
         imageButton.setImageResource(R.drawable.ic_favourite)
     }
 }
+
+

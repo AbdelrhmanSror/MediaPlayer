@@ -34,7 +34,7 @@ import kotlinx.android.synthetic.main.player_layout.view.*
 
 
 data class MediaInfo(var songList: ArrayList<SongModel>? = arrayListOf(),
-                     var chosenSongIndex: Int = 0, var fragmentPurpose: String? = PlayerActions.ACTION_FOREGROUND.value)
+                     var chosenSongIndex: Int = 0, var fragmentPurpose: String = PlayerActions.ACTION_FOREGROUND.value)
 
 /**
  * A simple [Fragment] subclass.
@@ -69,7 +69,6 @@ class ChosenSongFragment : Fragment() {
                         setUpSongRecyclerView()
                         setUpImageRecyclerView()
                         listOfSong.observe(viewLifecycleOwner, Observer {
-                            Log.v("listOfSong", "changed")
                             (binding.root.playerLayout.list_song.adapter as SongListAdapter).submitList(it)
                         })
                         viewModel.initializePlayer()
@@ -85,10 +84,9 @@ class ChosenSongFragment : Fragment() {
 
 
     private fun setUpSongRecyclerView() {
-
         var adapter = binding.root.playerLayout.list_song.adapter
         if (adapter == null) {
-            /**creating adapter and set it with the recyclerview
+            /**creating adapter and set it with the recycler view
             when user clicks on item in recycler view it will play the audio with that index
             and internally the adapter will focus this item and scroll to it if necessary*/
             adapter = SongListAdapter(object : OnItemClickListener {
@@ -125,6 +123,7 @@ class ChosenSongFragment : Fragment() {
             internally the adapter will focus this item and scroll to it if necessary*/
             adapter = ImageListAdapter(viewModel.imageCoverUris, object : OnItemClickListener {
                 override fun onClick(itemClickIndex: Int) {
+                    Log.v("listOfSong", "clciked")
                     viewModel.seekTo(itemClickIndex)
 
                 }

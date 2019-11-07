@@ -65,11 +65,11 @@ class SongListAdapter(private val listener: OnItemClickListener) : ListAdapter<S
     object DiffCallBack : DiffUtil.ItemCallback<SongModel>() {
 
         override fun areItemsTheSame(oldItem: SongModel, newItem: SongModel): Boolean {
-            return oldItem.title == newItem.title
+            return oldItem == newItem
         }
 
         override fun areContentsTheSame(oldItem: SongModel, newItem: SongModel): Boolean {
-            return oldItem.title == newItem.title
+            return oldItem.isFavourite == newItem.isFavourite
         }
 
     }
@@ -148,7 +148,6 @@ class SongListAdapter(private val listener: OnItemClickListener) : ListAdapter<S
             notifyItemChanged(lastSelectedItemPosition)
             notifyItemChanged(currentSelectedItemPosition)
             scrollTo(position)
-
         }
 
 

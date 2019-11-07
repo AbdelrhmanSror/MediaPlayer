@@ -32,8 +32,8 @@
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/image_card"
-            android:layout_width="240dp"
-            android:layout_height="250dp"
+            android:layout_width="220dp"
+            android:layout_height="230dp"
             app:cardCornerRadius="@dimen/large_horizontal_spacing"
             app:cardElevation="@dimen/large_horizontal_spacing"
             app:cardUseCompatPadding="true"
