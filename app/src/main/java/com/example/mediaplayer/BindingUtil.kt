@@ -3,7 +3,6 @@ package com.example.mediaplayer
 import android.util.Log
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.TextView
 import androidx.databinding.BindingAdapter
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.bumptech.glide.Glide
@@ -38,17 +37,6 @@ fun setCircularImageUri(imageView: ImageView, imageUri: String?) {
 
 
 /**
- *  for formatting duration of audio file
- */
-@BindingAdapter("duration")
-fun setDuration(textView: TextView, milliSec: Long) {
-    val minutes = milliSec.div(1000).div(60).toInt()
-    val second = milliSec.div(1000).rem(60).toInt()
-    val durationFormat = textView.context.resources.getString(R.string.duration_format, minutes.twoDigitNumber(), second.twoDigitNumber())
-    textView.text = durationFormat
-}
-
-/**
  * binding adapter for changing the repeat button shape when user clicks on it
  */
 @BindingAdapter("repeatMode")
@@ -81,19 +69,38 @@ fun adjustShuffle(imageButton: ImageButton, enable: Boolean) {
 /**
  * binding adapter for changing the play pause button shape when user clicks on it
  */
-@BindingAdapter("playPauseOption")
-fun playPauseAnimation(imageButton: ImageButton, playing: Boolean) {
+@BindingAdapter("playPauseAnimation")
+fun playPauseAnimation(imageButton: ImageButton, playing: Boolean?) {
     imageButton.apply {
-        val animatedVector = if (playing) {
-            AnimatedVectorDrawableCompat.create(context, R.drawable.play_pause_media)
+        playing?.let {
+            val animatedVector = if (playing) {
+                AnimatedVectorDrawableCompat.create(context, R.drawable.play_pause_media)
 
-        } else {
-            AnimatedVectorDrawableCompat.create(context, R.drawable.pause_play_media)
+            } else {
+                AnimatedVectorDrawableCompat.create(context, R.drawable.pause_play_media)
+            }
+            setImageDrawable(animatedVector)
+            animatedVector?.start()
+
         }
-        setImageDrawable(animatedVector)
-        animatedVector?.start()
-
     }
+
+}
+
+@BindingAdapter("initialPlayPause")
+fun setPlayPauseInitial(imageButton: ImageButton, isPlaying: Boolean?) {
+    isPlaying?.let {
+        with(imageButton)
+        {
+            if (isPlaying) {
+                setImageResource(R.drawable.pause_play_media)
+            } else {
+                setImageResource(R.drawable.play_pause_media)
+            }
+        }
+    }
+
+
 }
 
 

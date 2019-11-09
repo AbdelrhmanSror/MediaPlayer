@@ -13,7 +13,6 @@ enum class PlayerActions(val value: String) {
 
 }
 
-const val FRAGMENT_PURPOSE = "fragment_purpose"
 const val CHANNEL_ID = "5"
 const val NOTIFICATION_ID = 11
 const val LIST_SONG = "chosenSong"

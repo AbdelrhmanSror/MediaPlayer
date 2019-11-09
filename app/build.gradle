@@ -10,7 +10,7 @@ android {
         enabled = true
     }
     compileSdkVersion 29
-    buildToolsVersion "29.0.1"
+    buildToolsVersion "29.0.2"
     defaultConfig {
         applicationId "com.example.mediaplayer"
         minSdkVersion 21
@@ -28,8 +28,12 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
     androidExtensions {
         experimental = true
@@ -50,6 +54,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.2.0-alpha01'
     // Room and Lifecycle dependencies
     implementation "androidx.room:room-runtime:$version_room"
+    implementation 'androidx.room:room-ktx:2.2.1'
     kapt "androidx.room:room-compiler:$version_room"
     //exoPlayer library
     implementation 'com.google.android.exoplayer:exoplayer-core:2.10.3'
@@ -62,9 +67,10 @@ dependencies {
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
 
     // ViewModel and LiveData (arch components)
-    implementation "androidx.lifecycle:lifecycle-extensions:2.2.0-alpha02"
+    implementation "androidx.lifecycle:lifecycle-extensions:2.2.0-rc01"
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.2.0-rc01'
     implementation "androidx.core:core-ktx:1.1.0"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0-alpha02"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0-rc01"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     // Coroutines

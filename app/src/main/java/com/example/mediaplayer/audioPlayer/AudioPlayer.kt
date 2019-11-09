@@ -17,6 +17,11 @@ import android.content.Context
 import android.content.IntentFilter
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Handler
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.OnLifecycleEvent
 import com.example.mediaplayer.audioPlayer.audioFocus.AudioFocusCallBacks
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompatFactory
 import com.example.mediaplayer.foregroundService.AudioBroadCastReceiver
@@ -32,18 +37,24 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 
-class AudioPlayer(private val application: Context, private val onPlayerStateChanged: OnPlayerStateChanged) {
+class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwner) : LifecycleObserver {
 
-    var player: SimpleExoPlayer? = ExoPlayerFactory.newSimpleInstance(application)
-        private set
+    private var player: SimpleExoPlayer? = ExoPlayerFactory.newSimpleInstance(application)
+
     var isPlaying = true
         private set
+
     var currentAudioIndex = 0
         private set
 
+    private var onPlayerStateChanged: OnPlayerStateChanged? = null
+
+    private lateinit var runnable: Runnable
+
+    private lateinit var handler: Handler
 
     /**
-     * intent filter to setup with broadcast receiver so when user disconnect the headphone we pause_collapsed_notification the player
+     * intent filter to setup with broadcast receiver so when user disconnect the headphone we pause the player
      */
     private val intentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
     private val myNoisyAudioStreamReceiver = AudioBroadCastReceiver()
@@ -66,7 +77,6 @@ class AudioPlayer(private val application: Context, private val onPlayerStateCha
 
     private val mMediaAudioFocus = MediaAudioFocusCompatFactory.create(application)
 
-
     /**
      * variable to indicate to the last state of player if audio focus happened
      * so if the last state of player was true then continue playing the audio after the focus gained otherwise do nothing
@@ -78,8 +88,8 @@ class AudioPlayer(private val application: Context, private val onPlayerStateCha
     private var isFocusPermanentLost = false
 
     companion object {
-        fun create(application: Context, onPlayerStateChanged: OnPlayerStateChanged): AudioPlayer {
-            return AudioPlayer(application, onPlayerStateChanged)
+        fun create(application: Context, lifecycleOwner: LifecycleOwner): AudioPlayer {
+            return AudioPlayer(application, lifecycleOwner)
         }
     }
 
@@ -126,14 +136,21 @@ class AudioPlayer(private val application: Context, private val onPlayerStateCha
         }
         requestFocus()
         //trigger these callback for first time every time player is being started
-        onPlayerStateChanged.onRepeatModeChanged(player!!.repeatMode)
-        onPlayerStateChanged.onShuffleModeChanged(player!!.shuffleModeEnabled)
+        onPlayerStateChanged?.onRepeatModeChanged(player!!.repeatMode)
+        onPlayerStateChanged?.onShuffleModeChanged(player!!.shuffleModeEnabled)
     }
 
 
     init {
+        lifecycleOwner.lifecycle.addObserver(this)
         setOnPlayerStateChanged()
     }
+
+    //listener for the events happend to the player to observe
+    fun setOnPlayerStateChanged(onPlayerStateChanged: OnPlayerStateChanged?) {
+        this.onPlayerStateChanged = onPlayerStateChanged
+    }
+
 
     //handle the player when actions happen in notification
     private fun setOnPlayerStateChanged() {
@@ -142,11 +159,11 @@ class AudioPlayer(private val application: Context, private val onPlayerStateCha
 
                 override fun onTracksChanged(trackGroups: TrackGroupArray?, trackSelections: TrackSelectionArray?) {
 
-                    //when the track change we update the notification to reflect the current song
+                    //when the track changed we update the index of song reflect the current song
                     when {
                         isPlayerNext() || isPlayerPrevious() -> {
                             currentAudioIndex = currentWindowIndex
-                            onPlayerStateChanged.onAudioChanged()
+                            onPlayerStateChanged?.onAudioChanged()
 
                         }
                     }
@@ -159,7 +176,7 @@ class AudioPlayer(private val application: Context, private val onPlayerStateCha
                             //when player stop we stop listening to plug off events of headphone because player is already stopped
                             application.unregisterReceiver(myNoisyAudioStreamReceiver)
                             isPlaying = false
-                            onPlayerStateChanged.onPause()
+                            onPlayerStateChanged?.onPause()
 
                         }
                         isPlayerPlaying() -> {
@@ -168,24 +185,25 @@ class AudioPlayer(private val application: Context, private val onPlayerStateCha
                             //when player start again we start listening to  events of headphone
                             application.registerReceiver(myNoisyAudioStreamReceiver, intentFilter)
                             isPlaying = true
-                            onPlayerStateChanged.onPlay()
+                            onPlayerStateChanged?.onPlay()
 
 
                         }
                         playbackState == ExoPlayer.STATE_ENDED -> {
-                            onPlayerStateChanged.onAudioListCompleted()
+                            onPlayerStateChanged?.onAudioListCompleted()
 
                         }
 
                     }
                 }
 
+
                 override fun onRepeatModeChanged(repeatMode: Int) {
-                    onPlayerStateChanged.onRepeatModeChanged(repeatMode)
+                    onPlayerStateChanged?.onRepeatModeChanged(repeatMode)
                 }
 
                 override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
-                    onPlayerStateChanged.onShuffleModeChanged(shuffleModeEnabled)
+                    onPlayerStateChanged?.onShuffleModeChanged(shuffleModeEnabled)
                 }
             })
         }
@@ -223,22 +241,26 @@ class AudioPlayer(private val application: Context, private val onPlayerStateCha
     fun seekTo(index: Int) {
         currentAudioIndex = index
         player?.seekTo(currentAudioIndex, 0)
-        onPlayerStateChanged.onAudioChanged()
+        onPlayerStateChanged?.onAudioChanged()
 
     }
 
     /**
      * seek to different position
      */
-    fun seekToSecond(milliSecond: Long) {
-        player?.seekTo(milliSecond * 1000.toLong())
+    fun seekToSecond(second: Int) {
+        player?.seekTo(second * 1000.toLong())
     }
 
     fun play() {
+        if (::runnable.isInitialized)
+            handler.post(runnable)
         player?.playWhenReady = true
     }
 
     fun pause() {
+        if (::runnable.isInitialized)
+            handler.removeCallbacks(runnable)
         player?.playWhenReady = false
     }
 
@@ -255,7 +277,18 @@ class AudioPlayer(private val application: Context, private val onPlayerStateCha
         }
     }
 
-    fun release() {
+    /**
+     * position of current played audio in long val
+     */
+    fun currentPosition() = player!!.currentPosition
+
+    /**
+     * duration of current played audio in long val
+     */
+    fun duration() = player!!.duration
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+    private fun release() {
         player?.let {
             player!!.release()
             player = null
@@ -295,6 +328,35 @@ class AudioPlayer(private val application: Context, private val onPlayerStateCha
         }
     }
 
+
+    /**
+     *listener for progress of current playing audio
+     * we can use it in seek bar to continuously display timer
+     * also we have to provide lifecycle owner so we can remove callback of handler when the lifecycle owner has been paused
+     */
+    inner class AudioProgress : LifecycleObserver {
+        fun setOnProgressChanged(lifecycleOwner: LifecycleOwner, progressChanged: (duration: Int, progress: Int) -> Unit) {
+            lifecycleOwner.lifecycle.addObserver(this)
+            handler = Handler()
+            runnable = Runnable {
+                val duration = (duration() / 1000).toInt()
+                val progress = (currentPosition() / 1000).toInt()
+                progressChanged(duration, progress)
+                //update the text position under seek bar to reflect the current position of seek bar
+                handler.postDelayed(runnable, 50)
+
+            }
+            handler.postDelayed(runnable, 0)
+        }
+
+        @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+        private fun onPause() {
+            if (::runnable.isInitialized)
+                handler.removeCallbacks(runnable)
+
+        }
+    }
+
 }
 
 interface OnPlayerStateChanged {
@@ -325,7 +387,7 @@ interface OnPlayerStateChanged {
      */
     fun onShuffleModeChanged(enable: Boolean)
 
-    fun onRepeatModeChanged(shuffleMode: Int)
+    fun onRepeatModeChanged(repeatMode: Int)
 
 
 }

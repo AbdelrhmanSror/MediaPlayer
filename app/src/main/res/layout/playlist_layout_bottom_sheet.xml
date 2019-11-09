@@ -58,7 +58,6 @@
             android:layout_weight="1"
             android:layout_gravity="center_vertical"
             android:layout_height="wrap_content"
-            app:duration="@{playlistModelB.duration}"
             style="@style/bottom_sheet_text"
             tools:text="3.00" />
         <ImageView

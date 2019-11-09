@@ -1,8 +1,6 @@
 package com.example.mediaplayer.foregroundService
 
 import android.app.Notification
-import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.net.Uri
@@ -10,19 +8,21 @@ import android.os.Binder
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import com.example.mediaplayer.*
+import androidx.lifecycle.LifecycleService
+import com.example.mediaplayer.CHOSEN_SONG_INDEX
+import com.example.mediaplayer.LIST_SONG
+import com.example.mediaplayer.NOTIFICATION_ID
+import com.example.mediaplayer.PlayerActions
 import com.example.mediaplayer.audioPlayer.AudioPlayer
 import com.example.mediaplayer.audioPlayer.OnPlayerStateChanged
-import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.ui.chosenSong.MediaInfo
 
 
-class AudioForegroundService : Service() {
+class AudioForegroundService : LifecycleService() {
+
+
     lateinit var audioPlayer: AudioPlayer
         private set
-    private lateinit var application: Context
 
     // indicates how to behave if the service is killed.
     private var mStartMode = START_STICKY
@@ -34,44 +34,61 @@ class AudioForegroundService : Service() {
     //responsible for updating the notification
     private lateinit var mNotificationManager: NotificationManagerCompat
 
-    //whenever the audio track changes this live data will trigger and we observe it in ui component to update ui
-    private val _trackChanged = MutableLiveData<Int>()
-    val trackChanged: LiveData<Int>
-        get() = _trackChanged
-
-    //whenever the audio shuffle changes this live data will trigger and we observe it in ui component to update ui
-    private val _shuffleModeChanged = MutableLiveData<Boolean>()
-    val shuffleModeChanged: LiveData<Boolean>
-        get() = _shuffleModeChanged
-
-    //whenever the audio shuffle changes this live data will trigger and we observe it in ui component to update ui
-    private val _repeatModeChanged = MutableLiveData<Int>()
-    val repeatModeChanged: LiveData<Int>
-        get() = _repeatModeChanged
-
-    //whenever the audio state changes (play =true/pause=false) this live data will trigger and we observe it in ui component to update ui
-    private val _playerStateChanged = MutableLiveData<Boolean>()
-    val playerStateChanged: LiveData<Boolean>
-        get() = _playerStateChanged
-
-    //live data of list of song to observe and update it when necessary
-    private val _listOfSong = MutableLiveData<MutableList<SongModel>>()
-    val listOfSong: LiveData<MutableList<SongModel>>
-        get() = _listOfSong
+    private var serviceAudioPlayerObserver: ServiceAudioPlayerObserver? = null
 
     override fun onCreate() {
+        super.onCreate()
+        Log.v("audioServicePlayer", "created")
+
         // The service is being created.
         mNotificationManager = NotificationManagerCompat.from(this@AudioForegroundService)
-        application = applicationContext
-        audioPlayer = AudioPlayer.create(applicationContext, onPlayerStateChanged())
+        audioPlayer = AudioPlayer.create(applicationContext, this).apply {
+            setOnPlayerStateChanged(onPlayerStateChanged())
+        }
+
 
     }
 
+    //handle the player when actions happen in notification
+    private fun onPlayerStateChanged(): OnPlayerStateChanged {
+        return object : OnPlayerStateChanged {
+            override fun onAudioChanged() {
+                mNotificationManager.notify(NOTIFICATION_ID, getNotification())
+                serviceAudioPlayerObserver?.onAudioChanged(audioPlayer.currentAudioIndex, audioPlayer.isPlaying)
 
-    fun updateElementOfListOfSong(index: Int) {
-        _listOfSong.value!![index].isFavourite = !_listOfSong.value!![index].isFavourite
-        _listOfSong.notifyObserver()
+            }
+
+            override fun onPlay() {
+                startForeground(NOTIFICATION_ID, getNotification())
+                serviceAudioPlayerObserver?.onPlay()
+
+
+            }
+
+            override fun onPause() {
+                mNotificationManager.notify(NOTIFICATION_ID, getNotification())
+                serviceAudioPlayerObserver?.onPause()
+
+
+            }
+
+            override fun onShuffleModeChanged(enable: Boolean) {
+                serviceAudioPlayerObserver?.onShuffleModeChanged(enable)
+
+            }
+
+            override fun onRepeatModeChanged(repeatMode: Int) {
+                serviceAudioPlayerObserver?.onRepeatModeChanged(repeatMode)
+            }
+
+            override fun onAudioListCompleted() {
+                audioPlayer.pause()
+                seekTo(0)
+
+            }
+        }
     }
+
 
     fun changeRepeatMode() {
         audioPlayer.repeatModeEnable()
@@ -101,53 +118,14 @@ class AudioForegroundService : Service() {
         audioPlayer.seekTo(index)
     }
 
-    fun isAudioPlaying(): Boolean {
-        return audioPlayer.isPlaying
-    }
-
     private fun getNotification(): Notification {
         return foregroundNotification.build(audioPlayer.isPlaying, audioPlayer.currentAudioIndex)
     }
 
-    //handle the player when actions happen in notification
-    private fun onPlayerStateChanged(): OnPlayerStateChanged {
-        return object : OnPlayerStateChanged {
-            override fun onAudioChanged() {
-                mNotificationManager.notify(NOTIFICATION_ID, getNotification())
-                _trackChanged.value = audioPlayer.currentAudioIndex
-            }
 
-            override fun onPlay() {
-                startForeground(NOTIFICATION_ID, getNotification())
-                _playerStateChanged.value = true
-
-
-            }
-
-            override fun onPause() {
-                mNotificationManager.notify(NOTIFICATION_ID, getNotification())
-                _playerStateChanged.value = false
-
-
-            }
-
-            override fun onShuffleModeChanged(enable: Boolean) {
-                _shuffleModeChanged.value = enable
-            }
-
-            override fun onRepeatModeChanged(shuffleMode: Int) {
-                _repeatModeChanged.value = shuffleMode
-            }
-
-            override fun onAudioListCompleted() {
-                audioPlayer.pause()
-                seekTo(0)
-
-            }
-        }
+    fun setOnServiceAudioChangeListener(serviceAudioPlayerObserver: ServiceAudioPlayerObserver?) {
+        this.serviceAudioPlayerObserver = serviceAudioPlayerObserver
     }
-
-
     internal inner class SongBinder : Binder() {
         val service: AudioForegroundService
             get() = this@AudioForegroundService
@@ -163,6 +141,18 @@ class AudioForegroundService : Service() {
         }
     }
 
+    override fun onStartCommand(intent: Intent?,
+                                flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
+        // The service is starting, due to a call to startService().
+        handleIntent(intent)
+        return mStartMode
+    }
+
+    override fun onBind(intent: Intent): IBinder? {
+        super.onBind(intent)
+        return mBinder
+    }
 
     private fun handleIntent(intent: Intent?) {
         intent?.let {
@@ -187,14 +177,12 @@ class AudioForegroundService : Service() {
     private fun setUpPlayerForeground(intent: Intent) {
         with(intentData(intent))
         {
-            _listOfSong.value = songList
-            Log.v("listOfSong", "${_listOfSong.value!!.size}")
             val songListUris: ArrayList<Uri> = ArrayList()
             for (item in songList as ArrayList) {
                 songListUris.add(item.audioUri)
             }
             //only re setup the player when the playlist changes
-            foregroundNotification = ForegroundNotification(songList, application)
+            foregroundNotification = ForegroundNotification(songList, applicationContext)
             audioPlayer.startPlayer(songListUris, chosenSongIndex)
             startForeground(NOTIFICATION_ID, getNotification())
         }
@@ -202,27 +190,41 @@ class AudioForegroundService : Service() {
     }
 
     private fun cancelForeground() {
-        audioPlayer.release()
         //remove the notification and stop the service when user press the close button on notification
         stopForeground(false)
         mNotificationManager.cancelAll()
         stopSelf()
     }
 
-    override fun onStartCommand(intent: Intent?,
-                                flags: Int, startId: Int): Int {
-        // The service is starting, due to a call to startService().
-        handleIntent(intent)
-        return mStartMode
-    }
 
-    override fun onBind(intent: Intent): IBinder? {
-        return mBinder
-    }
+}
 
-    override fun onDestroy() {
-        audioPlayer.release()
-        super.onDestroy()
-    }
+
+interface ServiceAudioPlayerObserver {
+
+
+    /**
+     * this triggers whenever the audio track changes or when the player state changes like play and pause
+     */
+    fun onAudioChanged(chosenSongIndex: Int, isPlaying: Boolean)
+
+    /**
+     * this triggers whenever the audio start  playing
+     */
+    fun onPlay()
+
+    /**
+     * this triggers whenever the audio stop playing
+     */
+    fun onPause()
+
+    /**
+     * this triggers whenever the audio shuffle and repeat mode changes changes
+     * also it triggers at initialization time
+     */
+    fun onShuffleModeChanged(enable: Boolean)
+
+    fun onRepeatModeChanged(repeatMode: Int)
+
 
 }

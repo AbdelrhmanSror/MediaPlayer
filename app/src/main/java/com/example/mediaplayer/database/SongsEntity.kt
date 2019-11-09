@@ -40,7 +40,10 @@ interface SongsDao {
     fun getSong(name: String): SongEntity
 
     @Query("SELECT * FROM Songs")
-    fun getAllSongs(): LiveData<List<SongEntity>>
+    fun getAllSongsLiveData(): LiveData<List<SongEntity>>
+
+    @Query("SELECT * FROM Songs")
+    fun getAllSongs(): List<SongEntity>
 
     @Query("UPDATE songs SET isFavourite=:isFavourite WHERE name=:name")
     fun updateFavourite(name: String, isFavourite: Boolean)

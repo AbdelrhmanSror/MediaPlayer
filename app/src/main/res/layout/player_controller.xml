@@ -46,7 +46,6 @@
             android:textColor="@color/black"
             android:textSize="14sp"
             android:textStyle="bold"
-            app:duration="@{viewModel.playerDuration}"
             app:layout_constraintBottom_toBottomOf="@+id/media_seek_bar"
             app:layout_constraintStart_toEndOf="@+id/media_seek_bar"
             tools:text="22:49" />
@@ -87,14 +86,14 @@
             android:layout_marginBottom="8dp"
             android:background="@drawable/ripple_v21"
             android:elevation="8dp"
+            app:initialPlayPause="@{viewModel.playPauseStateInitial}"
             android:onClick="@{()->viewModel.playPauseListener()}"
-            android:src="@{viewModel.playPauseInitial}"
             app:backgroundTint="@color/blue"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/next"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@+id/prev"
-            app:playPauseOption="@{viewModel.playPauseAnimation}"
+            app:playPauseAnimation="@{viewModel.playPauseState}"
             tools:srcCompat="@drawable/play_pause_media" />
 
         <ImageButton

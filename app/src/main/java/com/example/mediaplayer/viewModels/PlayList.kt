@@ -12,7 +12,7 @@ import kotlinx.coroutines.withContext
 
 class PlayListViewModel(application: Application, repository: Repository) : AndroidViewModel(application) {
 
-    val playLists = repository.getListOfSongs()
+    val playLists = repository.getListOfSongsLivedata()
 
     init {
         viewModelScope.launch {

@@ -1,6 +1,5 @@
 package com.example.mediaplayer.ui.playlist
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,15 +8,13 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
-import com.example.mediaplayer.*
+import com.example.mediaplayer.CHOSEN_SONG_INDEX
+import com.example.mediaplayer.R
 import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.databinding.PlaylistFragmentBinding
-import com.example.mediaplayer.foregroundService.AudioForegroundService
-import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.ui.OnItemClickListener
 import com.example.mediaplayer.viewModels.PlayListViewModel
 import com.example.mediaplayer.viewModels.PlayListViewModelFactory
-import java.util.*
 
 
 /**
@@ -26,7 +23,6 @@ import java.util.*
 class PlayListFragment : Fragment() {
     private lateinit var navController: NavController
     private lateinit var binding: PlaylistFragmentBinding
-    private lateinit var playList: List<SongModel>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -50,8 +46,7 @@ class PlayListFragment : Fragment() {
                 // binding.bottomSheetLayout.visibility = View.GONE
             } else {
                 binding.noAudioText.visibility = View.GONE
-                playList = it.toSongModel()
-                (binding.listSong.adapter as PlaylistAdapter).submitList(playList)
+                (binding.listSong.adapter as PlaylistAdapter).submitList(it.toSongModel())
 
             }
 
@@ -63,8 +58,9 @@ class PlayListFragment : Fragment() {
         //creating adapter and set it with the playlist
         val adapter = PlaylistAdapter(object : OnItemClickListener {
             override fun onClick(itemClickIndex: Int) {
-                startForeground(playList as ArrayList, itemClickIndex)
-                navController.navigate(R.id.action_playListFragment_to_chosenSongFragment)
+                val args = Bundle()
+                args.putInt(CHOSEN_SONG_INDEX, itemClickIndex)
+                navController.navigate(R.id.action_playListFragment_to_chosenSongFragment, args)
             }
         })
         //setup recycler view with adapter
@@ -101,13 +97,6 @@ class PlayListFragment : Fragment() {
          binding.bottomSheetLayout.playlist_bottom_sheet.adapter = adapterBottomSheet
      }*/
 
-    private fun startForeground(song: ArrayList<SongModel>, chosenSongIndex: Int) {
-        val foregroundIntent = Intent(activity, AudioForegroundService::class.java)
-        foregroundIntent.action = PlayerActions.ACTION_FOREGROUND.value
-        foregroundIntent.putExtra(CHOSEN_SONG_INDEX, chosenSongIndex)
-        foregroundIntent.putParcelableArrayListExtra(LIST_SONG, song)
-        activity?.startForeground(foregroundIntent)
-    }
 
 }// Required empty public constructor
 

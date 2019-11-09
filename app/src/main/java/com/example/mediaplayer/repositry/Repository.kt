@@ -40,7 +40,11 @@ class Repository(private val application: Context) {
         database.songDao().insertAll(songs)
     }
 
-    fun getListOfSongs(): LiveData<List<SongEntity>> {
+    fun getListOfSongsLivedata(): LiveData<List<SongEntity>> {
+        return database.songDao().getAllSongsLiveData()
+    }
+
+    fun getListOfSongs(): List<SongEntity> {
         return database.songDao().getAllSongs()
     }
 
