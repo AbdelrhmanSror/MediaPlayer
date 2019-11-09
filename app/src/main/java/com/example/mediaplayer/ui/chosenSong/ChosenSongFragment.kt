@@ -120,17 +120,15 @@ class ChosenSongFragment : Fragment() {
     }
 
     private fun updateMediaSeekBarVal(player: AudioPlayer) {
-
         with(binding.playerController.mediaSeekBar) {
+
             player.AudioProgress().setOnProgressChanged(this@ChosenSongFragment) { duration, mProgress ->
-                max = duration
-                binding.playerController.duration.text = resources.getString(R.string.duration_format, (max / 60).twoDigitNumber(), (max % 60).twoDigitNumber())
-                progress = mProgress
+                max = (duration / 1000).toInt()
+                progress = (mProgress / 1000).toInt()
                 //update the text position under seek bar to reflect the current position of seek bar
                 binding.playerController.position.text = resources.getString(R.string.duration_format, (progress / 60).twoDigitNumber(), (progress % 60).twoDigitNumber())
 
             }
-
             setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar?, position: Int, fromUser: Boolean) {
                     if (fromUser) {

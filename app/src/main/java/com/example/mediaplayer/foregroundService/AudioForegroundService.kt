@@ -1,5 +1,4 @@
 package com.example.mediaplayer.foregroundService
-
 import android.app.Notification
 import android.content.Intent
 import android.media.AudioManager
@@ -49,25 +48,31 @@ class AudioForegroundService : LifecycleService() {
 
     }
 
+
+    fun setOnServiceAudioChangeListener(serviceAudioPlayerObserver: ServiceAudioPlayerObserver?) {
+        this.serviceAudioPlayerObserver = serviceAudioPlayerObserver
+    }
+
+
     //handle the player when actions happen in notification
     private fun onPlayerStateChanged(): OnPlayerStateChanged {
         return object : OnPlayerStateChanged {
-            override fun onAudioChanged() {
+            override fun onAudioChanged(index: Int, isPlaying: Boolean) {
+                serviceAudioPlayerObserver?.onAudioChanged(index, isPlaying)
                 mNotificationManager.notify(NOTIFICATION_ID, getNotification())
-                serviceAudioPlayerObserver?.onAudioChanged(audioPlayer.currentAudioIndex, audioPlayer.isPlaying)
 
             }
 
             override fun onPlay() {
-                startForeground(NOTIFICATION_ID, getNotification())
                 serviceAudioPlayerObserver?.onPlay()
+                startForeground(NOTIFICATION_ID, getNotification())
 
 
             }
 
             override fun onPause() {
-                mNotificationManager.notify(NOTIFICATION_ID, getNotification())
                 serviceAudioPlayerObserver?.onPause()
+                mNotificationManager.notify(NOTIFICATION_ID, getNotification())
 
 
             }
@@ -86,6 +91,11 @@ class AudioForegroundService : LifecycleService() {
                 seekTo(0)
 
             }
+
+            override fun onDurationChange(duration: Long) {
+                serviceAudioPlayerObserver?.onDurationChange(duration)
+
+            }
         }
     }
 
@@ -99,11 +109,7 @@ class AudioForegroundService : LifecycleService() {
     }
 
     fun changeAudioState() {
-        if (audioPlayer.isPlaying) {
-            audioPlayer.pause()
-        } else {
-            audioPlayer.play()
-        }
+        audioPlayer.changeAudioState()
     }
 
     fun goToPrevious() {
@@ -122,10 +128,6 @@ class AudioForegroundService : LifecycleService() {
         return foregroundNotification.build(audioPlayer.isPlaying, audioPlayer.currentAudioIndex)
     }
 
-
-    fun setOnServiceAudioChangeListener(serviceAudioPlayerObserver: ServiceAudioPlayerObserver?) {
-        this.serviceAudioPlayerObserver = serviceAudioPlayerObserver
-    }
     internal inner class SongBinder : Binder() {
         val service: AudioForegroundService
             get() = this@AudioForegroundService
@@ -225,6 +227,8 @@ interface ServiceAudioPlayerObserver {
     fun onShuffleModeChanged(enable: Boolean)
 
     fun onRepeatModeChanged(repeatMode: Int)
+
+    fun onDurationChange(duration: Long)
 
 
 }

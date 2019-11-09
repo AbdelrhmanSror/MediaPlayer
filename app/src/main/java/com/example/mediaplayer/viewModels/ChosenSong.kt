@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
+import android.util.Log
 import androidx.lifecycle.*
 import com.example.mediaplayer.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.LIST_SONG
@@ -37,17 +38,21 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int) 
             audioService = binder.service
             binder.service.setOnServiceAudioChangeListener(object : ServiceAudioPlayerObserver {
                 override fun onAudioChanged(chosenSongIndex: Int, isPlaying: Boolean) {
-                    _playPauseStateInitial.value = isPlaying
+                    _playPauseState.value = isPlaying to true
                     _chosenSongIndex.value = chosenSongIndex
                 }
 
                 override fun onPlay() {
-                    _playPauseState.value = true
+                    Log.v("playPauseAnimation", "onPlay true")
+
+                    _playPauseState.value = true to false
 
                 }
 
                 override fun onPause() {
-                    _playPauseState.value = false
+                    Log.v("playPauseAnimation", "onPause false")
+
+                    _playPauseState.value = false to false
                 }
 
                 override fun onShuffleModeChanged(enable: Boolean) {
@@ -56,6 +61,11 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int) 
 
                 override fun onRepeatModeChanged(repeatMode: Int) {
                     _repeatMode.value = repeatMode
+                }
+
+                override fun onDurationChange(duration: Long) {
+                    _duration.value = duration
+
                 }
             })
 
@@ -123,13 +133,13 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int) 
     private val _shuffleMode = MutableLiveData<Boolean>()
     val shuffleMode: LiveData<Boolean> = _shuffleMode
 
+    private val _duration = MutableLiveData<Long?>()
+    val duration: LiveData<Long?> = _duration
 
-    private val _playPauseStateInitial = MutableLiveData<Boolean?>()
-    val playPauseStateInitial: LiveData<Boolean?> = _playPauseStateInitial
-
-
-    private val _playPauseState = MutableLiveData<Boolean?>()
-    val playPauseState: LiveData<Boolean?> = _playPauseState
+    //live data of pair , first one indicating if the audio is playing or not ,the second one indicating
+    // if its the initial state or not so if it was initial state we won't have to play animation
+    private val _playPauseState = MutableLiveData<Pair<Boolean, Boolean>?>()
+    val playPauseState: LiveData<Pair<Boolean, Boolean>?> = _playPauseState
 
     fun setFavouriteAudio(chosenSongIndex: Int) {
         viewModelScope.launch {
@@ -151,23 +161,23 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int) 
     }
 
     //for when user clicks on repeat and shuffle button
-    fun repeatModeListener() {
+    fun onRepeatModeListener() {
         audioService.changeRepeatMode()
     }
 
-    fun shuffleModeListener() {
+    fun onShuffleModeListener() {
         audioService.changeShuffleMode()
     }
 
-    fun playPauseListener() {
+    fun onPlayPauseListener() {
         audioService.changeAudioState()
     }
 
-    fun previousListener() {
+    fun onPreviousListener() {
         audioService.goToPrevious()
     }
 
-    fun nextListener() {
+    fun onNextListener() {
         audioService.goToNext()
     }
 

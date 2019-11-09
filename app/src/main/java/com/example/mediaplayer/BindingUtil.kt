@@ -3,6 +3,8 @@ package com.example.mediaplayer
 import android.util.Log
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.databinding.BindingAdapter
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.bumptech.glide.Glide
@@ -51,6 +53,20 @@ fun adjustRepeat(imageButton: ImageButton, repeatMode: Int) {
     }
 }
 
+@BindingAdapter("setDuration")
+fun setDuration(textView: TextView, duration: Long?) {
+    with(textView) {
+        duration?.let {
+            val min = (duration / 1000).toFloat() / 60
+            val sec = (min - min.toInt()) * 60
+
+            textView.text = context.getString(R.string.duration_format, min.toInt().twoDigitNumber(), sec.toInt().twoDigitNumber())
+
+        }
+
+    }
+}
+
 /**
  * binding adapter for changing the shuffle button shape when user clicks on it
  */
@@ -68,38 +84,31 @@ fun adjustShuffle(imageButton: ImageButton, enable: Boolean) {
 
 /**
  * binding adapter for changing the play pause button shape when user clicks on it
+ * first parameter of pair indicate the current state of player if it is playing or paused
+ * second parameter indicate if its initial state or not so if it was we will not start animation
  */
 @BindingAdapter("playPauseAnimation")
-fun playPauseAnimation(imageButton: ImageButton, playing: Boolean?) {
+fun playPauseAnimation(imageButton: ImageButton, state: Pair<Boolean, Boolean>?) {
     imageButton.apply {
-        playing?.let {
-            val animatedVector = if (playing) {
-                AnimatedVectorDrawableCompat.create(context, R.drawable.play_pause_media)
-
+        state?.let {
+            if (state.second) {
+                if (state.first) {
+                    setImageDrawable(ContextCompat.getDrawable(context, R.drawable.pause_play_media))
+                } else {
+                    setImageDrawable(ContextCompat.getDrawable(context, R.drawable.play_pause_media))
+                }
             } else {
-                AnimatedVectorDrawableCompat.create(context, R.drawable.pause_play_media)
-            }
-            setImageDrawable(animatedVector)
-            animatedVector?.start()
-
-        }
-    }
-
-}
-
-@BindingAdapter("initialPlayPause")
-fun setPlayPauseInitial(imageButton: ImageButton, isPlaying: Boolean?) {
-    isPlaying?.let {
-        with(imageButton)
-        {
-            if (isPlaying) {
-                setImageResource(R.drawable.pause_play_media)
-            } else {
-                setImageResource(R.drawable.play_pause_media)
+                val animatedVector = if (state.first) {
+                    AnimatedVectorDrawableCompat.create(context, R.drawable.play_pause_media)
+                } else {
+                    AnimatedVectorDrawableCompat.create(context, R.drawable.pause_play_media)
+                }
+                setImageDrawable(animatedVector)
+                animatedVector?.start()
             }
         }
-    }
 
+    }
 
 }
 
