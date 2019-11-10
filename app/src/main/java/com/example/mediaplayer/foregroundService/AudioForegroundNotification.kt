@@ -102,7 +102,7 @@ class ForegroundNotification(private val songModels: ArrayList<SongModel>?
         val bundle = Bundle()
         //bundle.putParcelableArrayList(LIST_SONG, songModels)
         bundle.putInt(CHOSEN_SONG_INDEX, chosenSongIndex)
-        bundle.putBoolean(PlayerActions.NOTIFICATION_ACTION.value, true)
+        bundle.putBoolean(PlayerDestinations.NOTIFICATION.value, true)
         //using deep links to navigate to chosen song fragment
         return NavDeepLinkBuilder(context)
                 .setGraph(R.navigation.navigaion)

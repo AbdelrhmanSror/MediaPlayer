@@ -3,7 +3,6 @@ package com.example.mediaplayer.repositry
 import android.content.Context
 import androidx.lifecycle.LiveData
 import com.example.mediaplayer.DeviceAudioFile
-import com.example.mediaplayer.database.FavouriteSongEntity
 import com.example.mediaplayer.database.PlayerDatabase
 import com.example.mediaplayer.database.SongEntity
 import com.example.mediaplayer.model.SongModel
@@ -16,7 +15,7 @@ class Repository(private val application: Context) {
     private val database = PlayerDatabase.getInstance(application)
 
 
-    fun getFavouriteSongs(): LiveData<List<FavouriteSongEntity>> {
+    fun getFavouriteSongs(): LiveData<List<SongEntity>> {
         return database.favouriteSongsDao().getAllFavouriteSong()
     }
 
@@ -40,7 +39,7 @@ class Repository(private val application: Context) {
         database.songDao().insertAll(songs)
     }
 
-    fun getListOfSongsLivedata(): LiveData<List<SongEntity>> {
+    fun getListOfSongsLiveData(): LiveData<List<SongEntity>> {
         return database.songDao().getAllSongsLiveData()
     }
 
@@ -48,9 +47,6 @@ class Repository(private val application: Context) {
         return database.songDao().getAllSongs()
     }
 
-    fun getSong(title: String): SongEntity {
-        return database.songDao().getSong(title)
-    }
 
     //inserting the audio file on user device into database so our local database will become our source of true
     fun insertAudioIntoDatabase() {

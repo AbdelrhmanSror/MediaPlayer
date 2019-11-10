@@ -14,7 +14,7 @@ import kotlinx.android.parcel.Parcelize
 data class SongModel(val title: String, val actor: String, val audioUri: Uri, val albumCoverUri: String?, val duration: Long, var isFavourite: Boolean = false) : Parcelable
 
 fun SongModel.toFavouriteSongEntity(): FavouriteSongEntity {
-    return FavouriteSongEntity(name = this.title, actor = this.actor, audioUri = (this.audioUri).toString(), albumCoverUri = this.albumCoverUri, duration = this.duration)
+    return FavouriteSongEntity(name = this.title)
 
 }
 

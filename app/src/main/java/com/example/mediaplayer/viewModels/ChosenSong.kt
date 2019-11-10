@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
-import android.util.Log
 import androidx.lifecycle.*
 import com.example.mediaplayer.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.LIST_SONG
@@ -43,15 +42,11 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
                 }
 
                 override fun onPlay() {
-                    Log.v("playPauseAnimation", "onPlay true")
-
                     _playPauseState.value = true to false
 
                 }
 
                 override fun onPause() {
-                    Log.v("playPauseAnimation", "onPause false")
-
                     _playPauseState.value = false to false
                 }
 
@@ -106,7 +101,7 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
     }
 
 
-    val listSong = repository.getListOfSongsLivedata().map {
+    val listOfSong = repository.getListOfSongsLiveData().map {
         it.toSongModel()
     }
 
@@ -117,7 +112,7 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
     //get the list album art uris
     val imageCoverUris: ArrayList<String?> by lazy {
         val imageUris: ArrayList<String?> = ArrayList()
-        for (item in listSong.value!!) {
+        for (item in listOfSong.value!!) {
             imageUris.add(item.albumCoverUri)
         }
         imageUris
@@ -146,10 +141,10 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
         viewModelScope.launch {
             withContext(Dispatchers.IO)
             {
-                if (listSong.value!![chosenSongIndex].isFavourite) {
-                    repository.deleteFromFavouriteSongs(listSong.value!![chosenSongIndex].title)
+                if (listOfSong.value!![chosenSongIndex].isFavourite) {
+                    repository.deleteFromFavouriteSongs(listOfSong.value!![chosenSongIndex].title)
                 } else {
-                    repository.insertIntoFavouriteSongs(listSong.value!![chosenSongIndex])
+                    repository.insertIntoFavouriteSongs(listOfSong.value!![chosenSongIndex])
                 }
 
             }
@@ -182,7 +177,6 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
 
         audioService.goToNext()
     }
-
 
 
     override fun onCleared() {

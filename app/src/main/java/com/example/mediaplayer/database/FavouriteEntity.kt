@@ -12,22 +12,17 @@
  */
 
 package com.example.mediaplayer.database
-
-import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.room.*
-import com.example.mediaplayer.model.SongModel
+import androidx.room.ForeignKey.CASCADE
 
 
-@Entity(tableName = "favouriteSongs", indices = [Index(value = ["name"], unique = true)], foreignKeys = [ForeignKey(
+@Entity(tableName = "favouriteSongs", indices = [Index(value = ["name"], unique = true)], foreignKeys = [ForeignKey(onDelete = CASCADE,
         entity = SongEntity::class,
         parentColumns = arrayOf("name"),
         childColumns = arrayOf("name"))])
-data class FavouriteSongEntity(@PrimaryKey var name: String,
-                               var actor: String,
-                               var audioUri: String,
-                               var albumCoverUri: String?,
-                               var duration: Long)
+data class FavouriteSongEntity(@PrimaryKey(autoGenerate = true) val id: Int = 0,
+                               var name: String)
 
 @Dao
 interface FavouriteSongsDao {
@@ -37,22 +32,9 @@ interface FavouriteSongsDao {
     @Query("DELETE FROM favouriteSongs WHERE name=:name")
     fun deleteFavouriteSong(name: String)
 
-    @Query("SELECT * FROM favouriteSongs")
-    fun getAllFavouriteSong(): LiveData<List<FavouriteSongEntity>>
+    @Query("SELECT * FROM songs INNER JOIN favouriteSongs ON songs.name=favouriteSongs.name")
+    fun getAllFavouriteSong(): LiveData<List<SongEntity>>
 
     @Query("DELETE FROM favouriteSongs")
     fun clear()
-}
-
-fun List<FavouriteSongEntity>.toSongModel(): List<SongModel> {
-    return map {
-        SongModel(title = it.name, actor = it.actor, audioUri = Uri.parse(it.audioUri), albumCoverUri = it.albumCoverUri, duration = it.duration, isFavourite = true)
-    }
-
-}
-
-fun FavouriteSongEntity.toSongModel(): SongModel {
-    return SongModel(title = this.name, actor = this.actor, audioUri = Uri.parse(this.audioUri), albumCoverUri = this.albumCoverUri, duration = this.duration, isFavourite = true)
-
-
 }

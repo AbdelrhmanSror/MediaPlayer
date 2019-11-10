@@ -58,7 +58,7 @@ class ChosenSongFragment : Fragment() {
         viewModel = ViewModelProvider(this, factory).get(ChosenSongViewModel::class.java)
         with(viewModel)
         {
-            listSong.observe(viewLifecycleOwner, Observer {
+            listOfSong.observe(viewLifecycleOwner, Observer {
                 val songListAdapter = setUpSongRecyclerView(it)
                 val imageListAdapter = setUpImageRecyclerView(imageCoverUris)
                 //observe if the the the song was changed and based on that we reflect that change on ui

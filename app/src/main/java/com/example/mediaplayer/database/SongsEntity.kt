@@ -19,7 +19,7 @@ import androidx.room.*
 import com.example.mediaplayer.model.SongModel
 
 
-@Entity(tableName = "Songs", indices = [Index(value = ["name"], unique = true)])
+@Entity(tableName = "songs", indices = [Index(value = ["name"], unique = true)])
 data class SongEntity(
         @PrimaryKey var name: String,
         var actor: String,
@@ -33,22 +33,19 @@ interface SongsDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertAll(Songs: List<SongEntity>)
 
-    @Query("DELETE FROM Songs WHERE name=:name")
+    @Query("DELETE FROM songs WHERE name=:name")
     fun deleteSong(name: String)
 
-    @Query("SELECT * FROM Songs WHERE name=:name")
-    fun getSong(name: String): SongEntity
-
-    @Query("SELECT * FROM Songs")
+    @Query("SELECT * FROM songs")
     fun getAllSongsLiveData(): LiveData<List<SongEntity>>
 
-    @Query("SELECT * FROM Songs")
+    @Query("SELECT * FROM songs")
     fun getAllSongs(): List<SongEntity>
 
     @Query("UPDATE songs SET isFavourite=:isFavourite WHERE name=:name")
     fun updateFavourite(name: String, isFavourite: Boolean)
 
-    @Query("DELETE FROM Songs")
+    @Query("DELETE FROM songs")
     fun clear()
 }
 
@@ -56,11 +53,5 @@ fun List<SongEntity>.toSongModel(): List<SongModel> {
     return map {
         SongModel(title = it.name, actor = it.actor, audioUri = Uri.parse(it.audioUri), albumCoverUri = it.albumCoverUri, duration = it.duration, isFavourite = it.isFavourite)
     }
-
-}
-
-fun SongEntity.toSongModel(): SongModel {
-    return SongModel(title = this.name, actor = this.actor, audioUri = Uri.parse(this.audioUri), albumCoverUri = this.albumCoverUri, duration = this.duration, isFavourite = this.isFavourite)
-
 
 }
