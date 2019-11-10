@@ -47,6 +47,13 @@ class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwn
 
     var currentAudioIndex = 0
         private set
+    var playerShuffleMode = player!!.shuffleModeEnabled
+        private set
+    var playerRepeatMode = player!!.repeatMode
+        private set
+    var playerDuration = 0L
+        private set
+
 
     private var onPlayerStateChanged: OnPlayerStateChanged? = null
 
@@ -208,10 +215,12 @@ class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwn
 
 
                 override fun onRepeatModeChanged(repeatMode: Int) {
+                    playerRepeatMode = repeatMode
                     onPlayerStateChanged?.onRepeatModeChanged(repeatMode)
                 }
 
                 override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+                    playerShuffleMode = shuffleModeEnabled
                     onPlayerStateChanged?.onShuffleModeChanged(shuffleModeEnabled)
                 }
             })
@@ -249,6 +258,7 @@ class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwn
         var runnable: Runnable? = null
         runnable = Runnable {
             if (player?.playbackState == ExoPlayer.STATE_READY) {
+                playerDuration = player?.duration!!
                 onPlayerStateChanged?.onDurationChange(player?.duration!!)
             } else
                 handler.postDelayed(runnable!!, 0)
@@ -332,11 +342,6 @@ class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwn
     }
 
     /**
-     * position of current played audio in long val
-     */
-    fun currentPosition() = player!!.currentPosition
-
-    /**
      * change the audio state from playing to pausing and vice verse
      */
     fun changeAudioState() {
@@ -412,9 +417,13 @@ class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwn
             removeCallback()
             handler = Handler()
             runnable = Runnable {
-                progressChanged(player!!.duration, currentPosition())
-                //update the text position under seek bar to reflect the current position of seek bar
-                handler.postDelayed(runnable, 50)
+                player?.let {
+                    Log.v("progressChanged", "onprogress")
+                    progressChanged(player!!.duration, player!!.currentPosition)
+                    //update the text position under seek bar to reflect the current position of seek bar
+                    handler.postDelayed(runnable, 50)
+                }
+
 
             }
             handler.postDelayed(runnable, 50)

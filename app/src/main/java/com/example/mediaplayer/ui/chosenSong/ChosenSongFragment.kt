@@ -51,7 +51,10 @@ class ChosenSongFragment : Fragment() {
 
     private fun setUpViewModel() {
         val index: Int? = arguments?.getInt(CHOSEN_SONG_INDEX)
-        val factory = ChosenSongViewModelFactory(activity!!.application, index!!)
+        val fromNotification = arguments?.getBoolean(PlayerActions.NOTIFICATION_ACTION.value, false)
+        Log.v("chosenSongIndexChanged", "observerIndex $index")
+
+        val factory = ChosenSongViewModelFactory(activity!!.application, index!!, fromNotification!!)
         viewModel = ViewModelProvider(this, factory).get(ChosenSongViewModel::class.java)
         with(viewModel)
         {
@@ -60,7 +63,6 @@ class ChosenSongFragment : Fragment() {
                 val imageListAdapter = setUpImageRecyclerView(imageCoverUris)
                 //observe if the the the song was changed and based on that we reflect that change on ui
                 chosenSongIndex.observe(viewLifecycleOwner, Observer { index ->
-                    Log.v("chosenSongIndexChanged", "observerIndex $index")
                     songListAdapter.setCurrentSelectedPosition(index)
                     imageListAdapter.setCurrentSelectedPosition(index)
                     updateMediaSeekBarVal(audioService.audioPlayer)

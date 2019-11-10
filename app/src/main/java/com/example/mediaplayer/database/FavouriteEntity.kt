@@ -19,10 +19,10 @@ import androidx.room.*
 import com.example.mediaplayer.model.SongModel
 
 
-@Entity(tableName = "favouriteSongs", indices = [Index(value = ["name"], unique = true)]/*,foreignKeys = [ForeignKey(
+@Entity(tableName = "favouriteSongs", indices = [Index(value = ["name"], unique = true)], foreignKeys = [ForeignKey(
         entity = SongEntity::class,
         parentColumns = arrayOf("name"),
-        childColumns = arrayOf("name"))]*/)
+        childColumns = arrayOf("name"))])
 data class FavouriteSongEntity(@PrimaryKey var name: String,
                                var actor: String,
                                var audioUri: String,

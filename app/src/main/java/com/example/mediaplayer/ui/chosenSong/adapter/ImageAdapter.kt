@@ -100,7 +100,6 @@ class ImageListAdapter(private val albumCoverUris: ArrayList<String?>, private v
 
     }
 
-
     private fun scrollTo(position: Int) {
         Log.v("heyfroObserver", "positon $position")
 
@@ -122,4 +121,5 @@ class ImageListAdapter(private val albumCoverUris: ArrayList<String?>, private v
         smoothScroller.targetPosition = position
         (recyclerView.layoutManager as CenterZoomLayoutManager).startSmoothScroll(smoothScroller)
     }
+
 }

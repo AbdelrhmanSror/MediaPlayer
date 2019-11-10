@@ -160,6 +160,8 @@ class SongListAdapter(private val listener: OnItemClickListener) : ListAdapter<S
             if (isSnapAttached) {
                 snapHelper.attachToRecyclerView(null)
                 isSnapAttached = false
+                //recyclerView.postDelayed({ recyclerView.scrollToPosition(position) }, 500)
+
             }
 
         } else {

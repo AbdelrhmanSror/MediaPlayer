@@ -26,6 +26,7 @@
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="@+id/media_seek_bar"
             app:layout_constraintEnd_toStartOf="@+id/media_seek_bar"
+            app:layout_constraintStart_toStartOf="parent"
             tools:text="3:55" />
 
 
@@ -45,10 +46,11 @@
             android:layout_height="15dp"
             android:textColor="@color/black"
             android:textSize="14sp"
-            app:setDuration="@{viewModel.duration}"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="@+id/media_seek_bar"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/media_seek_bar"
+            app:setDuration="@{viewModel.duration}"
             tools:text="22:49" />
 
         <ImageButton

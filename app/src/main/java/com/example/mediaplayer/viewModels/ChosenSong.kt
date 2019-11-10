@@ -21,7 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ChosenSongViewModel(application: Application, private val songIndex: Int) : AndroidViewModel(application) {
+class ChosenSongViewModel(application: Application, private val songIndex: Int, private val fromNotification: Boolean) : AndroidViewModel(application) {
 
     private val mApplication = application
     private val repository = Repository(application)
@@ -91,7 +91,8 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int) 
             val songPlaylist = withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
                 repository.getListOfSongs().toSongModel()
             }
-            startForeground(songPlaylist as ArrayList<SongModel>, songIndex)
+            if (!fromNotification)
+                startForeground(songPlaylist as ArrayList<SongModel>, songIndex)
 
         }
     }
@@ -178,8 +179,10 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int) 
     }
 
     fun onNextListener() {
+
         audioService.goToNext()
     }
+
 
 
     override fun onCleared() {
@@ -189,13 +192,14 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int) 
     }
 }
 
-class ChosenSongViewModelFactory(private val application: Application, private val chosenSongIndex: Int) : ViewModelProvider.Factory {
+
+class ChosenSongViewModelFactory(private val application: Application, private val chosenSongIndex: Int, private val fromNotification: Boolean) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
 
         if (modelClass.isAssignableFrom(ChosenSongViewModel::class.java)) {
-            return ChosenSongViewModel(application, chosenSongIndex) as T
+            return ChosenSongViewModel(application, chosenSongIndex, fromNotification) as T
 
         }
         throw IllegalArgumentException("unknown class")
