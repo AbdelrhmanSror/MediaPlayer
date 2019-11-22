@@ -13,9 +13,7 @@
 
 package com.example.mediaplayer.database
 
-import android.content.Context
 import androidx.room.Database
-import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(entities = [FavouriteSongEntity::class, SongEntity::class], version = 2, exportSchema = false)
@@ -23,22 +21,6 @@ abstract class PlayerDatabase : RoomDatabase() {
     abstract fun favouriteSongsDao(): FavouriteSongsDao
     abstract fun songDao(): SongsDao
 
-    companion object {
-        @Volatile
-        private var INSTANCE: PlayerDatabase? = null
-
-        fun getInstance(context: Context): PlayerDatabase {
-            synchronized(this)
-            {
-                var instance = INSTANCE
-                if (instance == null) {
-                    instance = Room.databaseBuilder(context, PlayerDatabase::class.java, "SongList").fallbackToDestructiveMigration().build()
-                }
-                INSTANCE = instance
-                return instance
-            }
-        }
-    }
 }
 
 

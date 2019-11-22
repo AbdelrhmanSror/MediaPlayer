@@ -12,7 +12,7 @@ import kotlinx.coroutines.withContext
 
 class PlayListViewModel(application: Application, repository: Repository) : AndroidViewModel(application) {
 
-    val playLists = repository.getListOfSongsLiveData()
+    val playLists = repository.observeSongs()
 
     init {
         viewModelScope.launch {
@@ -28,7 +28,7 @@ class PlayListViewModel(application: Application, repository: Repository) : Andr
 }
 
 class PlayListViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
-    private val repository: Repository = Repository(application)
+    private val repository: Repository = Repository.getRepository(application)
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(PlayListViewModel::class.java)) {

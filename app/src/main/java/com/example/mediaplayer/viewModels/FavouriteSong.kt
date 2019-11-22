@@ -26,7 +26,7 @@ class FavouriteSongViewModel(application: Application, private val repository: R
 }
 
 class FavouriteSongViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
-    private val repository: Repository = Repository(application)
+    private val repository: Repository = Repository.getRepository(application)
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(FavouriteSongViewModel::class.java)) {

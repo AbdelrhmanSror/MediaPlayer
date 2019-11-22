@@ -13,7 +13,6 @@
 
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    xmlns:custom="http://schemas.android.com/apk/res-auto"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
@@ -69,14 +68,14 @@
             app:srcCompat="@drawable/equlizer"
             android:layout_gravity="center_vertical" />
 
-        <es.claucookie.miniequalizerlibrary.EqualizerView
+        <!--<es.claucookie.miniequalizerlibrary.EqualizerView
             android:id="@+id/equalizer_view"
             android:layout_width="30dp"
             android:visibility="gone"
             android:layout_gravity="center_vertical"
             android:layout_height="30dp"
             custom:foregroundColor="@color/black"
-            custom:animDuration="3500" />
+            custom:animDuration="3500" />-->
 
     </LinearLayout>
 </layout>

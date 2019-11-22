@@ -18,8 +18,12 @@
     <data>
 
         <variable
-            name="imageUri"
-            type="String" />
+            name="itemPosition"
+            type="Integer" />
+
+        <variable
+            name="viewmodel"
+            type="com.example.mediaplayer.viewModels.ChosenSongViewModel" />
 
     </data>
 
@@ -34,6 +38,7 @@
             android:id="@+id/image_card"
             android:layout_width="220dp"
             android:layout_height="230dp"
+            android:onClick="@{()->viewmodel.seekTo(itemPosition)}"
             app:cardCornerRadius="@dimen/large_horizontal_spacing"
             app:cardElevation="@dimen/large_horizontal_spacing"
             app:cardUseCompatPadding="true"
@@ -47,7 +52,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="fitXY"
-                app:imageUri="@{imageUri}"
+                app:imageUri="@{viewmodel.imageCoverUris[itemPosition]}"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.496"
                 app:layout_constraintStart_toStartOf="parent"

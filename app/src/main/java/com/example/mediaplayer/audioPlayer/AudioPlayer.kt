@@ -19,10 +19,7 @@ import android.media.AudioManager
 import android.net.Uri
 import android.os.Handler
 import android.util.Log
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.OnLifecycleEvent
 import com.example.mediaplayer.audioPlayer.audioFocus.AudioFocusCallBacks
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompatFactory
 import com.example.mediaplayer.foregroundService.AudioBroadCastReceiver
@@ -38,14 +35,14 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 
-class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwner) : LifecycleObserver {
+class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPlayerObservable {
 
     private var player: SimpleExoPlayer? = ExoPlayerFactory.newSimpleInstance(application)
 
     var isPlaying = true
         private set
 
-    var currentAudioIndex = 0
+    var currentAudioIndex = -1
         private set
     var playerShuffleMode = player!!.shuffleModeEnabled
         private set
@@ -55,7 +52,7 @@ class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwn
         private set
 
 
-    private var onPlayerStateChanged: OnPlayerStateChanged? = null
+    private val onPlayerStateChanged = ArrayList<OnPlayerStateChanged?>()
 
     private lateinit var runnable: Runnable
 
@@ -96,8 +93,8 @@ class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwn
     private var isFocusPermanentLost = false
 
     companion object {
-        fun create(application: Context, lifecycleOwner: LifecycleOwner): AudioPlayer {
-            return AudioPlayer(application, lifecycleOwner)
+        fun create(application: Context): AudioPlayer {
+            return AudioPlayer(application)
         }
     }
 
@@ -144,21 +141,53 @@ class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwn
         }
         requestFocus()
         //trigger these callback for first time every time player is being started
-        onPlayerStateChanged?.onRepeatModeChanged(player!!.repeatMode)
-        onPlayerStateChanged?.onShuffleModeChanged(player!!.shuffleModeEnabled)
+        onPlayerStateChanged.forEach {
+            it?.onRepeatModeChanged(player!!.repeatMode)
+            it?.onShuffleModeChanged(player!!.shuffleModeEnabled)
+        }
     }
 
 
     init {
-        lifecycleOwner.lifecycle.addObserver(this)
         setOnPlayerStateChanged()
     }
 
-    //listener for the events happend to the player to observe
-    fun setOnPlayerStateChanged(onPlayerStateChanged: OnPlayerStateChanged?) {
-        this.onPlayerStateChanged = onPlayerStateChanged
+
+    /**
+     * to register observer we need to give it the class that implement the interface of observer
+     * and [enableProgress] which used to trigger the  [OnPlayerStateChanged.onProgressChanged] whenever the progress changed
+     *
+     */
+    override fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgress: Boolean) {
+        this.onPlayerStateChanged.add(onPlayerStateChanged)
+        if (enableProgress) {
+            setOnProgressChanged(onPlayerStateChanged)
+        }
+        /**
+         * trigger callback for first time to update ui,
+         * this case for entering the app from notification
+         * as audio player already setuped the player callback won't trigger so we have to do it manually
+         *
+         *audio player at initial state will return -1 because there is no audio is being played
+         * also we just want to trigger these manually to refresh ui cause
+         * if the audio is playing these events won't trigger until the events that trigger them happen
+         * so to refresh ui when activity or fragment rebind with the service we have to do it manually
+         * also we do it only if audio already playing otherwise we continue the normal sequence
+         */
+        if (currentAudioIndex != -1) {
+            onPlayerStateChanged.onAudioChanged(currentAudioIndex, isPlaying)
+            onPlayerStateChanged.onShuffleModeChanged(playerShuffleMode)
+            onPlayerStateChanged.onRepeatModeChanged(playerRepeatMode)
+            onPlayerStateChanged.onDurationChange(playerDuration)
+        }
     }
 
+    override fun removeObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgress: Boolean) {
+        if (!enableProgress) {
+            stopProgress()
+        }
+        this.onPlayerStateChanged.remove(onPlayerStateChanged)
+    }
 
     //handle the player when actions happen in notification
     private fun setOnPlayerStateChanged() {
@@ -171,7 +200,9 @@ class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwn
                     when {
                         isPlayerNext() || isPlayerPrevious() -> {
                             currentAudioIndex = currentWindowIndex
-                            onPlayerStateChanged?.onAudioChanged(currentAudioIndex, isPlaying)
+                            onPlayerStateChanged.forEach {
+                                it?.onAudioChanged(currentAudioIndex, isPlaying)
+                            }
                             setDuration()
 
 
@@ -182,30 +213,32 @@ class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwn
 
 
                 override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-                    Log.v("duartionplayer", " duration :statechanged")
-
                     when {
                         isPlayerStopped() -> {
                             //when player stop we stop listening to plug off events of headphone because player is already stopped
                             application.unregisterReceiver(myNoisyAudioStreamReceiver)
                             isPlaying = false
-                            onPlayerStateChanged?.onPause()
+                            onPlayerStateChanged.forEach {
+                                it?.onPause()
+                            }
 
                         }
                         isPlayerPlaying() -> {
-                            Log.v("duartionplayer", " duration :isplaying")
-
                             if (isFocusPermanentLost)
                                 requestFocus()
                             //when player start again we start listening to  events of headphone
                             application.registerReceiver(myNoisyAudioStreamReceiver, intentFilter)
                             isPlaying = true
-                            onPlayerStateChanged?.onPlay()
+                            onPlayerStateChanged.forEach {
+                                it?.onPlay()
+                            }
 
 
                         }
                         playbackState == ExoPlayer.STATE_ENDED -> {
-                            onPlayerStateChanged?.onAudioListCompleted()
+                            onPlayerStateChanged.forEach {
+                                it?.onAudioListCompleted()
+                            }
 
                         }
 
@@ -216,12 +249,16 @@ class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwn
 
                 override fun onRepeatModeChanged(repeatMode: Int) {
                     playerRepeatMode = repeatMode
-                    onPlayerStateChanged?.onRepeatModeChanged(repeatMode)
+                    onPlayerStateChanged.forEach {
+                        it?.onRepeatModeChanged(repeatMode)
+                    }
                 }
 
                 override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
                     playerShuffleMode = shuffleModeEnabled
-                    onPlayerStateChanged?.onShuffleModeChanged(shuffleModeEnabled)
+                    onPlayerStateChanged.forEach {
+                        it?.onShuffleModeChanged(shuffleModeEnabled)
+                    }
                 }
             })
         }
@@ -259,7 +296,9 @@ class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwn
         runnable = Runnable {
             if (player?.playbackState == ExoPlayer.STATE_READY) {
                 playerDuration = player?.duration!!
-                onPlayerStateChanged?.onDurationChange(player?.duration!!)
+                onPlayerStateChanged.forEach {
+                    it?.onDurationChange(player?.duration!!)
+                }
             } else
                 handler.postDelayed(runnable!!, 0)
         }
@@ -290,7 +329,9 @@ class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwn
     fun seekTo(index: Int) {
         currentAudioIndex = index
         player?.seekTo(currentAudioIndex, 0)
-        onPlayerStateChanged?.onAudioChanged(currentAudioIndex, isPlaying)
+        onPlayerStateChanged.forEach {
+            it?.onAudioChanged(currentAudioIndex, isPlaying)
+        }
         setDuration()
 
     }
@@ -355,9 +396,9 @@ class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwn
     /**
      * to release audio player when lifecycle owner is destroyed
      */
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    private fun release() {
+    fun release() {
         player?.let {
+            Log.v("serviceOndESTroy", " player done")
             player!!.release()
             player = null
         }
@@ -375,7 +416,7 @@ class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwn
         }
     }
 
-    //detect if player already playing
+//detect if player already playing
 
     private fun isPlayerPlaying(): Boolean {
         player!!.run {
@@ -404,86 +445,28 @@ class AudioPlayer(private val application: Context, lifecycleOwner: LifecycleOwn
         }
     }
 
-
-    /**
-     *listener for progress of current playing audio
-     * we can use it in seek bar to continuously display timer
-     * also we have to provide lifecycle owner so we can remove callback of handler when the lifecycle owner has been paused
-     */
-    inner class AudioProgress : LifecycleObserver {
-        fun setOnProgressChanged(lifecycleOwner: LifecycleOwner, progressChanged: (duration: Long, progress: Long) -> Unit) {
-            lifecycleOwner.lifecycle.addObserver(this)
-            //remove any previous callback
-            removeCallback()
+    private fun setOnProgressChanged(onPlayerStateChanged: OnPlayerStateChanged) {
+        if (!::handler.isInitialized) {
             handler = Handler()
             runnable = Runnable {
                 player?.let {
-                    Log.v("progressChanged", "onprogress")
-                    progressChanged(player!!.duration, player!!.currentPosition)
+                    onPlayerStateChanged.onProgressChanged(player!!.currentPosition)
+
                     //update the text position under seek bar to reflect the current position of seek bar
                     handler.postDelayed(runnable, 50)
                 }
-
-
             }
             handler.postDelayed(runnable, 50)
-        }
+        } else {
+            handler.post(runnable)
 
-        private fun removeCallback() {
-            if (::runnable.isInitialized) {
-                handler.removeCallbacks(runnable)
-            }
-        }
-
-        @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-        private fun onPause() {
-
-            removeCallback()
-
-        }
-
-        @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-        private fun onResume() {
-            if (::runnable.isInitialized) {
-                handler.post(runnable)
-            }
         }
     }
 
-}
-
-interface OnPlayerStateChanged {
-
-    /**
-     * this will be called when the player complete playing all the the audio file in the list and no other files to play
-     */
-    fun onAudioListCompleted()
-
-    /**
-     * this triggers whenever the audio start  playing
-     */
-    fun onPlay()
-
-    /**
-     * this triggers whenever the audio stop playing
-     */
-    fun onPause()
-
-    /**
-     * this triggers whenever the audio track changes
-     * also will trigger when the current audio track changes automatically without interference from user
-     */
-    fun onAudioChanged(index: Int, isPlaying: Boolean)
-
-    /**
-     * this triggers whenever the audio shuffle and repeat mode changes changes
-     * also it triggers at initialization time
-     */
-    fun onShuffleModeChanged(enable: Boolean)
-
-    fun onRepeatModeChanged(repeatMode: Int)
-
-    fun onDurationChange(duration: Long) {}
-
+    private fun stopProgress() {
+        if (::runnable.isInitialized) {
+            handler.removeCallbacks(runnable)
+        }
+    }
 
 }

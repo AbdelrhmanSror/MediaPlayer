@@ -14,15 +14,21 @@
 package com.example.mediaplayer.ui.chosenSong.adapter
 
 import android.content.Context
+import android.graphics.drawable.Drawable
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.*
+import androidx.vectordrawable.graphics.drawable.Animatable2Compat
+import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.example.mediaplayer.R
 import com.example.mediaplayer.databinding.ChosenSongListLayoutBinding
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.startFavouriteAnimation
-import com.example.mediaplayer.ui.OnItemClickListener
+import com.example.mediaplayer.viewModels.ChosenSongViewModel
 import kotlinx.android.synthetic.main.chosen_song_list_layout.view.*
 
 
@@ -42,7 +48,7 @@ import kotlinx.android.synthetic.main.chosen_song_list_layout.view.*
 
 
 
-class SongListAdapter(private val listener: OnItemClickListener) : ListAdapter<SongModel, SongListAdapter.ViewHolder>(DiffCallBack) {
+class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<SongModel, SongListAdapter.ViewHolder>(DiffCallBack) {
 
     private lateinit var context: Context
     private lateinit var recyclerView: RecyclerView
@@ -74,19 +80,15 @@ class SongListAdapter(private val listener: OnItemClickListener) : ListAdapter<S
 
     }
 
-    class ViewHolder(val binding: ChosenSongListLayoutBinding, private val songListAdapter: SongListAdapter) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: SongModel, listener: OnItemClickListener) {
+    class ViewHolder(val binding: ChosenSongListLayoutBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(item: SongModel, viewModel: ChosenSongViewModel) {
             binding.playlistModel = item
+            binding.viewmodel = viewModel
+            binding.itemPosition = adapterPosition
             binding.favouriteShape.setOnClickListener {
-
-                listener.onFavouriteClick(adapterPosition)
                 binding.favouriteShape.startFavouriteAnimation(item.isFavourite)
             }
-            binding.songNumber.text = songListAdapter.context.getString(R.string.song_number, (adapterPosition + 1).toString())
-            binding.root.setOnClickListener {
-                songListAdapter.setCurrentSelectedPosition(adapterPosition)
-                listener.onClick(adapterPosition)
-            }
+
             binding.executePendingBindings()
 
         }
@@ -95,10 +97,10 @@ class SongListAdapter(private val listener: OnItemClickListener) : ListAdapter<S
          * return the view that viewHolder will hold
          */
         companion object {
-            fun from(parent: ViewGroup, songListAdapter: SongListAdapter): ViewHolder {
+            fun from(parent: ViewGroup): ViewHolder {
                 val inflater = LayoutInflater.from(parent.context)
                 val binding = ChosenSongListLayoutBinding.inflate(inflater)
-                return ViewHolder(binding, songListAdapter)
+                return ViewHolder(binding)
 
             }
         }
@@ -108,14 +110,14 @@ class SongListAdapter(private val listener: OnItemClickListener) : ListAdapter<S
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
 
-        return ViewHolder.from(parent, this)
+        return ViewHolder.from(parent)
     }
 
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
         updateCurrentSelectedView(holder.itemView, position)
-        holder.bind(getItem(position), listener)
+        holder.bind(getItem(position), viewmodel)
 
 
     }
@@ -125,9 +127,25 @@ class SongListAdapter(private val listener: OnItemClickListener) : ListAdapter<S
     private fun updateCurrentSelectedView(item: View, position: Int) {
         if (position == currentSelectedItemPosition) {
             item.divider.visibility = View.VISIBLE
+            item.equalizer_anim.visibility = View.VISIBLE
             lastSelectedItemPosition = position
+            val animatedVector = AnimatedVectorDrawableCompat.create(context, R.drawable.avd_anim)
+            item.equalizer_anim.setImageDrawable(animatedVector)
+            val mainHandler = Handler(Looper.getMainLooper())
+            animatedVector?.registerAnimationCallback(object : Animatable2Compat.AnimationCallback() {
+                override fun onAnimationEnd(drawable: Drawable?) {
+                    mainHandler.post {
+                        Log.v("animationStart", "yeah")
+                        animatedVector.start()
+
+                    }
+                }
+            })
+            animatedVector?.start()
         } else {
             item.divider.visibility = View.GONE
+            item.equalizer_anim.visibility = View.GONE
+
 
         }
     }
@@ -142,6 +160,8 @@ class SongListAdapter(private val listener: OnItemClickListener) : ListAdapter<S
     }
 
     fun setCurrentSelectedPosition(position: Int) {
+        Log.v("serviceaudioPlayer", "posiiton of recycelr view $position")
+
         //update the current focused position
         if (currentSelectedItemPosition != position) {
             currentSelectedItemPosition = position

@@ -1,7 +1,9 @@
 package com.example.mediaplayer.repositry
 
+import android.app.Application
 import android.content.Context
 import androidx.lifecycle.LiveData
+import androidx.room.Room
 import com.example.mediaplayer.DeviceAudioFile
 import com.example.mediaplayer.database.PlayerDatabase
 import com.example.mediaplayer.database.SongEntity
@@ -9,17 +11,28 @@ import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.model.toFavouriteSongEntity
 import com.example.mediaplayer.model.toSongEntity
 
+class Repository private constructor(private val application: Context) {
 
-class Repository(private val application: Context) {
+    private var database: PlayerDatabase = Room.databaseBuilder(application.applicationContext, PlayerDatabase::class.java, "SongList").fallbackToDestructiveMigration().build()
 
-    private val database = PlayerDatabase.getInstance(application)
+    companion object {
+        @Volatile
+        private var INSTANCE: Repository? = null
 
+        fun getRepository(app: Application): Repository {
+            return INSTANCE ?: synchronized(this) {
+                Repository(app).also {
+                    INSTANCE = it
+                }
+            }
+        }
+    }
 
     fun getFavouriteSongs(): LiveData<List<SongEntity>> {
         return database.favouriteSongsDao().getAllFavouriteSong()
     }
 
-    fun insertIntoFavouriteSongs(songModel: SongModel) {
+    fun addFavouriteSong(songModel: SongModel) {
         database.runInTransaction {
             database.songDao().updateFavourite(songModel.title, true)
             database.favouriteSongsDao().insertFavouriteSong(songModel.toFavouriteSongEntity())
@@ -27,7 +40,7 @@ class Repository(private val application: Context) {
         }
     }
 
-    fun deleteFromFavouriteSongs(title: String) {
+    fun removeFromFavouriteSongs(title: String) {
         database.runInTransaction {
             database.favouriteSongsDao().deleteFavouriteSong(title)
             database.songDao().updateFavourite(title, false)
@@ -35,15 +48,15 @@ class Repository(private val application: Context) {
         }
     }
 
-    private fun insertListOfSongs(songs: List<SongEntity>) {
+    private fun insertSongs(songs: List<SongEntity>) {
         database.songDao().insertAll(songs)
     }
 
-    fun getListOfSongsLiveData(): LiveData<List<SongEntity>> {
+    fun observeSongs(): LiveData<List<SongEntity>> {
         return database.songDao().getAllSongsLiveData()
     }
 
-    fun getListOfSongs(): List<SongEntity> {
+    fun getSongs(): List<SongEntity> {
         return database.songDao().getAllSongs()
     }
 
@@ -58,7 +71,7 @@ class Repository(private val application: Context) {
             if (listOfSong.isNullOrEmpty()) {
                 break
             }
-            insertListOfSongs(listOfSong)
+            insertSongs(listOfSong)
             offset += limit
             limit *= 3
         }

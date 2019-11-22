@@ -17,14 +17,12 @@ import android.content.Context
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.LinearSmoothScroller
-import androidx.recyclerview.widget.LinearSnapHelper
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.*
 import com.example.mediaplayer.databinding.PlayerImageLibraryBinding
-import com.example.mediaplayer.ui.OnItemClickListener
+import com.example.mediaplayer.viewModels.ChosenSongViewModel
 
 
-class ImageListAdapter(private val albumCoverUris: ArrayList<String?>, private val listener: OnItemClickListener) : RecyclerView.Adapter<ImageListAdapter.ViewHolder>() {
+class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<String, ImageListAdapter.ViewHolder>(DiffCallBack) {
 
     private lateinit var context: Context
     private lateinit var recyclerView: RecyclerView
@@ -39,12 +37,28 @@ class ImageListAdapter(private val albumCoverUris: ArrayList<String?>, private v
         }
     }
 
+
+    /**
+     *diff util class to calculate the difference between two list if the the old list has changed
+     *with minimum changes it can do
+     */
+    object DiffCallBack : DiffUtil.ItemCallback<String>() {
+
+        override fun areItemsTheSame(oldItem: String, newItem: String): Boolean {
+            return true
+        }
+
+        override fun areContentsTheSame(oldItem: String, newItem: String): Boolean {
+            return true
+        }
+
+    }
+
+
     class ViewHolder(val binding: PlayerImageLibraryBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: String?, listener: OnItemClickListener) {
-            binding.imageUri = item
-            binding.root.setOnClickListener {
-                listener.onClick(adapterPosition)
-            }
+        fun bind(viewmodel: ChosenSongViewModel) {
+            binding.viewmodel = viewmodel
+            binding.itemPosition = adapterPosition
             binding.executePendingBindings()
 
         }
@@ -71,15 +85,10 @@ class ImageListAdapter(private val albumCoverUris: ArrayList<String?>, private v
 
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(albumCoverUris[position], listener)
+        holder.bind(viewmodel)
 
 
     }
-
-    override fun getItemCount(): Int {
-        return albumCoverUris.size
-    }
-
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)

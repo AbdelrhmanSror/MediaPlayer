@@ -1,8 +1,11 @@
+<!--suppress AndroidUnknownAttribute -->
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
+        <import type="com.example.mediaplayer.ExtensionUtilsKt" />
 
         <variable
             name="viewModel"
@@ -18,6 +21,7 @@
             android:id="@+id/position"
             android:layout_width="wrap_content"
             android:layout_height="15dp"
+            android:text="@{@string/duration_format(ExtensionUtilsKt.twoDigitNumber(viewModel.audioPlayerProgress/60),ExtensionUtilsKt.twoDigitNumber(viewModel.audioPlayerProgress%60))}"
             android:includeFontPadding="false"
             android:paddingLeft="4dp"
             android:paddingRight="4dp"
@@ -31,9 +35,12 @@
 
 
         <SeekBar
+            android:progress="@{viewModel.audioPlayerProgress}"
+            android:max="@{Integer.valueOf(String.valueOf(viewModel.duration/1000))}"
             android:id="@+id/media_seek_bar"
             android:layout_width="250dp"
             android:layout_height="15dp"
+            android:onProgressChanged="@{(sb, value, fromUser)->fromUser? viewModel.seekToSecond(value):null}"
             android:layout_marginBottom="8dp"
             app:layout_constraintBottom_toTopOf="@+id/play"
             app:layout_constraintEnd_toEndOf="@+id/shuffle"
@@ -89,6 +96,7 @@
             android:layout_marginBottom="8dp"
             android:background="@drawable/ripple_v21"
             android:elevation="8dp"
+            app:playPauseInitial="@{viewModel.playPauseStateInitial}"
             android:onClick="@{()->viewModel.onPlayPauseListener()}"
             app:backgroundTint="@color/blue"
             app:layout_constraintBottom_toBottomOf="parent"

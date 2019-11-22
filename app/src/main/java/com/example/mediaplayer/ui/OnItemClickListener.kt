@@ -19,6 +19,5 @@ package com.example.mediaplayer.ui
  */
 interface OnItemClickListener {
     fun onClick(itemClickIndex: Int) {}
-    fun onFavouriteClick(itemClickIndex: Int) {}
 
 }

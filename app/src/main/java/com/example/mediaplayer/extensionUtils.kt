@@ -24,24 +24,8 @@ import android.util.Log
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.MutableLiveData
-import androidx.paging.PagedList
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 
-
-/**
- * extension function for starting foreground service
- */
-fun Context.startForeground(foregroundIntent: Intent) {
-    //Start service:
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        startForegroundService(foregroundIntent)
-
-    } else {
-        startService(foregroundIntent)
-
-    }
-}
 
 /**
  * add 0 before the digit if it was single number
@@ -52,15 +36,6 @@ fun Int.twoDigitNumber(): String {
         ("0${this}")
     } else
         this.toString()
-}
-
-fun <T> PagedList<out T>?.toArrayList(): List<T> {
-
-    return if (this.isNullOrEmpty()) {
-        emptyList()
-    } else {
-        ArrayList(this)
-    }
 }
 
 //start animation of like or dislike audio
@@ -78,12 +53,6 @@ fun ImageButton.startFavouriteAnimation(addToFavourite: Boolean) {
 
 }
 
-/**
- * call it from background
- */
-fun <T> MutableLiveData<T>.notifyObserver() {
-    this.postValue(this.value)
-}
 
 fun Activity.disableActionBarTitle() {
     //to disable the action bar title and use my own custom title.
@@ -99,4 +68,18 @@ fun Application.isAudioFilesPermissionGranted(): Boolean {
             this,
             Manifest.permission.READ_EXTERNAL_STORAGE
     ) == PackageManager.PERMISSION_GRANTED
+}
+
+/**
+ * extension function for starting foreground service
+ */
+fun Context.startForeground(foregroundIntent: Intent) {
+    //Start service:
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        startForegroundService(foregroundIntent)
+
+    } else {
+        startService(foregroundIntent)
+
+    }
 }

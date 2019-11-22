@@ -8,10 +8,11 @@ buildscript {
 
     }
     ext {
-        nav_version = "2.2.0-alpha03"
+        nav_version = "2.2.0-rc01"
         version_coroutine = "1.1.0"
         version_room = "2.2.1"
         pagingVersion = "2.1.0"
+        dagger_version="2.25.2"
 
 
     }

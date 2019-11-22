@@ -25,6 +25,7 @@
             android:id="@+id/chosen_song_list_container"
             style="@style/Widget.MaterialComponents.CardView"
             android:layout_width="match_parent"
+            android:onClick="@{()->viewmodel.seekTo(itemPosition)}"
             android:layout_height="80dp"
             app:cardCornerRadius="@dimen/small_horizontal_spacing"
             app:cardElevation="4dp"
@@ -51,6 +52,7 @@
                     android:layout_marginTop="@dimen/large_horizontal_spacing"
                     android:textColor="@color/black"
                     android:textSize="14sp"
+                    android:text="@{@string/song_number(String.valueOf(itemPosition+1))}"
                     tools:text="1." />
 
                 <LinearLayout
@@ -78,6 +80,14 @@
 
                 </LinearLayout>
 
+                <ImageView
+                    android:id="@+id/equalizer_anim"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    tools:visibility="visible"
+                    android:visibility="gone"
+                    android:layout_gravity="center_vertical|end"
+                    tools:srcCompat="@drawable/equlizer_anim" />
                 <ImageButton
                     android:id="@+id/favourite_shape"
                     android:layout_width="48dp"
@@ -86,6 +96,7 @@
                     android:layout_margin="@dimen/medium_vertical_spacing"
                     android:backgroundTint="@color/white"
                     app:borderWidth="0dp"
+                    android:onClick="@{()->viewmodel.setFavouriteAudio(itemPosition)}"
                     app:setInitialFavourite="@{playlistModel.favourite}"
                     app:srcCompat="@drawable/ic_favourite_stroke" />
             </LinearLayout>
@@ -95,9 +106,20 @@
 
     <data>
 
+        <import type="android.content.Context" />
+
+        <import type="com.example.mediaplayer.R" />
         <variable
             name="playlistModel"
             type="com.example.mediaplayer.model.SongModel" />
+
+        <variable
+            name="itemPosition"
+            type="Integer" />
+
+        <variable
+            name="viewmodel"
+            type="com.example.mediaplayer.viewModels.ChosenSongViewModel" />
     </data>
 
 </layout>
