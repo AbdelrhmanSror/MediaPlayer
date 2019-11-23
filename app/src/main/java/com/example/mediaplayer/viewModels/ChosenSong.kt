@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
-import android.util.Log
 import androidx.lifecycle.*
 import com.example.mediaplayer.*
 import com.example.mediaplayer.audioPlayer.OnPlayerStateChanged
@@ -42,7 +41,6 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
 
         override fun onServiceDisconnected(arg0: ComponentName) {
             //nothing
-            Log.v("serviceDisconnected", "done")
         }
     }
 
@@ -89,6 +87,14 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
         }
         imageUris
     }
+
+    private val _audioProgress = MutableLiveData<MutableLiveData<Long>>()
+    var audioPlayerProgress: LiveData<Int> = _audioProgress.switchMap {
+        it.map { progress ->
+            (progress / 1000).toInt()
+        }
+    }
+
     //to observe when the current song track is changed
     private val _chosenSongIndex = MutableLiveData<Int?>()
     val chosenSongIndex: LiveData<Int?> = _chosenSongIndex
@@ -108,14 +114,6 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
 
     private val _playPauseStateInitial = MutableLiveData<Boolean?>()
     val playPauseStateInitial: LiveData<Boolean?> = _playPauseStateInitial
-
-
-    /**
-     * live data for progress change of audio player
-     */
-    private var _audioProgress = MutableLiveData<Int>()
-    val audioPlayerProgress: LiveData<Int>
-        get() = _audioProgress
 
 
     override fun onAudioChanged(index: Int, isPlaying: Boolean) {
@@ -143,13 +141,10 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
 
     override fun onDurationChange(duration: Long) {
         _duration.value = duration
-
     }
 
-    override fun onProgressChanged(progress: Long) {
-        Log.v("onProgeesschanged", "vhanging...  progres is${_audioProgress.hasActiveObservers()}")
-        _audioProgress.value = (progress / 1000).toInt()
-
+    override fun onProgressChangedLiveData(progress: MutableLiveData<Long>) {
+        _audioProgress.value = progress
     }
 
     fun setFavouriteAudio(chosenSongIndex: Int) {

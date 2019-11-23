@@ -195,7 +195,7 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
 
     private fun firstTimeInstantScrolling(position: Int) {
         snapHelper.attachToRecyclerView(recyclerView)
-        Handler().postDelayed(Runnable {
+        Handler().postDelayed({
             //instant scroll at first time recyclerview started
             recyclerView.scrollToPosition(position + 1)
 

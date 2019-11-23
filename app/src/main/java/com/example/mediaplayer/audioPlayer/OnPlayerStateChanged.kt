@@ -13,6 +13,8 @@
 
 package com.example.mediaplayer.audioPlayer
 
+import androidx.lifecycle.MutableLiveData
+
 
 interface OnPlayerStateChanged {
 
@@ -46,7 +48,8 @@ interface OnPlayerStateChanged {
     fun onRepeatModeChanged(repeatMode: Int) {}
 
     fun onDurationChange(duration: Long) {}
-    fun onProgressChanged(progress: Long) {}
+    //fun onProgressChanged(progress: Long) {}
+    fun onProgressChangedLiveData(progress: MutableLiveData<Long>) {}
 
 
 }

@@ -1,12 +1,13 @@
 package com.example.mediaplayer.ui.chosenSong
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mediaplayer.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.PlayerDestinations
@@ -23,35 +24,40 @@ import com.example.mediaplayer.viewModels.ChosenSongViewModelFactory
  */
 class ChosenSongFragment : Fragment() {
 
-    private lateinit var viewModel: ChosenSongViewModel
+    private val viewModel: ChosenSongViewModel by viewModels {
+        val index: Int? = arguments?.getInt(CHOSEN_SONG_INDEX)
+        val fromNotification = arguments?.getBoolean(PlayerDestinations.NOTIFICATION.value, false)
+        ChosenSongViewModelFactory(activity!!.application, index!!, fromNotification!!)
+    }
     private lateinit var binding: ChosenSongFragmentBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         binding = ChosenSongFragmentBinding.inflate(inflater)
-        setUpViewModel()
-        setUpSongRecyclerView()
-        setUpImageRecyclerView()
-        binding.viewModel = viewModel
-        binding.lifecycleOwner = viewLifecycleOwner
         return binding.root
     }
 
-    private fun setUpViewModel() {
-        val index: Int? = arguments?.getInt(CHOSEN_SONG_INDEX)
-        val fromNotification = arguments?.getBoolean(PlayerDestinations.NOTIFICATION.value, false)
-        val factory = ChosenSongViewModelFactory(activity!!.application, index!!, fromNotification!!)
-        viewModel = ViewModelProvider(this, factory).get(ChosenSongViewModel::class.java)
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        setUpSongRecyclerView()
+        setUpImageRecyclerView()
+        setUpObserver()
+        binding.viewModel = viewModel
+        binding.lifecycleOwner = viewLifecycleOwner
+    }
 
+    private fun setUpObserver() {
         with(viewModel)
         {
+            Log.v("serviceDisconnected", "done")
             chosenSongIndex.observe(viewLifecycleOwner, Observer { index ->
                 index?.let {
                     (binding.playerLayout.listSong.adapter as SongListAdapter).setCurrentSelectedPosition(index)
                     (binding.playerLayout.listImage.adapter as ImageListAdapter).setCurrentSelectedPosition(index)
                 }
             })
+
         }
     }
 

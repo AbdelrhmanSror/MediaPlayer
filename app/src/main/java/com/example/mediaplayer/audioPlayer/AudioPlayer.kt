@@ -20,6 +20,7 @@ import android.net.Uri
 import android.os.Handler
 import android.util.Log
 import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.MutableLiveData
 import com.example.mediaplayer.audioPlayer.audioFocus.AudioFocusCallBacks
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompatFactory
 import com.example.mediaplayer.foregroundService.AudioBroadCastReceiver
@@ -56,7 +57,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
 
     private lateinit var runnable: Runnable
 
-    private lateinit var handler: Handler
+    private var handler: Handler? = null
 
     /**
      * intent filter to setup with broadcast receiver so when user disconnect the headphone we pause the player
@@ -160,7 +161,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
 
     /**
      * to register observer we need to give it the class that implement the interface of observer
-     * and [enableProgress] which used to trigger the  [OnPlayerStateChanged.onProgressChanged] whenever the progress changed
+     * and [enableProgress] which used to trigger the  [OnPlayerStateChanged.onProgressChangedLiveData] whenever the progress changed
      *
      *[instantTrigger] set this to true if u enter ur activity or fragment from notification so u want to trigger callback to refresh ui.
      * if u set [instantTrigger] to true and player was not already playing it won't have any active,it is only active if the player was playing
@@ -358,8 +359,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
      * play audio and reset runnable callback of Audio progress if it was initialized before
      */
     fun play() {
-        if (::runnable.isInitialized)
-            handler.post(runnable)
+        resumeProgress()
         player?.playWhenReady = true
     }
 
@@ -367,8 +367,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
      * pause audio and remove runnable callback of Audio progress if it is initialized
      */
     fun pause() {
-        if (::runnable.isInitialized)
-            handler.removeCallbacks(runnable)
+        pauseProgress()
         player?.playWhenReady = false
     }
 
@@ -457,27 +456,45 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
     }
 
     private fun setOnProgressChanged(onPlayerStateChanged: OnPlayerStateChanged) {
-        if (!::handler.isInitialized) {
+        onPlayerStateChanged.onProgressChangedLiveData(ProgressLiveData())
+    }
+
+    inner class ProgressLiveData : MutableLiveData<Long>() {
+        init {
             handler = Handler()
             runnable = Runnable {
                 player?.let {
-                    onPlayerStateChanged.onProgressChanged(player!!.currentPosition)
-
+                    // onPlayerStateChanged.onProgressChanged(player!!.currentPosition)
+                    postValue(player!!.currentPosition)
                     //update the text position under seek bar to reflect the current position of seek bar
-                    handler.postDelayed(runnable, 50)
+                    handler?.postDelayed(runnable, 50)
                 }
             }
-            handler.postDelayed(runnable, 50)
-        } else {
-            handler.post(runnable)
-
+            handler?.postDelayed(runnable, 50)
         }
+
+        override fun onInactive() {
+            pauseProgress()
+        }
+
+        override fun onActive() {
+            resumeProgress()
+        }
+    }
+
+    private fun pauseProgress() {
+        if (::runnable.isInitialized) {
+            handler?.removeCallbacks(runnable)
+        }
+    }
+
+    private fun resumeProgress() {
+        if (::runnable.isInitialized)
+            handler?.post(runnable)
     }
 
     private fun stopProgress() {
-        if (::runnable.isInitialized) {
-            handler.removeCallbacks(runnable)
-        }
+        pauseProgress()
+        handler = null
     }
-
 }
