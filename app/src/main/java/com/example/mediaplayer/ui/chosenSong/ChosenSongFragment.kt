@@ -34,7 +34,7 @@ class ChosenSongFragment : Fragment() {
         setUpSongRecyclerView()
         setUpImageRecyclerView()
         binding.viewModel = viewModel
-        binding.lifecycleOwner = this
+        binding.lifecycleOwner = viewLifecycleOwner
         return binding.root
     }
 
@@ -47,10 +47,11 @@ class ChosenSongFragment : Fragment() {
         with(viewModel)
         {
             chosenSongIndex.observe(viewLifecycleOwner, Observer { index ->
-                (binding.playerLayout.listSong.adapter as SongListAdapter).setCurrentSelectedPosition(index)
-                (binding.playerLayout.listImage.adapter as ImageListAdapter).setCurrentSelectedPosition(index)
+                index?.let {
+                    (binding.playerLayout.listSong.adapter as SongListAdapter).setCurrentSelectedPosition(index)
+                    (binding.playerLayout.listImage.adapter as ImageListAdapter).setCurrentSelectedPosition(index)
+                }
             })
-
         }
     }
 
@@ -60,6 +61,7 @@ class ChosenSongFragment : Fragment() {
         binding.playerLayout.listSong.layoutManager = CenterZoomLayoutManager(context!!)
         //setup recyclerview with adapter
         binding.playerLayout.listSong.adapter = adapter
+
     }
 
     private fun setUpImageRecyclerView() {
@@ -68,6 +70,7 @@ class ChosenSongFragment : Fragment() {
         binding.playerLayout.listImage.layoutManager = linearLayoutManager
         //setup recyclerview with adapter
         binding.playerLayout.listImage.adapter = adapter
+
     }
 
 

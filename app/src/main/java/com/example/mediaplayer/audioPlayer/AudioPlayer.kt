@@ -63,6 +63,8 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
      */
     private val intentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
     private val myNoisyAudioStreamReceiver = AudioBroadCastReceiver()
+
+
     private var repeatModeActivated: Boolean = false
         set(value) {
             if (value) {
@@ -73,6 +75,8 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
             }
             field = value
         }
+
+
     private var shuffleModeActivated: Boolean = false
         set(value) {
             player!!.shuffleModeEnabled = value
@@ -132,6 +136,11 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
         if (audioList != mSongList) {
             mSongList = audioList
             setUpPlayer(chosenAudioIndex)
+            //trigger these callback for first time every time player is being started
+            onPlayerStateChanged.forEach {
+                it?.onRepeatModeChanged(player!!.repeatMode)
+                it?.onShuffleModeChanged(player!!.shuffleModeEnabled)
+            }
         } else {
             seekTo(chosenAudioIndex)
             //if the player was being stopped then play
@@ -140,11 +149,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
             }
         }
         requestFocus()
-        //trigger these callback for first time every time player is being started
-        onPlayerStateChanged.forEach {
-            it?.onRepeatModeChanged(player!!.repeatMode)
-            it?.onShuffleModeChanged(player!!.shuffleModeEnabled)
-        }
+
     }
 
 
@@ -157,28 +162,27 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
      * to register observer we need to give it the class that implement the interface of observer
      * and [enableProgress] which used to trigger the  [OnPlayerStateChanged.onProgressChanged] whenever the progress changed
      *
+     *[instantTrigger] set this to true if u enter ur activity or fragment from notification so u want to trigger callback to refresh ui.
+     * if u set [instantTrigger] to true and player was not already playing it won't have any active,it is only active if the player was playing
+     * by default [instantTrigger] is set to false
+     *
+     * warning :do not use [instantTrigger] other than that because it may trigger callback twice at same time which will lead to unwanted behaviour
      */
-    override fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgress: Boolean) {
+    override fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgress: Boolean, instantTrigger: Boolean) {
         this.onPlayerStateChanged.add(onPlayerStateChanged)
         if (enableProgress) {
             setOnProgressChanged(onPlayerStateChanged)
         }
         /**
-         * trigger callback for first time to update ui,
-         * this case for entering the app from notification
-         * as audio player already setuped the player callback won't trigger so we have to do it manually
-         *
          *audio player at initial state will return -1 because there is no audio is being played
          * also we just want to trigger these manually to refresh ui cause
          * if the audio is playing these events won't trigger until the events that trigger them happen
          * so to refresh ui when activity or fragment rebind with the service we have to do it manually
          * also we do it only if audio already playing otherwise we continue the normal sequence
          */
-        if (currentAudioIndex != -1) {
-            onPlayerStateChanged.onAudioChanged(currentAudioIndex, isPlaying)
-            onPlayerStateChanged.onShuffleModeChanged(playerShuffleMode)
-            onPlayerStateChanged.onRepeatModeChanged(playerRepeatMode)
-            onPlayerStateChanged.onDurationChange(playerDuration)
+        if (currentAudioIndex != -1 && instantTrigger) {
+            notifyObserver(onPlayerStateChanged)
+
         }
     }
 
@@ -187,6 +191,13 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
             stopProgress()
         }
         this.onPlayerStateChanged.remove(onPlayerStateChanged)
+    }
+
+    override fun notifyObserver(onPlayerStateChanged: OnPlayerStateChanged) {
+        onPlayerStateChanged.onAudioChanged(currentAudioIndex, isPlaying)
+        onPlayerStateChanged.onShuffleModeChanged(playerShuffleMode)
+        onPlayerStateChanged.onRepeatModeChanged(playerRepeatMode)
+        onPlayerStateChanged.onDurationChange(playerDuration)
     }
 
     //handle the player when actions happen in notification
@@ -276,7 +287,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
 
             }
 
-            //when the focus lost we pause the player and set prevPlayerState to false
+            //when the focus lost we pause the player and set prevPlayerState to the current state of player
             override fun onAudioFocusLost(Permanent: Boolean) {
                 prevPlayerState = isPlaying
                 pause()

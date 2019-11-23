@@ -6,7 +6,6 @@
     <data>
 
         <import type="com.example.mediaplayer.ExtensionUtilsKt" />
-
         <variable
             name="viewModel"
             type="com.example.mediaplayer.viewModels.ChosenSongViewModel" />

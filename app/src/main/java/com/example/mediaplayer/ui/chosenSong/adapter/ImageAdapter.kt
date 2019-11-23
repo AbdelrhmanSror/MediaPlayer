@@ -14,7 +14,7 @@
 package com.example.mediaplayer.ui.chosenSong.adapter
 
 import android.content.Context
-import android.util.Log
+import android.os.Handler
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.*
@@ -28,6 +28,7 @@ class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter
     private lateinit var recyclerView: RecyclerView
     private var currentSelectedItemPosition: Int = -1
     private var isSnapAttached = false
+    private var firstTimeInflating: Boolean = true
     private val snapHelper = LinearSnapHelper()
     private val smoothScroller: LinearSmoothScroller by lazy {
         object : LinearSmoothScroller(context) {
@@ -109,9 +110,24 @@ class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter
 
     }
 
-    private fun scrollTo(position: Int) {
-        Log.v("heyfroObserver", "positon $position")
+    private fun firstTimeInstantScrolling(position: Int) {
+        snapHelper.attachToRecyclerView(recyclerView)
+        Handler().postDelayed({
+            //instant scroll at first time recyclerview started
+            //if position is 0 then instant scroll is enought
+            //otherwise we make instant scroll and then we convert it to smooth scroll by adding 1
+            if (position == 0)
+                recyclerView.scrollToPosition(position)
+            else {
+                recyclerView.scrollToPosition(position)
+                smoothScroller.targetPosition = 1
+                (recyclerView.layoutManager as CenterZoomLayoutManager).startSmoothScroll(smoothScroller)
+            }
+        }, 200)
+        firstTimeInflating = false
+    }
 
+    private fun normalScrolling(position: Int) {
         //if position was the first or last then just scroll
         if (position == 0 || position == itemCount - 1) {
             if (isSnapAttached) {
@@ -125,10 +141,17 @@ class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter
                 snapHelper.attachToRecyclerView(recyclerView)
                 isSnapAttached = true
             }
-
         }
         smoothScroller.targetPosition = position
         (recyclerView.layoutManager as CenterZoomLayoutManager).startSmoothScroll(smoothScroller)
+    }
+
+    private fun scrollTo(position: Int) {
+        if (firstTimeInflating) {
+            firstTimeInstantScrolling(position)
+        } else {
+            normalScrolling(position)
+        }
     }
 
 }

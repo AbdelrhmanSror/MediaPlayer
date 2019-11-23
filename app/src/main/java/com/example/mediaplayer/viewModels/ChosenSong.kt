@@ -22,7 +22,7 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
 
     private val mApplication = application
     private val repository = Repository.getRepository(application)
-    lateinit var audioService: AudioForegroundService
+    private lateinit var audioService: AudioForegroundService
 
 
     /**
@@ -35,7 +35,7 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             val binder = service as AudioForegroundService.SongBinder
             audioService = binder.service
-            audioService.registerObserver(this@ChosenSongViewModel, true)
+            audioService.registerObserver(this@ChosenSongViewModel, true, fromNotification)
 
 
         }
@@ -90,8 +90,8 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
         imageUris
     }
     //to observe when the current song track is changed
-    private val _chosenSongIndex = MutableLiveData<Int>()
-    val chosenSongIndex: LiveData<Int> = _chosenSongIndex
+    private val _chosenSongIndex = MutableLiveData<Int?>()
+    val chosenSongIndex: LiveData<Int?> = _chosenSongIndex
 
     // when service is initialized so we pass the live data to be observed and update the repeatMod,shuffleMode,playPauseButton Ui
     private val _repeatMode = MutableLiveData<Int>()
@@ -113,15 +113,15 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
     /**
      * live data for progress change of audio player
      */
-    private val _audioPlayerProgress = MutableLiveData<Long>()
-    val audioPlayerProgress: LiveData<Int> = _audioPlayerProgress.map {
-        (it / 1000).toInt()
-    }
+    private var _audioProgress = MutableLiveData<Int>()
+    val audioPlayerProgress: LiveData<Int>
+        get() = _audioProgress
 
 
     override fun onAudioChanged(index: Int, isPlaying: Boolean) {
         _playPauseStateInitial.value = isPlaying
         _chosenSongIndex.value = index
+
     }
 
     override fun onPlay() {
@@ -147,7 +147,9 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
     }
 
     override fun onProgressChanged(progress: Long) {
-        _audioPlayerProgress.value = progress
+        Log.v("onProgeesschanged", "vhanging...  progres is${_audioProgress.hasActiveObservers()}")
+        _audioProgress.value = (progress / 1000).toInt()
+
     }
 
     fun setFavouriteAudio(chosenSongIndex: Int) {

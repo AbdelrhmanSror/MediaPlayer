@@ -46,8 +46,8 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
 
     }
 
-    fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgress: Boolean) {
-        audioPlayer.registerObserver(onPlayerStateChanged, enableProgress)
+    fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgress: Boolean, instantTrigger: Boolean) {
+        audioPlayer.registerObserver(onPlayerStateChanged, enableProgress, instantTrigger)
     }
 
     fun removeObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgress: Boolean) {
