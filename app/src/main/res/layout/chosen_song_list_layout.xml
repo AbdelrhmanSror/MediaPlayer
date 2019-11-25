@@ -80,14 +80,16 @@
 
                 </LinearLayout>
 
-                <ImageView
+                <com.example.mediaplayer.customViews.EqualizerView
                     android:id="@+id/equalizer_anim"
                     android:layout_width="30dp"
                     android:layout_height="30dp"
                     tools:visibility="visible"
+                    app:foregroundColor="@color/blue"
                     android:visibility="gone"
-                    android:layout_gravity="center_vertical|end"
-                    tools:srcCompat="@drawable/equlizer_anim" />
+                    app:animDuration="3500"
+                    android:layout_gravity="center|end"
+                    />
                 <ImageButton
                     android:id="@+id/favourite_shape"
                     android:layout_width="48dp"

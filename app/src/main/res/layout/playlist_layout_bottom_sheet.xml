@@ -59,23 +59,6 @@
             android:layout_height="wrap_content"
             style="@style/bottom_sheet_text"
             tools:text="3.00" />
-        <ImageView
-            android:id="@+id/equalizer_replacement"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:visibility="visible"
-            android:layout_height="wrap_content"
-            app:srcCompat="@drawable/equlizer"
-            android:layout_gravity="center_vertical" />
-
-        <!--<es.claucookie.miniequalizerlibrary.EqualizerView
-            android:id="@+id/equalizer_view"
-            android:layout_width="30dp"
-            android:visibility="gone"
-            android:layout_gravity="center_vertical"
-            android:layout_height="30dp"
-            custom:foregroundColor="@color/black"
-            custom:animDuration="3500" />-->
 
     </LinearLayout>
 </layout>

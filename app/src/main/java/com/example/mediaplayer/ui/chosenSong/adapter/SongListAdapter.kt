@@ -44,7 +44,7 @@ import javax.inject.Inject
 
 
 
-class SongListAdapter (private val viewmodel: ChosenSongViewModel) : ListAdapter<SongModel, SongListAdapter.ViewHolder>(DiffCallBack) {
+class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<SongModel, SongListAdapter.ViewHolder>(DiffCallBack) {
 
     private lateinit var context: Context
     private lateinit var recyclerView: RecyclerView
@@ -114,8 +114,9 @@ class SongListAdapter (private val viewmodel: ChosenSongViewModel) : ListAdapter
         onRecyclerViewScrolling()
 
     }
-    private fun onRecyclerViewScrolling(){
-        recyclerView.addOnScrollListener(object :RecyclerView.OnScrollListener(){
+
+    private fun onRecyclerViewScrolling() {
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
 
             }
@@ -138,36 +139,12 @@ class SongListAdapter (private val viewmodel: ChosenSongViewModel) : ListAdapter
     }
 
 
-    override fun onViewDetachedFromWindow(holder: ViewHolder) {
-    }
-    /*private fun onfinishIntflatingFirstTime(onFinish: () -> Unit) {
-        if (firstTimeInflating) {
-            recyclerView.viewTreeObserver
-                    .addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-                        override fun onGlobalLayout() {
-                            onFinish()
-                            Log.v("inflatingTime","fisttime")
-                            firstTimeInflating=false
-                            //At this point the layout is complete and the
-                            //dimensions of recyclerView and any child views are known.
-                            //Remove listener after changed RecyclerView's height to prevent infinite loop
-                            recyclerView.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                        }
-                    })
-        } else {
-            Log.v("inflatingTime","secondtime")
-            onFinish()
-        }
-    }
-*/
-
-
-    fun setCurrentSelectedPosition(position: Int,scrollEnabled:Boolean) {
+    fun setCurrentSelectedPosition(position: Int, scrollEnabled: Boolean) {
         //update the current focused position
         if (currentSelectedItemPosition != position) {
             currentSelectedItemPosition = position
-            if(!scrollEnabled)
-               return
+            if (!scrollEnabled)
+                return
             notifyItemChanged(lastSelectedItemPosition)
             notifyItemChanged(currentSelectedItemPosition)
             scrollTo(position)
@@ -181,29 +158,19 @@ class SongListAdapter (private val viewmodel: ChosenSongViewModel) : ListAdapter
     private fun updateCurrentSelectedView(item: View, position: Int) {
         if (position == currentSelectedItemPosition) {
             item.divider.visibility = View.VISIBLE
-            // item.equalizer_anim.visibility = View.VISIBLE
+            item.equalizer_anim.visibility = View.VISIBLE
+            item.equalizer_anim.animateBars()
             lastSelectedItemPosition = position
-            /*  val animatedVector = AnimatedVectorDrawableCompat.create(context, R.drawable.avd_anim)
-              item.equalizer_anim.setImageDrawable(animatedVector)
-              val mainHandler = Handler(Looper.getMainLooper())
-              animatedVector?.registerAnimationCallback(object : Animatable2Compat.AnimationCallback() {
-                  override fun onAnimationEnd(drawable: Drawable?) {
-                      mainHandler.post {
-                          Log.v("animationStart", "yeah")
-                          animatedVector.start()
 
-                      }
-                  }
-              })
-              animatedVector?.start()*/
+
         } else {
             item.divider.visibility = View.GONE
-            // item.equalizer_anim.visibility = View.GONE
+            item.equalizer_anim.visibility = View.GONE
+            item.equalizer_anim.stopBars()
 
 
         }
     }
-
 
 
     private fun firstTimeInstantScrolling(position: Int) {
