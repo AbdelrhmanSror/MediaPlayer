@@ -5,7 +5,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProviders
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import com.example.mediaplayer.CHOSEN_SONG_INDEX
@@ -14,13 +15,20 @@ import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.databinding.PlaylistFragmentBinding
 import com.example.mediaplayer.ui.OnItemClickListener
 import com.example.mediaplayer.viewModels.PlayListViewModel
-import com.example.mediaplayer.viewModels.PlayListViewModelFactory
+import dagger.android.support.DaggerFragment
+import javax.inject.Inject
 
 
 /**
  * A simple [Fragment] subclass.
  */
-class PlayListFragment : Fragment() {
+class PlayListFragment : DaggerFragment() {
+
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+
+    private val viewModel by viewModels<PlayListViewModel> { viewModelFactory }
+
     private lateinit var navController: NavController
     private lateinit var binding: PlaylistFragmentBinding
 
@@ -36,10 +44,8 @@ class PlayListFragment : Fragment() {
 
 
     private fun prepareMusicList() {
-        val factory = PlayListViewModelFactory(activity!!.application)
-        val playListViewModel = ViewModelProviders.of(activity!!, factory).get(PlayListViewModel::class.java)
         setUpPlayList()
-        playListViewModel.playLists.observe(viewLifecycleOwner, androidx.lifecycle.Observer {
+        viewModel.playLists.observe(viewLifecycleOwner, androidx.lifecycle.Observer {
 
             if (it.isNullOrEmpty()) {
                 binding.noAudioText.visibility = View.VISIBLE

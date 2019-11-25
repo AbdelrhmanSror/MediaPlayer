@@ -57,8 +57,7 @@ class DeviceAudioFile(private val application: Context) {
 
     private fun Cursor.getAudioUri(): Uri {
         val audioId = this.getLong(getColumnIndex(MediaStore.Audio.Media._ID))
-        return ContentUris.withAppendedId(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, audioId)
+        return ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, audioId)
     }
 
     private fun Cursor.getAudioName(): String {
@@ -88,10 +87,10 @@ class DeviceAudioFile(private val application: Context) {
      */
     private fun getAlbumArtPath(albumId: String): String? {
         val cursor = with(application) {
-            contentResolver.query(android.provider.MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
-                    kotlin.arrayOf(android.provider.MediaStore.Audio.Albums._ID, android.provider.MediaStore.Audio.Albums.ALBUM_ART),
-                    android.provider.MediaStore.Audio.Albums._ID + "=?",
-                    kotlin.arrayOf(albumId), null)
+            contentResolver.query(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
+                    arrayOf(MediaStore.Audio.Albums._ID, MediaStore.Audio.Albums.ALBUM_ART),
+                    MediaStore.Audio.Albums._ID + "=?",
+                    arrayOf(albumId), null)
         }
         cursor?.run {
             if (moveToFirst()) {

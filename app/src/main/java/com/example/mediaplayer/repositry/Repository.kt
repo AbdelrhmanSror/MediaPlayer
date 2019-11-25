@@ -1,32 +1,17 @@
 package com.example.mediaplayer.repositry
 
 import android.app.Application
-import android.content.Context
 import androidx.lifecycle.LiveData
-import androidx.room.Room
 import com.example.mediaplayer.DeviceAudioFile
 import com.example.mediaplayer.database.PlayerDatabase
 import com.example.mediaplayer.database.SongEntity
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.model.toFavouriteSongEntity
 import com.example.mediaplayer.model.toSongEntity
+import javax.inject.Inject
 
-class Repository private constructor(private val application: Context) {
 
-    private var database: PlayerDatabase = Room.databaseBuilder(application.applicationContext, PlayerDatabase::class.java, "SongList").fallbackToDestructiveMigration().build()
-
-    companion object {
-        @Volatile
-        private var INSTANCE: Repository? = null
-
-        fun getRepository(app: Application): Repository {
-            return INSTANCE ?: synchronized(this) {
-                Repository(app).also {
-                    INSTANCE = it
-                }
-            }
-        }
-    }
+class Repository @Inject constructor(private val application: Application, private val database: PlayerDatabase) {
 
     fun getFavouriteSongs(): LiveData<List<SongEntity>> {
         return database.favouriteSongsDao().getAllFavouriteSong()

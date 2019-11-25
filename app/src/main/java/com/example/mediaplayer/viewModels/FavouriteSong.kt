@@ -18,20 +18,11 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.mediaplayer.repositry.Repository
+import javax.inject.Inject
 
 
-class FavouriteSongViewModel(application: Application, private val repository: Repository) : AndroidViewModel(application) {
+class FavouriteSongViewModel @Inject constructor(application: Application, repository: Repository) : AndroidViewModel(application) {
     val playLists = repository.getFavouriteSongs()
 
 }
 
-class FavouriteSongViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
-    private val repository: Repository = Repository.getRepository(application)
-
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(FavouriteSongViewModel::class.java)) {
-            return FavouriteSongViewModel(application, repository) as T
-        }
-        throw IllegalArgumentException("unKnown class")
-    }
-}

@@ -80,6 +80,7 @@ class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter
 
     }
 
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder.from(parent)
     }
@@ -100,15 +101,17 @@ class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter
 
     }
 
-    fun setCurrentSelectedPosition(position: Int) {
+    fun setCurrentSelectedPosition(position: Int, scrollEnabled: Boolean) {
         if (currentSelectedItemPosition != position) {
             currentSelectedItemPosition = position
             //scroll to the current focused position
-            scrollTo(position)
+            if (scrollEnabled)
+                scrollTo(position)
         }
 
 
     }
+
 
     private fun firstTimeInstantScrolling(position: Int) {
         snapHelper.attachToRecyclerView(recyclerView)

@@ -13,6 +13,7 @@
 
 package com.example.mediaplayer.ui.chosenSong
 
+import android.util.Log
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
@@ -30,6 +31,7 @@ import com.example.mediaplayer.twoDigitNumber
 import com.example.mediaplayer.ui.chosenSong.adapter.ImageListAdapter
 import com.example.mediaplayer.ui.chosenSong.adapter.SongListAdapter
 import com.google.android.exoplayer2.Player
+import java.lang.NumberFormatException
 
 
 /**
@@ -77,9 +79,11 @@ fun adjustRepeat(imageButton: ImageButton, repeatMode: Int) {
 fun setDuration(textView: TextView, duration: Long?) {
     with(textView) {
         duration?.let {
-            val min = (duration / 1000).toFloat() / 60
-            val sec = (min - min.toInt()) * 60
-            textView.text = context.getString(R.string.duration_format, min.toInt().twoDigitNumber(), sec.toInt().twoDigitNumber())
+            Log.v("durationIs","$duration")
+                val min = (duration / 1000).toFloat() / 60
+                val sec = (min - min.toInt()) * 60
+                textView.text = context.getString(R.string.duration_format, min.toInt().twoDigitNumber(), sec.toInt().twoDigitNumber())
+
 
         }
 

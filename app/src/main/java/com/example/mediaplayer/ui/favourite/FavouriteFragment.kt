@@ -21,24 +21,34 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import com.example.mediaplayer.*
+import com.example.mediaplayer.PlayerActions.PLAYER_ACTION
 import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.databinding.FragmentFavouriteBinding
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.ui.OnItemClickListener
 import com.example.mediaplayer.viewModels.FavouriteSongViewModel
-import com.example.mediaplayer.viewModels.FavouriteSongViewModelFactory
+import dagger.android.support.DaggerFragment
 import java.util.*
+import javax.inject.Inject
 
 /**
  * A simple [Fragment] subclass.
  */
-class FavouriteFragment : Fragment() {
+class FavouriteFragment : DaggerFragment() {
+
+
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+
+    private val viewModel by viewModels<FavouriteSongViewModel> { viewModelFactory }
+
     private lateinit var binding: FragmentFavouriteBinding
     private lateinit var navController: NavController
     private lateinit var playList: List<SongModel>
@@ -54,11 +64,8 @@ class FavouriteFragment : Fragment() {
     }
 
     private fun prepareMusicList() {
-        val factory = FavouriteSongViewModelFactory(activity!!.application)
-        val favouriteSongViewModel = ViewModelProviders.of(activity!!, factory).get(FavouriteSongViewModel::class.java)
         setUpPlayList()
-
-        favouriteSongViewModel.playLists.observe(viewLifecycleOwner, Observer {
+        viewModel.playLists.observe(viewLifecycleOwner, Observer {
             it?.let {
                 playList = it.toSongModel()
                 (binding.listSong.adapter as FavouriteSongAdapter).submitList(playList)
@@ -83,7 +90,7 @@ class FavouriteFragment : Fragment() {
 
     private fun startForeground(songModels: List<SongModel>, itemClickedIndex: Int) {
         val foregroundIntent = Intent(activity, AudioForegroundService::class.java)
-        foregroundIntent.action = PlayerActions.ACTION_FOREGROUND.value
+        foregroundIntent.putExtra(PLAYER_ACTION, PlayerActions.ACTION_FOREGROUND)
         foregroundIntent.putExtra(CHOSEN_SONG_INDEX, itemClickedIndex)
         foregroundIntent.putParcelableArrayListExtra(LIST_SONG, songModels as ArrayList)
         activity?.startForeground(foregroundIntent)

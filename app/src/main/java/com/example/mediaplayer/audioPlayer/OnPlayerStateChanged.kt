@@ -46,9 +46,15 @@ interface OnPlayerStateChanged {
     fun onShuffleModeChanged(enable: Boolean) {}
 
     fun onRepeatModeChanged(repeatMode: Int) {}
-
+    /**
+     * this will trigger whenever the current audio changes which will result in changing the duration of current audio ,
+     */
     fun onDurationChange(duration: Long) {}
-    //fun onProgressChanged(progress: Long) {}
+
+    /**
+     * will return live data to observe that will return the progress of current audio
+     * also will stop whenever there is no observer
+     */
     fun onProgressChangedLiveData(progress: MutableLiveData<Long>) {}
 
 

@@ -63,6 +63,9 @@ class FavouriteSongAdapter(private val listener: OnItemClickListener) : ListAdap
 
     }
 
+    private fun setOnItemClickListener(){
+
+    }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder.from(parent)
     }

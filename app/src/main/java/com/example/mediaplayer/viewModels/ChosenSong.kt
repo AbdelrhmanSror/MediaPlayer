@@ -16,63 +16,16 @@ import com.example.mediaplayer.repositry.Repository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class ChosenSongViewModel(application: Application, private val songIndex: Int, private val fromNotification: Boolean) : AndroidViewModel(application), OnPlayerStateChanged {
+class ChosenSongViewModel(application: Application, private val repository: Repository, private val songIndex: Int, private val fromNotification: Boolean) : AndroidViewModel(application), OnPlayerStateChanged {
+
 
     private val mApplication = application
-    private val repository = Repository.getRepository(application)
+
     private lateinit var audioService: AudioForegroundService
 
-
-    /**
-     * Defines callbacks for service binding, passed to bindService()
-     */
-    private val connection = object : ServiceConnection {
-
-        override fun onServiceConnected(className: ComponentName,
-                                        service: IBinder) {
-            // We've bound to LocalService, cast the IBinder and get LocalService instance
-            val binder = service as AudioForegroundService.SongBinder
-            audioService = binder.service
-            audioService.registerObserver(this@ChosenSongViewModel, true, fromNotification)
-
-
-        }
-
-        override fun onServiceDisconnected(arg0: ComponentName) {
-            //nothing
-        }
-    }
-
-
-    init {
-        initializePlayList()
-        //binding this fragment to service
-        mApplication.bindService(Intent(mApplication, AudioForegroundService::class.java), connection, Context.BIND_AUTO_CREATE)
-
-    }
-
-
-    private fun initializePlayList() {
-        viewModelScope.launch {
-            val songPlaylist = withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
-                repository.getSongs().toSongModel()
-            }
-            if (!fromNotification) {
-                startForeground(songPlaylist as ArrayList<SongModel>, songIndex)
-            }
-
-        }
-    }
-
-    private fun startForeground(song: ArrayList<SongModel>, chosenSongIndex: Int) {
-        val foregroundIntent = Intent(mApplication, AudioForegroundService::class.java)
-        foregroundIntent.action = PlayerActions.ACTION_FOREGROUND.value
-        foregroundIntent.putExtra(CHOSEN_SONG_INDEX, chosenSongIndex)
-        foregroundIntent.putParcelableArrayListExtra(LIST_SONG, song)
-        mApplication.startForeground(foregroundIntent)
-    }
-
+    var  previousRecyclerViewPosition=-1
 
     val listOfSong = repository.observeSongs().map {
         it.toSongModel()
@@ -88,16 +41,9 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
         imageUris
     }
 
-    private val _audioProgress = MutableLiveData<MutableLiveData<Long>>()
-    var audioPlayerProgress: LiveData<Int> = _audioProgress.switchMap {
-        it.map { progress ->
-            (progress / 1000).toInt()
-        }
-    }
-
     //to observe when the current song track is changed
-    private val _chosenSongIndex = MutableLiveData<Int?>()
-    val chosenSongIndex: LiveData<Int?> = _chosenSongIndex
+    private val _chosenSongIndex = MutableLiveData<Event<Int>>()
+    val chosenSongIndex: LiveData<Event<Int>> = _chosenSongIndex
 
     // when service is initialized so we pass the live data to be observed and update the repeatMod,shuffleMode,playPauseButton Ui
     private val _repeatMode = MutableLiveData<Int>()
@@ -115,10 +61,69 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
     private val _playPauseStateInitial = MutableLiveData<Boolean?>()
     val playPauseStateInitial: LiveData<Boolean?> = _playPauseStateInitial
 
+    private val _audioPlayerProgress = MutableLiveData<MutableLiveData<Long>>()
+    var audioPlayerProgress: LiveData<Int> = _audioPlayerProgress.switchMap {
+        it.map { progress ->
+            (progress / 1000).toInt()
+        }
+    }
+
+    /**
+     * Defines callbacks for service binding, passed to bindService()
+     */
+    private val connection = object : ServiceConnection {
+
+        override fun onServiceConnected(className: ComponentName,
+                                        service: IBinder) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            val binder = service as AudioForegroundService.SongBinder
+            audioService = binder.service
+            audioService.registerObserver(this@ChosenSongViewModel, enableProgressCallback = true, instantTrigger = fromNotification)
+
+
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            //nothing
+        }
+    }
+
+    init {
+        startService()
+        //binding this fragment to service
+        mApplication.bindService(Intent(mApplication, AudioForegroundService::class.java), connection, Context.BIND_AUTO_CREATE)
+    }
+
+
+    private fun startService() {
+        viewModelScope.launch {
+            val songlist=withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
+                repository.getSongs().toSongModel()
+            }
+            if (!fromNotification) {
+                startForeground(songlist as ArrayList<SongModel>, songIndex)
+            }
+        }
+
+
+    }
+
+    private fun startForeground(song: ArrayList<SongModel>, chosenSongIndex: Int) {
+        val foregroundIntent = Intent(mApplication, AudioForegroundService::class.java)
+        foregroundIntent.action = PlayerActions.ACTION_FOREGROUND
+        foregroundIntent.putExtra(CHOSEN_SONG_INDEX, chosenSongIndex)
+        foregroundIntent.putParcelableArrayListExtra(LIST_SONG, song)
+        mApplication.startForeground(foregroundIntent)
+    }
+
+
+
+
+
 
     override fun onAudioChanged(index: Int, isPlaying: Boolean) {
         _playPauseStateInitial.value = isPlaying
-        _chosenSongIndex.value = index
+        _chosenSongIndex.value = Event(index)
 
     }
 
@@ -144,7 +149,7 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
     }
 
     override fun onProgressChangedLiveData(progress: MutableLiveData<Long>) {
-        _audioProgress.value = progress
+        _audioPlayerProgress.value = progress
     }
 
     fun setFavouriteAudio(chosenSongIndex: Int) {
@@ -201,14 +206,21 @@ class ChosenSongViewModel(application: Application, private val songIndex: Int, 
     }
 }
 
+class ChosenSongViewModelFactory @Inject constructor(private val application: Application, private val repository: Repository) : ViewModelProvider.Factory {
 
-class ChosenSongViewModelFactory(private val application: Application, private val chosenSongIndex: Int, private val fromNotification: Boolean) : ViewModelProvider.Factory {
+    private var chosenSongIndex: Int? = null
+    private var fromNotification: Boolean? = null
+    fun setData(songIndex: Int, fromNotification: Boolean) {
+        chosenSongIndex = songIndex
+        this.fromNotification = fromNotification
+
+    }
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
 
         if (modelClass.isAssignableFrom(ChosenSongViewModel::class.java)) {
-            return ChosenSongViewModel(application, chosenSongIndex, fromNotification) as T
+            return ChosenSongViewModel(application, repository, chosenSongIndex!!, fromNotification!!) as T
 
         }
         throw IllegalArgumentException("unknown class")

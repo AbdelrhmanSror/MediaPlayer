@@ -1,3 +1,4 @@
+
 package com.example.mediaplayer.foregroundService
 
 import android.app.Notification
@@ -15,7 +16,7 @@ import com.example.mediaplayer.model.SongModel
 import java.util.*
 
 
-class ForegroundNotification(private val songModels: ArrayList<SongModel>?
+class AudioForegroundNotification(private val songModels: ArrayList<SongModel>?
                              , private val context: Context) {
     private val customCollapsedNotification = RemoteViews(context.packageName, R.layout.custom_audio_notification_collapsed).apply {
         setImageViewResource(R.id.notification_prev, R.drawable.previous_collapsed_notification)
@@ -102,7 +103,7 @@ class ForegroundNotification(private val songModels: ArrayList<SongModel>?
         val bundle = Bundle()
         //bundle.putParcelableArrayList(LIST_SONG, songModels)
         bundle.putInt(CHOSEN_SONG_INDEX, chosenSongIndex)
-        bundle.putBoolean(PlayerDestinations.NOTIFICATION.value, true)
+        bundle.putBoolean(PlayerDestinations.NOTIFICATION, true)
         //using deep links to navigate to chosen song fragment
         return NavDeepLinkBuilder(context)
                 .setGraph(R.navigation.navigaion)
@@ -113,35 +114,35 @@ class ForegroundNotification(private val songModels: ArrayList<SongModel>?
 
     private fun pendingIntentPause(): PendingIntent {
         val pauseIntent = Intent(context, AudioForegroundService::class.java)
-        pauseIntent.action = PlayerActions.PAUSE_ACTION.value
+        pauseIntent.action = PlayerActions.PAUSE_ACTION
         return PendingIntent.getService(context,
                 NOTIFICATION_ID, pauseIntent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
     private fun pendingIntentDelete(): PendingIntent {
         val deleteIntent = Intent(context, AudioForegroundService::class.java)
-        deleteIntent.action = PlayerActions.DELETE_ACTION.value
+        deleteIntent.action = PlayerActions.DELETE_ACTION
         return PendingIntent.getService(context,
                 NOTIFICATION_ID, deleteIntent, 0)
     }
 
     private fun pendingIntentPrevious(): PendingIntent {
         val prevIntent = Intent(context, AudioForegroundService::class.java)
-        prevIntent.action = PlayerActions.PREVIOUS_ACTION.value
+        prevIntent.action = PlayerActions.PREVIOUS_ACTION
         return PendingIntent.getService(context,
                 NOTIFICATION_ID, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
     private fun pendingIntentPlay(): PendingIntent {
         val playIntent = Intent(context, AudioForegroundService::class.java)
-        playIntent.action = PlayerActions.PLAY_ACTION.value
+        playIntent.action = PlayerActions.PLAY_ACTION
         return PendingIntent.getService(context,
                 NOTIFICATION_ID, playIntent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
     private fun pendingIntentNext(): PendingIntent {
         val nextIntent = Intent(context, AudioForegroundService::class.java)
-        nextIntent.action = PlayerActions.NEXT_ACTION.value
+        nextIntent.action = PlayerActions.NEXT_ACTION
         return PendingIntent.getService(context,
                 NOTIFICATION_ID, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT)
     }

@@ -11,29 +11,28 @@
  * limitations under the License.
  */
 
-
 package com.example.mediaplayer.di
 
 import android.app.Application
 import android.content.Context
-import com.example.mediaplayer.MediaApplication
-import dagger.BindsInstance
-import dagger.Component
-import dagger.android.AndroidInjector
-import dagger.android.support.AndroidSupportInjectionModule
+import androidx.room.Room
+import com.example.mediaplayer.database.PlayerDatabase
+import com.example.mediaplayer.repositry.Repository
+import dagger.Binds
+import dagger.Module
+import dagger.Provides
 import javax.inject.Singleton
 
-@Singleton
-@Component(modules = [
-    AndroidSupportInjectionModule::class
-    , ApplicationModule::class
-    , ChosenSongModule::class
-    , FavouriteModule::class
-    , PlayListModule::class])
-interface ApplicationComponent : AndroidInjector<MediaApplication> {
+@Module
+object ApplicationModule {
 
-    @Component.Factory
-    interface Factory {
-        fun create(@BindsInstance application: Application): ApplicationComponent
+    @JvmStatic
+    @Singleton
+    @Provides
+    fun provideDataBase(application: Application): PlayerDatabase {
+        return Room.databaseBuilder(application.applicationContext
+                , PlayerDatabase::class.java, "SongList")
+                .fallbackToDestructiveMigration()
+                .build()
     }
 }

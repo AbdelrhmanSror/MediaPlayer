@@ -25,6 +25,7 @@ import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.startFavouriteAnimation
 import com.example.mediaplayer.viewModels.ChosenSongViewModel
 import kotlinx.android.synthetic.main.chosen_song_list_layout.view.*
+import javax.inject.Inject
 
 
 /*
@@ -43,7 +44,7 @@ import kotlinx.android.synthetic.main.chosen_song_list_layout.view.*
 
 
 
-class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<SongModel, SongListAdapter.ViewHolder>(DiffCallBack) {
+class SongListAdapter (private val viewmodel: ChosenSongViewModel) : ListAdapter<SongModel, SongListAdapter.ViewHolder>(DiffCallBack) {
 
     private lateinit var context: Context
     private lateinit var recyclerView: RecyclerView
@@ -104,6 +105,24 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
 
     }
 
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        this.recyclerView = recyclerView
+        snapHelper.attachToRecyclerView(recyclerView)
+        isSnapAttached = true
+        context = recyclerView.context
+        onRecyclerViewScrolling()
+
+    }
+    private fun onRecyclerViewScrolling(){
+        recyclerView.addOnScrollListener(object :RecyclerView.OnScrollListener(){
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+
+            }
+
+        })
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
 
         return ViewHolder.from(parent)
@@ -118,11 +137,10 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
 
     }
 
-    override fun onViewAttachedToWindow(holder: ViewHolder) {
-        Log.v("attachectowinfndjbfd", "${holder.adapterPosition}")
-        super.onViewAttachedToWindow(holder)
+
+    override fun onViewDetachedFromWindow(holder: ViewHolder) {
     }
-/*private fun onfinishIntflatingFirstTime(onFinish: () -> Unit) {
+    /*private fun onfinishIntflatingFirstTime(onFinish: () -> Unit) {
         if (firstTimeInflating) {
             recyclerView.viewTreeObserver
                     .addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
@@ -142,6 +160,22 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
         }
     }
 */
+
+
+    fun setCurrentSelectedPosition(position: Int,scrollEnabled:Boolean) {
+        //update the current focused position
+        if (currentSelectedItemPosition != position) {
+            currentSelectedItemPosition = position
+            if(!scrollEnabled)
+               return
+            notifyItemChanged(lastSelectedItemPosition)
+            notifyItemChanged(currentSelectedItemPosition)
+            scrollTo(position)
+
+        }
+
+
+    }
 
     // update the current view and remove any state was existed before recycling
     private fun updateCurrentSelectedView(item: View, position: Int) {
@@ -170,28 +204,7 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
         }
     }
 
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        super.onAttachedToRecyclerView(recyclerView)
-        this.recyclerView = recyclerView
-        snapHelper.attachToRecyclerView(recyclerView)
-        isSnapAttached = true
-        context = recyclerView.context
 
-    }
-
-
-    fun setCurrentSelectedPosition(position: Int) {
-        //update the current focused position
-        if (currentSelectedItemPosition != position) {
-            currentSelectedItemPosition = position
-            notifyItemChanged(lastSelectedItemPosition)
-            notifyItemChanged(currentSelectedItemPosition)
-            scrollTo(position)
-
-        }
-
-
-    }
 
     private fun firstTimeInstantScrolling(position: Int) {
         snapHelper.attachToRecyclerView(recyclerView)

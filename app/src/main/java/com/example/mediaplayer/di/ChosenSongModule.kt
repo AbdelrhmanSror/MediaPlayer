@@ -11,10 +11,19 @@
  * limitations under the License.
  */
 
-package com.example.mediaplayer.audioPlayer
+package com.example.mediaplayer.di
 
-interface AudioPlayerObservable {
-    fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgressCallback: Boolean, instantTrigger: Boolean = false)
-    fun removeObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgress: Boolean)
-    fun notifyObserver(onPlayerStateChanged: OnPlayerStateChanged)
+import com.example.mediaplayer.ui.chosenSong.ChosenSongFragment
+import dagger.Module
+import dagger.android.ContributesAndroidInjector
+
+/**
+ * Dagger module for the chosen song feature.
+ */
+@Module
+abstract class ChosenSongModule {
+
+    @ContributesAndroidInjector
+    internal abstract fun chosenSongFragment(): ChosenSongFragment
+
 }

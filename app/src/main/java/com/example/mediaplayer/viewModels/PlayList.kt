@@ -1,6 +1,7 @@
 package com.example.mediaplayer.viewModels
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -9,8 +10,9 @@ import com.example.mediaplayer.repositry.Repository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class PlayListViewModel(application: Application, repository: Repository) : AndroidViewModel(application) {
+class PlayListViewModel @Inject constructor(application: Application, repository: Repository) : AndroidViewModel(application) {
 
     val playLists = repository.observeSongs()
 
@@ -18,6 +20,7 @@ class PlayListViewModel(application: Application, repository: Repository) : Andr
         viewModelScope.launch {
             withContext(Dispatchers.IO)
             {
+                Log.v("insertingdatabse","inserting")
                 repository.insertAudioIntoDatabase()
             }
 
@@ -27,13 +30,3 @@ class PlayListViewModel(application: Application, repository: Repository) : Andr
 
 }
 
-class PlayListViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
-    private val repository: Repository = Repository.getRepository(application)
-
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(PlayListViewModel::class.java)) {
-            return PlayListViewModel(application, repository) as T
-        }
-        throw IllegalArgumentException("unKnown class")
-    }
-}

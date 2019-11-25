@@ -8,30 +8,28 @@ import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
 import androidx.core.app.NotificationManagerCompat
-import com.example.mediaplayer.CHOSEN_SONG_INDEX
-import com.example.mediaplayer.LIST_SONG
-import com.example.mediaplayer.NOTIFICATION_ID
-import com.example.mediaplayer.PlayerActions
+import com.example.mediaplayer.*
+import com.example.mediaplayer.PlayerActions.ACTION_FOREGROUND
+import com.example.mediaplayer.PlayerActions.DELETE_ACTION
+import com.example.mediaplayer.PlayerActions.NEXT_ACTION
+import com.example.mediaplayer.PlayerActions.PAUSE_ACTION
+import com.example.mediaplayer.PlayerActions.PLAY_ACTION
+import com.example.mediaplayer.PlayerActions.PREVIOUS_ACTION
 import com.example.mediaplayer.audioPlayer.AudioPlayer
 import com.example.mediaplayer.audioPlayer.OnPlayerStateChanged
 import com.example.mediaplayer.model.SongModel
 
 
-data class MediaInfo(var songList: ArrayList<SongModel>? = arrayListOf(),
-                     var chosenSongIndex: Int = 0)
-
 class AudioForegroundService : Service(), OnPlayerStateChanged {
 
-
-    lateinit var audioPlayer: AudioPlayer
-        private set
+    private lateinit var audioPlayer: AudioPlayer
 
     // indicates how to behave if the service is killed.
     private var mStartMode = START_STICKY
     // interface for clients that bind.
     private var mBinder: IBinder = SongBinder()
     //responsible for creating media player notification;
-    private lateinit var foregroundNotification: ForegroundNotification
+    private lateinit var foregroundNotification: AudioForegroundNotification
     //responsible for updating the notification
     private lateinit var mNotificationManager: NotificationManagerCompat
 
@@ -46,8 +44,8 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
 
     }
 
-    fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgress: Boolean, instantTrigger: Boolean) {
-        audioPlayer.registerObserver(onPlayerStateChanged, enableProgress, instantTrigger)
+    fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged,enableProgressCallback : Boolean, instantTrigger: Boolean) {
+        audioPlayer.registerObserver(onPlayerStateChanged, enableProgressCallback, instantTrigger)
     }
 
     fun removeObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgress: Boolean) {
@@ -57,6 +55,7 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
     fun seekToSecond(second: Int) {
         audioPlayer.seekToSecond(second)
     }
+
     fun changeRepeatMode() {
         audioPlayer.repeatModeEnable()
     }
@@ -91,12 +90,11 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
 
     }
 
-    /**data class can be founded in chosenSongFragment*/
-    private fun intentData(intent: Intent): MediaInfo {
+    private fun intentData(intent: Intent): Pair<ArrayList<SongModel>, Int> {
         //playList of songs
         //getting the current playing song index
-        intent.run {
-            return MediaInfo(getParcelableArrayListExtra(LIST_SONG)!!, getIntExtra(CHOSEN_SONG_INDEX, 0))
+        with(intent) {
+            return getParcelableArrayListExtra<SongModel>(LIST_SONG)!! to getIntExtra(CHOSEN_SONG_INDEX, 0)
         }
     }
 
@@ -115,20 +113,20 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
     private fun handleIntent(intent: Intent?) {
         intent?.let {
             when (it.action) {
-                PlayerActions.ACTION_FOREGROUND.value -> {
+                ACTION_FOREGROUND -> {
                     setUpPlayerForeground(intent)
                 }
-                PlayerActions.PAUSE_ACTION.value, AudioManager.ACTION_AUDIO_BECOMING_NOISY -> {
+                PAUSE_ACTION, AudioManager.ACTION_AUDIO_BECOMING_NOISY -> {
                     audioPlayer.pause()
                 }
-                PlayerActions.PLAY_ACTION.value -> {
+                PLAY_ACTION -> {
                     audioPlayer.play()
                 }
-                PlayerActions.PREVIOUS_ACTION.value ->
+                PREVIOUS_ACTION ->
                     audioPlayer.previous()
-                PlayerActions.NEXT_ACTION.value ->
+                NEXT_ACTION ->
                     audioPlayer.next()
-                PlayerActions.DELETE_ACTION.value -> {
+                DELETE_ACTION -> {
                     cancelForeground()
                 }
 
@@ -140,11 +138,11 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
         with(intentData(intent))
         {
             val songListUris: ArrayList<Uri> = ArrayList()
-            for (item in songList as ArrayList) {
+            for (item in first) {
                 songListUris.add(item.audioUri)
             }
-            foregroundNotification = ForegroundNotification(songList, applicationContext)
-            audioPlayer.startPlayer(songListUris, chosenSongIndex)
+            foregroundNotification = AudioForegroundNotification(first, applicationContext)
+            audioPlayer.startPlayer(songListUris, second)
             startForeground(NOTIFICATION_ID, getNotification())
         }
 

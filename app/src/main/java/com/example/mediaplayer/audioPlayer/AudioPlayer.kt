@@ -121,7 +121,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
 
     private fun setUpPlayer(chosenAudioIndex: Int) {
         currentAudioIndex = chosenAudioIndex
-        player!!.apply {
+        player?.apply {
             //to control to player the audio or video right now or wait user to play_collapsed_notification the audio himself
             playWhenReady = true
             val mediaSource = buildMediaSource(mSongList)
@@ -161,7 +161,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
 
     /**
      * to register observer we need to give it the class that implement the interface of observer
-     * and [enableProgress] which used to trigger the  [OnPlayerStateChanged.onProgressChangedLiveData] whenever the progress changed
+     * and [enableProgressCallback] which used to trigger the  [OnPlayerStateChanged.onProgressChangedLiveData] whenever the progress changed
      *
      *[instantTrigger] set this to true if u enter ur activity or fragment from notification so u want to trigger callback to refresh ui.
      * if u set [instantTrigger] to true and player was not already playing it won't have any active,it is only active if the player was playing
@@ -169,9 +169,9 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
      *
      * warning :do not use [instantTrigger] other than that because it may trigger callback twice at same time which will lead to unwanted behaviour
      */
-    override fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgress: Boolean, instantTrigger: Boolean) {
+    override fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgressCallback: Boolean, instantTrigger: Boolean) {
         this.onPlayerStateChanged.add(onPlayerStateChanged)
-        if (enableProgress) {
+        if (enableProgressCallback) {
             setOnProgressChanged(onPlayerStateChanged)
         }
         /**
@@ -497,4 +497,5 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
         pauseProgress()
         handler = null
     }
+
 }
