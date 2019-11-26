@@ -16,7 +16,7 @@
     <string name="edit">Edit</string>
     <string name="add_to_favourite">Add To Favourite</string>
     <string name="permission_denied">Permission Denied</string>
-    <string name="permission_clarify">You should grant this permission so application can access your audio files</string>
+    <string name="permission_clarify">You should grant this permission so application can play your audio files</string>
     <string name="accept_permission">Accept</string>
     <string name="refuse_permission">Refuse</string>
     <string name="enable_permission_settings">Go to settings to enable permission</string>
@@ -24,4 +24,6 @@
     <string name="title_activity_main2">Main2Activity</string>
     <string name="tab_text_1">Tab 1</string>
     <string name="tab_text_2">Tab 2</string>
+    <string name="playlist">Playlist</string>
+    <string name="favourite">Favourite</string>
 </resources>

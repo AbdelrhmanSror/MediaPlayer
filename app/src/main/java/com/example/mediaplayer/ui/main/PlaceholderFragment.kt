@@ -40,11 +40,11 @@ class PlaceholderFragment : Fragment() {
         TabLayoutMediator(binding.tabLayout, binding.pager) { tab, position ->
             when (position) {
                 0 -> {
-                    tab.text = "Playlist"
+                    tab.text = getString(R.string.playlist)
                     tab.icon = resources.getDrawable(R.drawable.ic_playlist, null)
                 }
                 1 -> {
-                    tab.text = "Favourite"
+                    tab.text = getString(R.string.favourite)
                     tab.icon = resources.getDrawable(R.drawable.ic_favourite, null)
 
                 }
