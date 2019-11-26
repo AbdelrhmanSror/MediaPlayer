@@ -344,6 +344,8 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
         onPlayerStateChanged.forEach {
             it?.onAudioChanged(currentAudioIndex, isPlaying)
         }
+        if(!isPlaying)
+            play()
         setDuration()
 
     }

@@ -10,6 +10,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.findNavController
@@ -17,9 +18,13 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.example.mediaplayer.databinding.ActivityMainBinding
+import com.example.mediaplayer.ui.favourite.FavouriteFragment
+import com.example.mediaplayer.ui.playlist.PlayListFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.tabs.TabLayoutMediator
 
 class MainActivity : AppCompatActivity() {
 
@@ -32,14 +37,12 @@ class MainActivity : AppCompatActivity() {
         ////reference to nav controller
         navController = findNavController(R.id.nav_host_fragment)
         checkPermission()
-        appBarConfiguration = AppBarConfiguration.Builder(setOf(R.id.playList_dest, R.id.favourite_dest)).build()
+        appBarConfiguration = AppBarConfiguration.Builder(setOf(R.id.placeholderFragment)).build()
         //reference to toolBar
         val toolbar = binding.toolbar
         //set toolbar as default action bar
         setSupportActionBar(toolbar)
         setupActionBarWithNavController(navController, appBarConfiguration)
-        setupBottomNavMenu()
-        setUpBottomNavBehaviour()
         //to disable the action bar title and use my own custom title.
         this.disableActionBarTitle()
 
@@ -54,10 +57,6 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
-    private fun setupBottomNavMenu() {
-        val bottomNav = binding.bottomNavView
-        bottomNav.setupWithNavController(navController)
-    }
 
 
     private fun checkPermission() {
@@ -74,8 +73,8 @@ class MainActivity : AppCompatActivity() {
         val inflater = navController.navInflater
         val graph = inflater.inflate(R.navigation.navigaion)
         //show the bottom nav view after permission is granted
-        binding.bottomNavView.visibility = View.VISIBLE
-        graph.startDestination = R.id.playList_dest
+       // binding.bottomNavView.visibility = View.VISIBLE
+        graph.startDestination = R.id.placeholderFragment
         navController.setGraph(graph, null)
     }
 
@@ -135,26 +134,6 @@ class MainActivity : AppCompatActivity() {
                 //shouldShowRequestPermissionRationale will return false
                 else {
                     showPermissionEnableSnackBar()
-                }
-            }
-        }
-    }
-    //preventing bottom navigation  from showing anywhere other than the main destinations
-    private fun setUpBottomNavBehaviour() {
-        navController.addOnDestinationChangedListener { _, nd: NavDestination, _ ->
-            if (nd.id == R.id.playList_dest || nd.id == R.id.favourite_dest) {
-                with(binding.bottomNavView)
-                {
-                    visibility = View.VISIBLE
-                    animate()
-                            .alpha(1f)
-                }
-            } else {
-                with(binding.bottomNavView)
-                {
-                    visibility = View.GONE
-                    animate()
-                            .alpha(1f)
                 }
             }
         }

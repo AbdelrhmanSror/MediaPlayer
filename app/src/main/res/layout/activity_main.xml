@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -13,8 +13,8 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/appBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:elevation="0dp"
-            android:theme="@style/AppTheme.AppBarOverlay">
+            android:theme="@style/AppTheme.AppBarOverlay"
+            app:elevation="0dp">
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
@@ -31,28 +31,17 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                     android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
                     android:textColor="@color/white" />
             </androidx.appcompat.widget.Toolbar>
+
         </com.google.android.material.appbar.AppBarLayout>
 
         <fragment
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
             android:id="@+id/nav_host_fragment"
             android:name="androidx.navigation.fragment.NavHostFragment"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:defaultNavHost="true" />
 
-        <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottom_nav_view"
-            android:layout_width="match_parent"
-            android:layout_gravity="bottom"
-            android:layout_height="wrap_content"
-            android:background="@color/white"
-            android:visibility="gone"
-            tools:visibility="visible"
-            app:itemIconTint="@drawable/bottom_nav_state"
-            android:elevation="8dp"
-            app:itemTextColor="@drawable/bottom_nav_state"
-            app:menu="@menu/player_menu" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 

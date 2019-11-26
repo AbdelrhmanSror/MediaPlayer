@@ -66,7 +66,7 @@ class PlayListFragment : DaggerFragment() {
             override fun onClick(itemClickIndex: Int) {
                 val args = Bundle()
                 args.putInt(CHOSEN_SONG_INDEX, itemClickIndex)
-                navController.navigate(R.id.action_playListFragment_to_chosenSongFragment, args)
+                navController.navigate(R.id.action_placeholderFragment_to_chosenSong_dest, args)
             }
         })
         //setup recycler view with adapter

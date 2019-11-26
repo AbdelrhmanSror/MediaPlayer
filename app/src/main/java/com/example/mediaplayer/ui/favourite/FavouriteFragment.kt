@@ -90,7 +90,7 @@ class FavouriteFragment : DaggerFragment() {
 
     private fun startForeground(songModels: List<SongModel>, itemClickedIndex: Int) {
         val foregroundIntent = Intent(activity, AudioForegroundService::class.java)
-        foregroundIntent.putExtra(PLAYER_ACTION, PlayerActions.ACTION_FOREGROUND)
+        foregroundIntent.action=PlayerActions.ACTION_FOREGROUND
         foregroundIntent.putExtra(CHOSEN_SONG_INDEX, itemClickedIndex)
         foregroundIntent.putParcelableArrayListExtra(LIST_SONG, songModels as ArrayList)
         activity?.startForeground(foregroundIntent)

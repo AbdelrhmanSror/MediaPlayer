@@ -19,6 +19,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.*
 import com.example.mediaplayer.databinding.ChosenSongListLayoutBinding
 import com.example.mediaplayer.model.SongModel
@@ -53,6 +54,7 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
     private var firstTimeInflating: Boolean = true
     private var isSnapAttached = false
     private val snapHelper = LinearSnapHelper()
+    private var equalizerEnabled: Boolean = true
     private val smoothScroller: LinearSmoothScroller by lazy {
         object : LinearSmoothScroller(context) {
             override fun getVerticalSnapPreference(): Int {
@@ -85,7 +87,12 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
             binding.favouriteShape.setOnClickListener {
                 binding.favouriteShape.startFavouriteAnimation(item.isFavourite)
             }
+            /*viewModel.playPauseState.observeForever(Observer {
+                it?.getContentIfNotHandled()?.let {
+                    if (it) binding.equalizerAnim.animateBars() else binding.equalizerAnim.stopBars()
 
+                }
+            })*/
             binding.executePendingBindings()
 
         }
@@ -156,10 +163,16 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
 
     // update the current view and remove any state was existed before recycling
     private fun updateCurrentSelectedView(item: View, position: Int) {
+        Log.v("playpausestate", "$equalizerEnabled  $position  rec upcu")
+
         if (position == currentSelectedItemPosition) {
             item.divider.visibility = View.VISIBLE
             item.equalizer_anim.visibility = View.VISIBLE
-            item.equalizer_anim.animateBars()
+            Log.v("playpausestate", "$equalizerEnabled  rec up")
+
+            if (equalizerEnabled) {
+                item.equalizer_anim.animateBars()
+            }
             lastSelectedItemPosition = position
 
 
@@ -172,6 +185,15 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
         }
     }
 
+    fun equalizerEnabled(enabled: Boolean) {
+        equalizerEnabled = enabled
+        recyclerView.findViewHolderForAdapterPosition(currentSelectedItemPosition)?.itemView?.equalizer_anim?.apply {
+            Log.v("playpausestate", "$enabled  rec")
+
+            if (enabled) this.animateBars() else this.stopBars()
+        }
+
+    }
 
     private fun firstTimeInstantScrolling(position: Int) {
         snapHelper.attachToRecyclerView(recyclerView)

@@ -26,6 +26,8 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
 import com.example.mediaplayer.Event
 import com.example.mediaplayer.R
+import com.example.mediaplayer.customViews.EqualizerView
+import com.example.mediaplayer.databinding.MinEqualizerBinding
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.twoDigitNumber
 import com.example.mediaplayer.ui.chosenSong.adapter.ImageListAdapter
@@ -79,10 +81,10 @@ fun adjustRepeat(imageButton: ImageButton, repeatMode: Int) {
 fun setDuration(textView: TextView, duration: Long?) {
     with(textView) {
         duration?.let {
-            Log.v("durationIs","$duration")
-                val min = (duration / 1000).toFloat() / 60
-                val sec = (min - min.toInt()) * 60
-                textView.text = context.getString(R.string.duration_format, min.toInt().twoDigitNumber(), sec.toInt().twoDigitNumber())
+            Log.v("durationIs", "$duration")
+            val min = (duration / 1000).toFloat() / 60
+            val sec = (min - min.toInt()) * 60
+            textView.text = context.getString(R.string.duration_format, min.toInt().twoDigitNumber(), sec.toInt().twoDigitNumber())
 
 
         }
@@ -151,4 +153,15 @@ fun setInitialFavourite(imageButton: ImageButton, isFavourite: Boolean) {
         imageButton.setImageResource(R.drawable.ic_favourite)
     }
 }
+/*
+
+@BindingAdapter("animationEnabled")
+fun setAnimationEnabled(equalizerView: EqualizerView, enable: Event<Boolean>?) {
+    Log.v("animationEnabled", "${enable?.getContentIfNotHandled()}")
+    enable?.getContentIfNotHandled()?.let {
+        if (it) equalizerView.animateBars() else equalizerView.stopBars()
+
+    }
+}
+*/
 

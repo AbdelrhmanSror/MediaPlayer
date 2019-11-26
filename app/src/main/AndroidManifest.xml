@@ -5,8 +5,8 @@
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-
     <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".MediaApplication"
         android:icon="@drawable/play_collapsed_notification"
@@ -16,6 +16,10 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:icon">
+        <activity
+            android:name=".Main2Activity"
+            android:label="@string/title_activity_main2"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
             android:name=".MainActivity"
             android:launchMode="singleInstance">
@@ -31,10 +35,9 @@
             android:resource="@array/preloaded_fonts" />
 
         <service
-            android:name="com.example.mediaplayer.foregroundService.AudioForegroundService"
+            android:name=".foregroundService.AudioForegroundService"
             android:enabled="true"
             android:exported="false" />
     </application>
-
 
 </manifest>

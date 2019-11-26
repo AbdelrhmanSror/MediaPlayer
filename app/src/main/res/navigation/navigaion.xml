@@ -3,44 +3,34 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/navigaion"
-    app:startDestination="@id/playList_dest"
+    app:startDestination="@id/placeholderFragment"
     tools:ignore="UnusedNavigation">
 
     <fragment
-        android:id="@+id/playList_dest"
-        android:name="com.example.mediaplayer.ui.playlist.PlayListFragment"
-        android:label="PlayListFragment">
+        android:id="@+id/chosenSong_dest"
+        android:name="com.example.mediaplayer.ui.chosenSong.ChosenSongFragment"
+        android:label="ChosenSongFragment">
         <action
-            android:id="@+id/action_playListFragment_to_chosenSongFragment"
+            android:id="@+id/action_chosenSong_dest_to_placeholderFragment"
+            app:destination="@id/placeholderFragment"
+            app:enterAnim="@animator/fade_in"
+            app:exitAnim="@animator/fade_out"
+            app:launchSingleTop="true"
+            app:popEnterAnim="@animator/fade_in"
+            app:popExitAnim="@animator/fade_out" />
+    </fragment>
+    <fragment
+        android:id="@+id/placeholderFragment"
+        android:name="com.example.mediaplayer.ui.main.PlaceholderFragment"
+        android:label="PlaceholderFragment" >
+        <action
+            android:id="@+id/action_placeholderFragment_to_chosenSong_dest"
             app:destination="@id/chosenSong_dest"
             app:enterAnim="@animator/fade_in"
             app:exitAnim="@animator/fade_out"
             app:launchSingleTop="true"
             app:popEnterAnim="@animator/fade_in"
             app:popExitAnim="@animator/fade_out" />
-
-    </fragment>
-    <fragment
-        android:id="@+id/chosenSong_dest"
-        android:name="com.example.mediaplayer.ui.chosenSong.ChosenSongFragment"
-        android:label="ChosenSongFragment">
-        <action
-            android:id="@+id/action_chosenSongFragment_to_playListFragment"
-            app:destination="@id/playList_dest"
-            app:enterAnim="@animator/fade_in"
-            app:exitAnim="@animator/fade_out"
-            app:launchSingleTop="false"
-            app:popEnterAnim="@animator/fade_in"
-            app:popExitAnim="@animator/fade_out" />
-    </fragment>
-    <fragment
-        android:id="@+id/favourite_dest"
-        android:name="com.example.mediaplayer.ui.favourite.FavouriteFragment"
-        android:label="fragment_favourite"
-        tools:layout="@layout/fragment_favourite">
-        <action
-            android:id="@+id/action_favourite_dest_to_chosenSong_dest"
-            app:destination="@id/chosenSong_dest" />
     </fragment>
 
 

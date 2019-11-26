@@ -21,4 +21,7 @@
     <string name="refuse_permission">Refuse</string>
     <string name="enable_permission_settings">Go to settings to enable permission</string>
     <string name="go_to_settings">Settings</string>
+    <string name="title_activity_main2">Main2Activity</string>
+    <string name="tab_text_1">Tab 1</string>
+    <string name="tab_text_2">Tab 2</string>
 </resources>

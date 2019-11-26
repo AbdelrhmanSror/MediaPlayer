@@ -68,6 +68,8 @@ class ChosenSongViewModel(application: Application, private val repository: Repo
         }
     }
 
+    private val _equalizerAnimationEnabled = MutableLiveData<Boolean?>()
+    val equalizerAnimationEnabled: LiveData<Boolean?> = _equalizerAnimationEnabled
     /**
      * Defines callbacks for service binding, passed to bindService()
      */
@@ -122,17 +124,20 @@ class ChosenSongViewModel(application: Application, private val repository: Repo
 
 
     override fun onAudioChanged(index: Int, isPlaying: Boolean) {
+        _equalizerAnimationEnabled.value=isPlaying
         _playPauseStateInitial.value = isPlaying
         _chosenSongIndex.value = Event(index)
 
     }
 
     override fun onPlay() {
+        _equalizerAnimationEnabled.value=true
         _playPauseState.value = Event(true)
 
     }
 
     override fun onPause() {
+        _equalizerAnimationEnabled.value=false
         _playPauseState.value = Event(false)
     }
 

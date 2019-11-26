@@ -9,6 +9,7 @@ import android.content.res.TypedArray
 import android.graphics.Color
 import android.os.Build
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewTreeObserver
@@ -18,7 +19,9 @@ import android.widget.LinearLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.databinding.BindingAdapter
 import androidx.databinding.DataBindingUtil
+import com.example.mediaplayer.Event
 import com.example.mediaplayer.R
 import com.example.mediaplayer.databinding.MinEqualizerBinding
 
@@ -136,7 +139,7 @@ class EqualizerView : LinearLayout {
 
             stopSet = AnimatorSet()
             stopSet.playTogether(scaleY3, scaleY2, scaleY1, scaleY4, scaleY5)
-            stopSet.duration = 200
+            stopSet.duration = 500
             stopSet.start()
         } else if (!stopSet.isStarted) {
             stopSet.start()

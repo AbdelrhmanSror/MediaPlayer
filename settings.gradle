@@ -1,1 +1,1 @@
-include ':app', ':DropDownMenu'
+include ':app'
