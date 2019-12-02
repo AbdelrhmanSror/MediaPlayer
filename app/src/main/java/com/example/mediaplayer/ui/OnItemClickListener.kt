@@ -13,6 +13,8 @@
 
 package com.example.mediaplayer.ui
 
+import android.view.View
+
 
 /**
  * click listener for every item in recycler view

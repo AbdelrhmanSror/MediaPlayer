@@ -18,16 +18,20 @@ import android.content.IntentFilter
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Handler
+import android.support.v4.media.MediaDescriptionCompat
+import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.MutableLiveData
 import com.example.mediaplayer.audioPlayer.audioFocus.AudioFocusCallBacks
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompatFactory
-import com.example.mediaplayer.foregroundService.AudioBroadCastReceiver
+import com.example.mediaplayer.foregroundService.NoiseBroadCastReceiver
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
+import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
@@ -36,9 +40,17 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 
+
 class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPlayerObservable {
 
     private var player: SimpleExoPlayer? = ExoPlayerFactory.newSimpleInstance(application)
+
+    private val mediaSession: MediaSessionCompat by lazy {
+        MediaSessionCompat(application, application.packageName)
+    }
+    private val mediaSessionConnector: MediaSessionConnector by lazy {
+        MediaSessionConnector(mediaSession)
+    }
 
     var isPlaying = true
         private set
@@ -62,8 +74,10 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
     /**
      * intent filter to setup with broadcast receiver so when user disconnect the headphone we pause the player
      */
-    private val intentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
-    private val myNoisyAudioStreamReceiver = AudioBroadCastReceiver()
+    private val intentFilter = IntentFilter().apply {
+        addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+    }
+    private val myNoisyAudioStreamReceiver = NoiseBroadCastReceiver()
 
 
     private var repeatModeActivated: Boolean = false
@@ -83,7 +97,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
             player!!.shuffleModeEnabled = value
             field = value
         }
-    private var mSongList: ArrayList<Uri>? = null
+    private var songList: ArrayList<Uri>? = null
 
     private val mMediaAudioFocus = MediaAudioFocusCompatFactory.create(application)
 
@@ -124,18 +138,33 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
         player?.apply {
             //to control to player the audio or video right now or wait user to play_collapsed_notification the audio himself
             playWhenReady = true
-            val mediaSource = buildMediaSource(mSongList)
+            val mediaSource = buildMediaSource(songList)
             prepare(mediaSource)
             //to control the starter location of audio and current track
             seekTo(chosenAudioIndex)
             application.registerReceiver(myNoisyAudioStreamReceiver, intentFilter)
+
         }
+    }
+
+    /**
+     * to control the player through headset or google assistant
+     */
+    fun enableCommandControl(mediaDescriptionCompat: (Int) -> MediaDescriptionCompat) {
+        mediaSessionConnector.setPlayer(player)
+        mediaSession.isActive = true
+        val queueNavigator: TimelineQueueNavigator = object : TimelineQueueNavigator(mediaSession) {
+            override fun getMediaDescription(player: Player?, windowIndex: Int): MediaDescriptionCompat {
+                return mediaDescriptionCompat(windowIndex)
+            }
+        }
+        mediaSessionConnector.setQueueNavigator(queueNavigator)
     }
 
     fun startPlayer(audioList: ArrayList<Uri>, chosenAudioIndex: Int) {
         //only re setup the player when the playlist changes
-        if (audioList != mSongList) {
-            mSongList = audioList
+        if (audioList != songList) {
+            songList = audioList
             setUpPlayer(chosenAudioIndex)
             //trigger these callback for first time every time player is being started
             onPlayerStateChanged.forEach {
@@ -344,7 +373,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
         onPlayerStateChanged.forEach {
             it?.onAudioChanged(currentAudioIndex, isPlaying)
         }
-        if(!isPlaying)
+        if (!isPlaying)
             play()
         setDuration()
 
@@ -410,6 +439,8 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
      */
     fun release() {
         player?.let {
+            mediaSession.release()
+            mediaSessionConnector.setPlayer(null)
             Log.v("serviceOndESTroy", " player done")
             player!!.release()
             player = null

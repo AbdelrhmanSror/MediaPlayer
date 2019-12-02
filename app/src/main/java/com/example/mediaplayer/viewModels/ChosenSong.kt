@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
+import android.util.Log
 import androidx.lifecycle.*
 import com.example.mediaplayer.*
 import com.example.mediaplayer.audioPlayer.OnPlayerStateChanged
@@ -205,6 +206,8 @@ class ChosenSongViewModel(application: Application, private val repository: Repo
 
     override fun onCleared() {
         super.onCleared()
+        Log.v("playpausestate", "Chosenclear")
+
         //un Bind fragment from service
         audioService.removeObserver(this, false)
         mApplication.unbindService(connection)

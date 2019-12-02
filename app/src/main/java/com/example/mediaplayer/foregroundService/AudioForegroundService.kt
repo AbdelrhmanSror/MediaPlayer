@@ -8,7 +8,9 @@ import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
 import androidx.core.app.NotificationManagerCompat
-import com.example.mediaplayer.*
+import com.example.mediaplayer.CHOSEN_SONG_INDEX
+import com.example.mediaplayer.LIST_SONG
+import com.example.mediaplayer.NOTIFICATION_ID
 import com.example.mediaplayer.PlayerActions.ACTION_FOREGROUND
 import com.example.mediaplayer.PlayerActions.DELETE_ACTION
 import com.example.mediaplayer.PlayerActions.NEXT_ACTION
@@ -18,6 +20,7 @@ import com.example.mediaplayer.PlayerActions.PREVIOUS_ACTION
 import com.example.mediaplayer.audioPlayer.AudioPlayer
 import com.example.mediaplayer.audioPlayer.OnPlayerStateChanged
 import com.example.mediaplayer.model.SongModel
+import com.example.mediaplayer.model.getMediaDescription
 
 
 class AudioForegroundService : Service(), OnPlayerStateChanged {
@@ -44,7 +47,8 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
 
     }
 
-    fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged,enableProgressCallback : Boolean, instantTrigger: Boolean) {
+
+    fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgressCallback: Boolean, instantTrigger: Boolean) {
         audioPlayer.registerObserver(onPlayerStateChanged, enableProgressCallback, instantTrigger)
     }
 
@@ -80,6 +84,7 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
         audioPlayer.seekTo(index)
     }
 
+
     private fun getNotification(): Notification {
         return foregroundNotification.build(audioPlayer.isPlaying, audioPlayer.currentAudioIndex)
     }
@@ -90,13 +95,6 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
 
     }
 
-    private fun intentData(intent: Intent): Pair<ArrayList<SongModel>, Int> {
-        //playList of songs
-        //getting the current playing song index
-        with(intent) {
-            return getParcelableArrayListExtra<SongModel>(LIST_SONG)!! to getIntExtra(CHOSEN_SONG_INDEX, 0)
-        }
-    }
 
     override fun onStartCommand(intent: Intent?,
                                 flags: Int, startId: Int): Int {
@@ -134,6 +132,14 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
         }
     }
 
+    private fun intentData(intent: Intent): Pair<ArrayList<SongModel>, Int> {
+        //playList of songs
+        //getting the current playing song index
+        with(intent) {
+            return getParcelableArrayListExtra<SongModel>(LIST_SONG)!! to getIntExtra(CHOSEN_SONG_INDEX, 0)
+        }
+    }
+
     private fun setUpPlayerForeground(intent: Intent) {
         with(intentData(intent))
         {
@@ -143,6 +149,9 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
             }
             foregroundNotification = AudioForegroundNotification(first, applicationContext)
             audioPlayer.startPlayer(songListUris, second)
+            audioPlayer.enableCommandControl { index ->
+                first[index].getMediaDescription()
+            }
             startForeground(NOTIFICATION_ID, getNotification())
         }
 

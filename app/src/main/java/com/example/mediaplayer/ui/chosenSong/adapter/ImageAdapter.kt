@@ -17,9 +17,12 @@ import android.content.Context
 import android.os.Handler
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.*
 import com.example.mediaplayer.databinding.PlayerImageLibraryBinding
 import com.example.mediaplayer.viewModels.ChosenSongViewModel
+import kotlinx.android.synthetic.main.player_controller.*
+import kotlinx.android.synthetic.main.player_image_library.view.*
 
 
 class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<String, ImageListAdapter.ViewHolder>(DiffCallBack) {
@@ -77,8 +80,8 @@ class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter
             }
         }
 
-
     }
+
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -87,6 +90,7 @@ class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter
 
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        ViewCompat.setTransitionName(holder.itemView.artwork, "Test_$position")
         holder.bind(viewmodel)
 
 

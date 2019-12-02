@@ -3,35 +3,37 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/navigaion"
-    app:startDestination="@id/placeholderFragment"
-    tools:ignore="UnusedNavigation">
+    tools:ignore="UnusedNavigation"
+    app:startDestination="@id/playListFragment">
 
     <fragment
         android:id="@+id/chosenSong_dest"
         android:name="com.example.mediaplayer.ui.chosenSong.ChosenSongFragment"
         android:label="ChosenSongFragment">
         <action
-            android:id="@+id/action_chosenSong_dest_to_placeholderFragment"
-            app:destination="@id/placeholderFragment"
+            android:id="@+id/action_chosenSong_dest_to_playListFragment"
+            app:destination="@id/playListFragment"
             app:enterAnim="@animator/fade_in"
             app:exitAnim="@animator/fade_out"
-            app:launchSingleTop="true"
             app:popEnterAnim="@animator/fade_in"
-            app:popExitAnim="@animator/fade_out" />
+            app:popExitAnim="@animator/fade_out"/>
     </fragment>
     <fragment
-        android:id="@+id/placeholderFragment"
-        android:name="com.example.mediaplayer.ui.main.PlaceholderFragment"
-        android:label="PlaceholderFragment" >
+        android:id="@+id/playListFragment"
+        android:name="com.example.mediaplayer.ui.playlist.PlayListFragment"
+        android:label="PlayListFragment" >
         <action
-            android:id="@+id/action_placeholderFragment_to_chosenSong_dest"
+            android:id="@+id/action_playListFragment_to_chosenSong_dest"
             app:destination="@id/chosenSong_dest"
             app:enterAnim="@animator/fade_in"
             app:exitAnim="@animator/fade_out"
-            app:launchSingleTop="true"
             app:popEnterAnim="@animator/fade_in"
-            app:popExitAnim="@animator/fade_out" />
+            app:popExitAnim="@animator/fade_out"/>
     </fragment>
+    <fragment
+        android:id="@+id/favouriteFragment"
+        android:name="com.example.mediaplayer.ui.favourite.FavouriteFragment"
+        android:label="FavouriteFragment" />
 
 
 </navigation>

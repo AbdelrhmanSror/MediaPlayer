@@ -19,6 +19,7 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import android.widget.ImageButton
@@ -61,16 +62,6 @@ fun Activity.disableActionBarTitle() {
 
 
 /**
- * extension function to check if user granted the permissions
- */
-fun Application.isAudioFilesPermissionGranted(): Boolean {
-    return ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.READ_EXTERNAL_STORAGE
-    ) == PackageManager.PERMISSION_GRANTED
-}
-
-/**
  * extension function for starting foreground service
  */
 fun Context.startForeground(foregroundIntent: Intent) {
@@ -82,4 +73,12 @@ fun Context.startForeground(foregroundIntent: Intent) {
         startService(foregroundIntent)
 
     }
+}
+
+
+fun String?.toUri(): Uri? {
+    this?.let {
+        return Uri.parse(this)
+    }
+    return null
 }

@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -87,6 +88,8 @@ class PlaylistAdapter(private val itemListener: OnItemClickListener) : ListAdapt
 
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        ViewCompat.setTransitionName(holder.itemView.AlbumArt, "Test_$position")
+
         holder.bind(getItem(position)!!, itemListener)
     }
 

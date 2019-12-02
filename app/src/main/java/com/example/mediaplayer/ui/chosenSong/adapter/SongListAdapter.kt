@@ -163,12 +163,12 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
 
     // update the current view and remove any state was existed before recycling
     private fun updateCurrentSelectedView(item: View, position: Int) {
-        Log.v("playpausestate", "$equalizerEnabled  $position  rec upcu")
+       // Log.v("playpausestate", "$equalizerEnabled  $position  rec upcu")
 
         if (position == currentSelectedItemPosition) {
             item.divider.visibility = View.VISIBLE
             item.equalizer_anim.visibility = View.VISIBLE
-            Log.v("playpausestate", "$equalizerEnabled  rec up")
+           // Log.v("playpausestate", "$equalizerEnabled  rec up")
 
             if (equalizerEnabled) {
                 item.equalizer_anim.animateBars()
@@ -188,8 +188,6 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
     fun equalizerEnabled(enabled: Boolean) {
         equalizerEnabled = enabled
         recyclerView.findViewHolderForAdapterPosition(currentSelectedItemPosition)?.itemView?.equalizer_anim?.apply {
-            Log.v("playpausestate", "$enabled  rec")
-
             if (enabled) this.animateBars() else this.stopBars()
         }
 

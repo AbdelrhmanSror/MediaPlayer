@@ -8,7 +8,7 @@
     <string name="shuffle">Shuffle</string>
     <string name="repeat">Repeat</string>
     <string name="favourite">Favourite</string>
-    <string name="favouriteSong">Playlist</string>
+    <string name="playlist">Playlist</string>
     <string name="no_audio_message">you must have at least one audio file on this device so app can work correctly</string>
     <string name="duration_format"> %1$s:%2$s</string>
     <string name="song_number">%1$s.</string>
@@ -22,8 +22,5 @@
     <string name="enable_permission_settings">Go to settings to enable permission</string>
     <string name="go_to_settings">Settings</string>
     <string name="title_activity_main2">Main2Activity</string>
-    <string name="tab_text_1">Tab 1</string>
-    <string name="tab_text_2">Tab 2</string>
-    <string name="playlist">Playlist</string>
-    <string name="favourite">Favourite</string>
+
 </resources>
