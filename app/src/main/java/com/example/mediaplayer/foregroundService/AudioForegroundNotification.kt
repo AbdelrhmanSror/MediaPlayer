@@ -1,4 +1,3 @@
-
 package com.example.mediaplayer.foregroundService
 
 import android.app.Notification
@@ -17,23 +16,19 @@ import java.util.*
 
 
 class AudioForegroundNotification(private val songModels: ArrayList<SongModel>?
-                             , private val context: Context) {
+                                  , private val context: Context) {
     private val customCollapsedNotification = RemoteViews(context.packageName, R.layout.custom_audio_notification_collapsed).apply {
         setImageViewResource(R.id.notification_prev, R.drawable.previous_collapsed_notification)
         setImageViewResource(R.id.notification_next, R.drawable.next_collapsed_notification)
-        setImageViewResource(R.id.notification_close, R.drawable.close_collapsed_notification)
         setOnClickPendingIntent(R.id.notification_next, pendingIntentNext())
         setOnClickPendingIntent(R.id.notification_prev, pendingIntentPrevious())
-        setOnClickPendingIntent(R.id.notification_close, pendingIntentDelete())
 
     }
     private val customExpandedNotification = RemoteViews(context.packageName, R.layout.custom_audio_notification_expanded).apply {
         setImageViewResource(R.id.notification_prev, R.drawable.previous__expanded_notification)
         setImageViewResource(R.id.notification_next, R.drawable.next__expanded_notification)
-        setImageViewResource(R.id.notification_close, R.drawable.close__expanded_notification)
         setOnClickPendingIntent(R.id.notification_next, pendingIntentNext())
         setOnClickPendingIntent(R.id.notification_prev, pendingIntentPrevious())
-        setOnClickPendingIntent(R.id.notification_close, pendingIntentDelete())
 
     }
 
@@ -88,9 +83,13 @@ class AudioForegroundNotification(private val songModels: ArrayList<SongModel>?
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 // Add an app icon and set its accent color
                 .setSmallIcon(R.drawable.play_collapsed_notification)
-                .setColor(ContextCompat.getColor(context, R.color.blue))
+                .setColor(ContextCompat.getColor(context, R.color.colorAccent))
+
                 .setContentIntent(onNotificationClickedIntent(chosenSongIndex))
-                .setStyle(androidx.media.app.NotificationCompat.DecoratedMediaCustomViewStyle())
+                // Add a cancel button
+                .setStyle(androidx.media.app.NotificationCompat.DecoratedMediaCustomViewStyle()
+                        .setShowCancelButton(true)
+                        .setCancelButtonIntent(pendingIntentDelete()))
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setDeleteIntent(pendingIntentDelete())

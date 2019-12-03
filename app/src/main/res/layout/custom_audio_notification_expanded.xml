@@ -67,14 +67,6 @@
 
             tools:background="@drawable/next_collapsed_notification" />
 
-        <ImageButton
-            android:id="@+id/notification_close"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@color/dark_gray"
-            android:layout_gravity="end|top"
-            android:layout_marginEnd="@dimen/small_vertical_spacing"
-            tools:background="@drawable/close_collapsed_notification" />
     </LinearLayout>
 
 </LinearLayout>

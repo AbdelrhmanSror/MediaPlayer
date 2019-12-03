@@ -41,16 +41,29 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 
 
-class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPlayerObservable {
+class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayerObservable {
 
-    private var player: SimpleExoPlayer? = ExoPlayerFactory.newSimpleInstance(application)
+    private var player: SimpleExoPlayer? = ExoPlayerFactory.newSimpleInstance(context)
 
     private val mediaSession: MediaSessionCompat by lazy {
-        MediaSessionCompat(application, application.packageName)
+        MediaSessionCompat(context, context.packageName)
     }
+
+    //to give flexibility if i want to do extra work while releasing the player like stopping service
+    private lateinit var extraRelease: () -> Unit
+
     private val mediaSessionConnector: MediaSessionConnector by lazy {
         MediaSessionConnector(mediaSession)
     }
+    //to see if the ui is visible or not
+    private var isUiVisible = true
+
+    /**
+     * //to indicate if the player is released or not so when the ui is not visible we release the player
+     * this is to avoid reinitializing the player again when user release the player and ui
+     * is still visible so if he resume the player we do not have to initialize it again
+     */
+    private var isReleased = false
 
     var isPlaying = true
         private set
@@ -99,7 +112,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
         }
     private var songList: ArrayList<Uri>? = null
 
-    private val mMediaAudioFocus = MediaAudioFocusCompatFactory.create(application)
+    private val mMediaAudioFocus = MediaAudioFocusCompatFactory.create(context)
 
     /**
      * variable to indicate to the last state of player if audio focus happened
@@ -120,8 +133,8 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
     //creating concatenating media source for media player to play_notification
     private fun buildMediaSource(audioUris: ArrayList<Uri>?): MediaSource? {
         // Produces DataSource instances through which media data is loaded.
-        val dataSourceFactory = DefaultDataSourceFactory(application,
-                Util.getUserAgent(application, "MediaPlayer"))
+        val dataSourceFactory = DefaultDataSourceFactory(context,
+                Util.getUserAgent(context, "MediaPlayer"))
         val concatenatingMediaSource = ConcatenatingMediaSource()
         when (audioUris) {
             null -> return null
@@ -142,24 +155,11 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
             prepare(mediaSource)
             //to control the starter location of audio and current track
             seekTo(chosenAudioIndex)
-            application.registerReceiver(myNoisyAudioStreamReceiver, intentFilter)
+            context.registerReceiver(myNoisyAudioStreamReceiver, intentFilter)
 
         }
     }
 
-    /**
-     * to control the player through headset or google assistant
-     */
-    fun enableCommandControl(mediaDescriptionCompat: (Int) -> MediaDescriptionCompat) {
-        mediaSessionConnector.setPlayer(player)
-        mediaSession.isActive = true
-        val queueNavigator: TimelineQueueNavigator = object : TimelineQueueNavigator(mediaSession) {
-            override fun getMediaDescription(player: Player?, windowIndex: Int): MediaDescriptionCompat {
-                return mediaDescriptionCompat(windowIndex)
-            }
-        }
-        mediaSessionConnector.setQueueNavigator(queueNavigator)
-    }
 
     fun startPlayer(audioList: ArrayList<Uri>, chosenAudioIndex: Int) {
         //only re setup the player when the playlist changes
@@ -182,6 +182,21 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
 
     }
 
+    /**
+     * to control the player through headset or google assistant
+     */
+    fun enableCommandControl(mediaDescriptionCompat: (Int) -> MediaDescriptionCompat) {
+        mediaSessionConnector.setPlayer(player)
+        mediaSession.isActive = true
+        val queueNavigator: TimelineQueueNavigator = object : TimelineQueueNavigator(mediaSession) {
+            override fun getMediaDescription(player: Player?, windowIndex: Int): MediaDescriptionCompat {
+                return mediaDescriptionCompat(windowIndex)
+            }
+
+        }
+        mediaSessionConnector.setQueueNavigator(queueNavigator)
+    }
+
 
     init {
         setOnPlayerStateChanged()
@@ -190,7 +205,6 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
 
     /**
      * to register observer we need to give it the class that implement the interface of observer
-     * and [enableProgressCallback] which used to trigger the  [OnPlayerStateChanged.onProgressChangedLiveData] whenever the progress changed
      *
      *[instantTrigger] set this to true if u enter ur activity or fragment from notification so u want to trigger callback to refresh ui.
      * if u set [instantTrigger] to true and player was not already playing it won't have any active,it is only active if the player was playing
@@ -198,11 +212,10 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
      *
      * warning :do not use [instantTrigger] other than that because it may trigger callback twice at same time which will lead to unwanted behaviour
      */
-    override fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgressCallback: Boolean, instantTrigger: Boolean) {
+    override fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, instantTrigger: Boolean) {
         this.onPlayerStateChanged.add(onPlayerStateChanged)
-        if (enableProgressCallback) {
-            setOnProgressChanged(onPlayerStateChanged)
-        }
+        setOnProgressChanged(onPlayerStateChanged)
+
         /**
          *audio player at initial state will return -1 because there is no audio is being played
          * also we just want to trigger these manually to refresh ui cause
@@ -216,10 +229,8 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
         }
     }
 
-    override fun removeObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgress: Boolean) {
-        if (!enableProgress) {
-            stopProgress()
-        }
+    override fun removeObserver(onPlayerStateChanged: OnPlayerStateChanged) {
+        stopProgress()
         this.onPlayerStateChanged.remove(onPlayerStateChanged)
     }
 
@@ -257,7 +268,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
                     when {
                         isPlayerStopped() -> {
                             //when player stop we stop listening to plug off events of headphone because player is already stopped
-                            application.unregisterReceiver(myNoisyAudioStreamReceiver)
+                            context.unregisterReceiver(myNoisyAudioStreamReceiver)
                             isPlaying = false
                             onPlayerStateChanged.forEach {
                                 it?.onPause()
@@ -268,7 +279,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
                             if (isFocusPermanentLost)
                                 requestFocus()
                             //when player start again we start listening to  events of headphone
-                            application.registerReceiver(myNoisyAudioStreamReceiver, intentFilter)
+                            context.registerReceiver(myNoisyAudioStreamReceiver, intentFilter)
                             isPlaying = true
                             onPlayerStateChanged.forEach {
                                 it?.onPlay()
@@ -312,8 +323,9 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
         mMediaAudioFocus.requestAudioFocus(object : AudioFocusCallBacks {
             //when the focus gained we start playing audio if it was previously running
             override fun onAudioFocusGained() {
-                if (prevPlayerState)
+                if (prevPlayerState) {
                     play()
+                }
 
             }
 
@@ -390,6 +402,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
      * play audio and reset runnable callback of Audio progress if it was initialized before
      */
     fun play() {
+        isReleased = false
         resumeProgress()
         player?.playWhenReady = true
     }
@@ -398,6 +411,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
      * pause audio and remove runnable callback of Audio progress if it is initialized
      */
     fun pause() {
+        isReleased = false
         pauseProgress()
         player?.playWhenReady = false
     }
@@ -406,6 +420,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
      * go to next audio
      */
     fun next() {
+        isReleased = false
         player?.next()
     }
 
@@ -415,6 +430,7 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
      * and user pressed on previous button then we reset the player to the beginning
      */
     fun previous() {
+        isReleased = false
         player?.apply {
             when {
                 currentPosition > 3000 -> seekTo(0)
@@ -437,14 +453,24 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
     /**
      * to release audio player when lifecycle owner is destroyed
      */
-    fun release() {
+    fun release(extra: () -> Unit) {
+        extraRelease = extra
         player?.let {
-            mediaSession.release()
-            mediaSessionConnector.setPlayer(null)
-            Log.v("serviceOndESTroy", " player done")
-            player!!.release()
-            player = null
+            pause()
+            if (!isUiVisible) {
+                releasePlayerPermanently()
+            } else {
+                isReleased = true
+            }
         }
+    }
+
+    private fun releasePlayerPermanently() {
+        extraRelease()
+        player!!.release()
+        player = null
+        mediaSession.release()
+        mediaSessionConnector.setPlayer(null)
     }
 
     /**
@@ -459,8 +485,10 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
         }
     }
 
-//detect if player already playing
 
+    /**
+     * detect if player already playing
+     */
     private fun isPlayerPlaying(): Boolean {
         player!!.run {
             return playWhenReady != isPlaying && playWhenReady
@@ -508,11 +536,14 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
 
         override fun onInactive() {
             pauseProgress()
+
         }
 
         override fun onActive() {
+            isUiVisible = true
             resumeProgress()
         }
+
     }
 
     private fun pauseProgress() {
@@ -522,12 +553,17 @@ class AudioPlayer(private val application: Context) : LifecycleObserver, AudioPl
     }
 
     private fun resumeProgress() {
-        if (::runnable.isInitialized)
+        if (::runnable.isInitialized) {
             handler?.post(runnable)
+        }
     }
 
     private fun stopProgress() {
+        isUiVisible = false
         pauseProgress()
+        if (isReleased) {
+            releasePlayerPermanently()
+        }
         handler = null
     }
 

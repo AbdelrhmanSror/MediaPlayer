@@ -14,7 +14,7 @@
 package com.example.mediaplayer.audioPlayer
 
 interface AudioPlayerObservable {
-    fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgressCallback: Boolean, instantTrigger: Boolean = false)
-    fun removeObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgress: Boolean)
+    fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, instantTrigger: Boolean = false)
+    fun removeObserver(onPlayerStateChanged: OnPlayerStateChanged)
     fun notifyObserver(onPlayerStateChanged: OnPlayerStateChanged)
 }

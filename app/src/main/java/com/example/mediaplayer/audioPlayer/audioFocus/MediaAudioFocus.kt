@@ -18,6 +18,8 @@ import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
+import android.os.Handler
+import android.util.Log
 import androidx.annotation.RequiresApi
 
 /**
@@ -32,6 +34,9 @@ class MediaAudioFocus private constructor(context: Context) : MediaAudioFocusCom
     private var playbackDelayed = false
     private var playbackNowAuthorized = false
     private var resumeOnFocusGain = false
+    private var isLossTransient=false
+    private var isLoss=false
+    private var isGain=false
 
 
     private val audioManager: AudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -56,13 +61,17 @@ class MediaAudioFocus private constructor(context: Context) : MediaAudioFocusCom
     override fun onAudioFocusChange(focusChange: Int) {
         when (focusChange) {
             AudioManager.AUDIOFOCUS_GAIN -> {
+                Log.v("hndlergained", "done delayed$playbackDelayed")
 
                 if (playbackDelayed || resumeOnFocusGain) {
                     synchronized(focusLock) {
                         playbackDelayed = false
                         resumeOnFocusGain = false
                     }
+
                     audioFocusCallBacks.onAudioFocusGained()
+
+
                 }
             }
             AudioManager.AUDIOFOCUS_LOSS -> {
@@ -70,14 +79,23 @@ class MediaAudioFocus private constructor(context: Context) : MediaAudioFocusCom
                     resumeOnFocusGain = false
                     playbackDelayed = false
                 }
+                Log.v("hndlergained", "done loss")
                 audioFocusCallBacks.onAudioFocusLost(true)
+
+
             }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
                 synchronized(focusLock) {
                     resumeOnFocusGain = true
                     playbackDelayed = false
+
                 }
-                audioFocusCallBacks.onAudioFocusLost(false)
+                //only call this once cause during loss transient this my be called many times and we do not want that
+                if(!isLossTransient) {
+                    Log.v("hndlergained", "done loss trans")
+                    isLossTransient=true
+                    audioFocusCallBacks.onAudioFocusLost(false)
+                }
             }
 
         }

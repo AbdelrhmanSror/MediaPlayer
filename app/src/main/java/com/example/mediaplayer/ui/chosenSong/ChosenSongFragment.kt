@@ -88,7 +88,6 @@ class ChosenSongFragment : DaggerFragment() {
                 }
             })
             equalizerAnimationEnabled.observe(viewLifecycleOwner, Observer {
-                Log.v("playpausestate", "$it")
                 it?.let {
                     songListAdapter.equalizerEnabled(it)
 

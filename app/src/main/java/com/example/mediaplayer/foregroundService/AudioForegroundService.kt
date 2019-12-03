@@ -48,12 +48,12 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
     }
 
 
-    fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgressCallback: Boolean, instantTrigger: Boolean) {
-        audioPlayer.registerObserver(onPlayerStateChanged, enableProgressCallback, instantTrigger)
+    fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, instantTrigger: Boolean) {
+        audioPlayer.registerObserver(onPlayerStateChanged, instantTrigger)
     }
 
-    fun removeObserver(onPlayerStateChanged: OnPlayerStateChanged, enableProgress: Boolean) {
-        audioPlayer.removeObserver(onPlayerStateChanged, enableProgress)
+    fun removeObserver(onPlayerStateChanged: OnPlayerStateChanged) {
+        audioPlayer.removeObserver(onPlayerStateChanged)
     }
 
     fun seekToSecond(second: Int) {
@@ -159,9 +159,12 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
 
     private fun cancelForeground() {
         //remove the notification and stop the service when user press the close button on notification
-        stopForeground(false)
-        mNotificationManager.cancelAll()
-        stopSelf()
+        audioPlayer.release {
+            stopSelf()
+            mNotificationManager.cancelAll()
+        }
+
+
     }
 
     override fun onAudioChanged(index: Int, isPlaying: Boolean) {
@@ -172,11 +175,10 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
 
     override fun onPlay() {
         startForeground(NOTIFICATION_ID, getNotification())
-
-
     }
 
     override fun onPause() {
+        stopForeground(false)
         mNotificationManager.notify(NOTIFICATION_ID, getNotification())
 
 
@@ -188,10 +190,5 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
 
     }
 
-
-    override fun onDestroy() {
-        super.onDestroy()
-        audioPlayer.release()
-    }
 }
 

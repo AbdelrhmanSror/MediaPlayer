@@ -19,14 +19,18 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class ChosenSongViewModel(application: Application, private val repository: Repository, private val songIndex: Int, private val fromNotification: Boolean) : AndroidViewModel(application), OnPlayerStateChanged {
+class ChosenSongViewModel(application: Application,
+                          private val repository: Repository,
+                          private val songIndex: Int,
+                          private val fromNotification: Boolean)
+    : AndroidViewModel(application), OnPlayerStateChanged {
 
 
     private val mApplication = application
 
     private lateinit var audioService: AudioForegroundService
 
-    var  previousRecyclerViewPosition=-1
+    var previousRecyclerViewPosition = -1
 
     val listOfSong = repository.observeSongs().map {
         it.toSongModel()
@@ -81,13 +85,15 @@ class ChosenSongViewModel(application: Application, private val repository: Repo
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             val binder = service as AudioForegroundService.SongBinder
             audioService = binder.service
-            audioService.registerObserver(this@ChosenSongViewModel, enableProgressCallback = true, instantTrigger = fromNotification)
+            audioService.registerObserver(this@ChosenSongViewModel, instantTrigger = fromNotification)
 
 
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
             //nothing
+            Log.v("playpausestate", "servicedisconnected")
+
         }
     }
 
@@ -100,7 +106,7 @@ class ChosenSongViewModel(application: Application, private val repository: Repo
 
     private fun startService() {
         viewModelScope.launch {
-            val songlist=withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
+            val songlist = withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
                 repository.getSongs().toSongModel()
             }
             if (!fromNotification) {
@@ -120,25 +126,21 @@ class ChosenSongViewModel(application: Application, private val repository: Repo
     }
 
 
-
-
-
-
     override fun onAudioChanged(index: Int, isPlaying: Boolean) {
-        _equalizerAnimationEnabled.value=isPlaying
+        _equalizerAnimationEnabled.value = isPlaying
         _playPauseStateInitial.value = isPlaying
         _chosenSongIndex.value = Event(index)
 
     }
 
     override fun onPlay() {
-        _equalizerAnimationEnabled.value=true
+        _equalizerAnimationEnabled.value = true
         _playPauseState.value = Event(true)
 
     }
 
     override fun onPause() {
-        _equalizerAnimationEnabled.value=false
+        _equalizerAnimationEnabled.value = false
         _playPauseState.value = Event(false)
     }
 
@@ -206,10 +208,8 @@ class ChosenSongViewModel(application: Application, private val repository: Repo
 
     override fun onCleared() {
         super.onCleared()
-        Log.v("playpausestate", "Chosenclear")
-
         //un Bind fragment from service
-        audioService.removeObserver(this, false)
+        audioService.removeObserver(this)
         mApplication.unbindService(connection)
     }
 }
