@@ -56,6 +56,7 @@ interface OnPlayerStateChanged {
      * also will stop whenever there is no observer
      */
     fun onProgressChangedLiveData(progress: MutableLiveData<Long>) {}
+    fun onAudioSessionId(audioSessionId:Int){}
 
 
 }

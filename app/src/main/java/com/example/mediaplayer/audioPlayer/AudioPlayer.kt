@@ -30,6 +30,7 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.analytics.AnalyticsListener
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
@@ -55,6 +56,7 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
     private val mediaSessionConnector: MediaSessionConnector by lazy {
         MediaSessionConnector(mediaSession)
     }
+    private var audioSessionId: Int = -1
     //to see if the ui is visible or not
     private var isUiVisible = true
 
@@ -166,16 +168,19 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
         if (audioList != songList) {
             songList = audioList
             setUpPlayer(chosenAudioIndex)
-            //trigger these callback for first time every time player is being started
-            onPlayerStateChanged.forEach {
-                it?.onRepeatModeChanged(player!!.repeatMode)
-                it?.onShuffleModeChanged(player!!.shuffleModeEnabled)
-            }
+            /* //trigger these callback for first time every time player is being started because these call back won't trigger so we do it manually
+             onPlayerStateChanged.forEach {
+                 it?.onRepeatModeChanged(player!!.repeatMode)
+                 it?.onShuffleModeChanged(player!!.shuffleModeEnabled)
+             }*/
         } else {
             seekTo(chosenAudioIndex)
             //if the player was being stopped then play
             if (!isPlaying) {
-                play()
+                Handler().postDelayed({
+                    play()
+                }, 1000)
+
             }
         }
         requestFocus()
@@ -202,31 +207,58 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
         setOnPlayerStateChanged()
     }
 
-
     /**
-     * to register observer we need to give it the class that implement the interface of observer
+     * to trigger call backs instantly once the the observer is attached
      *
-     *[instantTrigger] set this to true if u enter ur activity or fragment from notification so u want to trigger callback to refresh ui.
-     * if u set [instantTrigger] to true and player was not already playing it won't have any active,it is only active if the player was playing
-     * by default [instantTrigger] is set to false
+     *[instantTrigger] set this if u enter ur activity or fragment from notification so u want to trigger callback to refresh ui.
+     * if u set [instantTrigger] and player was not already playing it won't have any effect,it is only active if the player was playing
+     *
+     *this function will trigger these callbacks if possible
+     * onPlayerStateChanged.onAudioChanged)
+     * onPlayerStateChanged.onShuffleModeChanged
+     * onPlayerStateChanged.onRepeatModeChanged
+     * onPlayerStateChanged.onDurationChange
      *
      * warning :do not use [instantTrigger] other than that because it may trigger callback twice at same time which will lead to unwanted behaviour
      */
-    override fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, instantTrigger: Boolean) {
-        this.onPlayerStateChanged.add(onPlayerStateChanged)
-        setOnProgressChanged(onPlayerStateChanged)
-
+    fun instantTrigger(onPlayerStateChanged: OnPlayerStateChanged) {
         /**
          *audio player at initial state will return -1 because there is no audio is being played
          * also we just want to trigger these manually to refresh ui cause
          * if the audio is playing these events won't trigger until the events that trigger them happen
          * so to refresh ui when activity or fragment rebind with the service we have to do it manually
-         * also we do it only if audio already playing otherwise we continue the normal sequence
+         * also we do it only if audio already playing otherwise we continue the normal flow
          */
-        if (currentAudioIndex != -1 && instantTrigger) {
+        if (currentAudioIndex != -1) {
             notifyObserver(onPlayerStateChanged)
 
         }
+    }
+
+    /**
+     *to enable progress callback of audio ,can be used in ui to setup timer
+     */
+    fun enableProgress(onPlayerStateChanged: OnPlayerStateChanged) {
+        setOnProgressChanged(onPlayerStateChanged)
+    }
+
+    /**
+     *to trigger auio session call back first time observer is attached ,it won't trigger the callback if the audioSession is -1
+     */
+    fun triggerAudioSessionCallbackFirstTime(onPlayerStateChanged: OnPlayerStateChanged) {
+        if (audioSessionId == -1)
+            setOnAudioSessionIdChangeListener()
+        else onPlayerStateChanged.onAudioSessionId(audioSessionId)
+
+
+    }
+
+
+    /**
+     * to register observer we need to give it the class that implement the interface of observer
+     */
+    override fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged) {
+        this.onPlayerStateChanged.add(onPlayerStateChanged)
     }
 
     override fun removeObserver(onPlayerStateChanged: OnPlayerStateChanged) {
@@ -239,14 +271,15 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
         onPlayerStateChanged.onShuffleModeChanged(playerShuffleMode)
         onPlayerStateChanged.onRepeatModeChanged(playerRepeatMode)
         onPlayerStateChanged.onDurationChange(playerDuration)
+
+
     }
+
 
     //handle the player when actions happen in notification
     private fun setOnPlayerStateChanged() {
         player!!.run {
             addListener(object : Player.EventListener {
-
-
                 override fun onTracksChanged(trackGroups: TrackGroupArray?, trackSelections: TrackSelectionArray?) {
                     //when the track changed we update the index of song reflect the current song
                     when {
@@ -314,6 +347,27 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
                 }
             })
         }
+    }
+
+    private fun setOnAudioSessionIdChangeListener() {
+        player?.addAnalyticsListener(object : AnalyticsListener {
+
+            /**
+             * Called when the audio session id is set.
+             *
+             * @param eventTime      The event time.
+             * @param audioSessionId The audio session id.
+             */
+            override fun onAudioSessionId(eventTime: AnalyticsListener.EventTime?, audioSessionId: Int) {
+                Log.v("visulaizerBytes", " audio seesioon1 $audioSessionId")
+                this@AudioPlayer.audioSessionId = audioSessionId
+                onPlayerStateChanged.forEach {
+                    it?.onAudioSessionId(audioSessionId)
+                }
+
+            }
+        })
+
     }
 
     /**

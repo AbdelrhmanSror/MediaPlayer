@@ -20,12 +20,12 @@ class AudioPermission(private val activityCompat: AppCompatActivity
     }
 
     companion object {
-        const val MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 5
+        const val MY_PERMISSIONS_REQUEST = 5
     }
 
     private fun checkPermission() {
         // Here, thisActivity is the current activity
-        if (!activityCompat.application.isAudioFilePermissionGranted()) {
+        if (!activityCompat.application.isPermissionGranted()) {
             requestPermission()
         } else {
             onPermissionGranted()
@@ -36,19 +36,23 @@ class AudioPermission(private val activityCompat: AppCompatActivity
     /**
      * extension function to check if user granted the permissions
      */
-    private fun Application.isAudioFilePermissionGranted(): Boolean {
+    private fun Application.isPermissionGranted(): Boolean {
         return ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.READ_EXTERNAL_STORAGE
-        ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+        ) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.BLUETOOTH
+        ) == PackageManager.PERMISSION_GRANTED&& ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.RECORD_AUDIO
         ) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestPermission() = ActivityCompat.requestPermissions(activityCompat,
-            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH),
-            MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE
+            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH,Manifest.permission.RECORD_AUDIO),
+            MY_PERMISSIONS_REQUEST
     )
 
     //show snack bar to tell user to direct user to settings to enable permission
@@ -85,16 +89,17 @@ class AudioPermission(private val activityCompat: AppCompatActivity
         // location data layer.
         //if the permission is granted but gps is not enabled then ask user to enable it
         //else if the use did not enable it then go to default location
-        if (requestCode == MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE) {
+        if (requestCode == MY_PERMISSIONS_REQUEST) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
-                    && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    && grantResults[1] == PackageManager.PERMISSION_GRANTED&&grantResults[2] == PackageManager.PERMISSION_GRANTED) {
                 onPermissionGranted()
             } else {
                 // permission was not granted
                 //permission is denied (this is the first time, when "never ask again" is not checked) so ask again explaining the usage of permission
                 // shouldShowRequestPermissionRationale will return true
                 if (ActivityCompat.shouldShowRequestPermissionRationale(activityCompat, Manifest.permission.READ_EXTERNAL_STORAGE)
-                        || ActivityCompat.shouldShowRequestPermissionRationale(activityCompat, Manifest.permission.BLUETOOTH)) {
+                        || ActivityCompat.shouldShowRequestPermissionRationale(activityCompat, Manifest.permission.BLUETOOTH)
+                        ||ActivityCompat.shouldShowRequestPermissionRationale(activityCompat, Manifest.permission.RECORD_AUDIO)) {
                     showPermissionAlertDialog()
 
                 } //permission is denied (and never ask again is  checked)

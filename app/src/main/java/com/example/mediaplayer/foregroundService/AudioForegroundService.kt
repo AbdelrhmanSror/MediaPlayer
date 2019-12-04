@@ -41,15 +41,12 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
         // The service is being created.
         mNotificationManager = NotificationManagerCompat.from(this)
         audioPlayer = AudioPlayer.create(applicationContext).apply {
-            registerObserver(this@AudioForegroundService, false)
+            registerObserver(this@AudioForegroundService)
         }
 
-
     }
-
-
-    fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged, instantTrigger: Boolean) {
-        audioPlayer.registerObserver(onPlayerStateChanged, instantTrigger)
+    fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged) {
+        audioPlayer.registerObserver(onPlayerStateChanged)
     }
 
     fun removeObserver(onPlayerStateChanged: OnPlayerStateChanged) {
@@ -84,6 +81,18 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
         audioPlayer.seekTo(index)
     }
 
+    fun instantTrigger(onPlayerStateChanged: OnPlayerStateChanged) {
+        audioPlayer.instantTrigger(onPlayerStateChanged)
+
+    }
+
+    fun enableProgress(onPlayerStateChanged: OnPlayerStateChanged) {
+        audioPlayer.enableProgress(onPlayerStateChanged)
+    }
+
+    fun triggerAudioSessionCallbackFirstTime(onPlayerStateChanged: OnPlayerStateChanged) {
+        audioPlayer.triggerAudioSessionCallbackFirstTime(onPlayerStateChanged)
+    }
 
     private fun getNotification(): Notification {
         return foregroundNotification.build(audioPlayer.isPlaying, audioPlayer.currentAudioIndex)
@@ -160,6 +169,7 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
     private fun cancelForeground() {
         //remove the notification and stop the service when user press the close button on notification
         audioPlayer.release {
+            removeObserver(this)
             stopSelf()
             mNotificationManager.cancelAll()
         }

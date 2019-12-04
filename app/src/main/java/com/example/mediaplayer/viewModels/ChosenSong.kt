@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.media.audiofx.Visualizer
 import android.os.IBinder
 import android.util.Log
 import androidx.lifecycle.*
@@ -28,6 +29,7 @@ class ChosenSongViewModel(application: Application,
 
     private val mApplication = application
 
+    private lateinit var visualizer: Visualizer
     private lateinit var audioService: AudioForegroundService
 
     var previousRecyclerViewPosition = -1
@@ -85,15 +87,19 @@ class ChosenSongViewModel(application: Application,
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             val binder = service as AudioForegroundService.SongBinder
             audioService = binder.service
-            audioService.registerObserver(this@ChosenSongViewModel, instantTrigger = fromNotification)
+            audioService.apply {
+                registerObserver(this@ChosenSongViewModel)
+                enableProgress(this@ChosenSongViewModel)
+                triggerAudioSessionCallbackFirstTime(this@ChosenSongViewModel)
+                if (fromNotification)
+                    instantTrigger(this@ChosenSongViewModel)
+            }
 
 
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
             //nothing
-            Log.v("playpausestate", "servicedisconnected")
-
         }
     }
 
@@ -160,6 +166,25 @@ class ChosenSongViewModel(application: Application,
         _audioPlayerProgress.value = progress
     }
 
+    override fun onAudioSessionId(audioSessionId: Int) {
+        Log.v("visulaizerBytes", " audio seesioon2 $audioSessionId")
+
+        //YOU NEED android.permission.RECORD_AUDIO for that in AndroidManifest.xml
+        visualizer = Visualizer(audioSessionId)
+        visualizer.captureSize = Visualizer.getCaptureSizeRange()[1]
+        visualizer.setDataCaptureListener(object : Visualizer.OnDataCaptureListener {
+            override fun onWaveFormDataCapture(p0: Visualizer?, p1: ByteArray?, p2: Int) {
+
+            }
+
+            override fun onFftDataCapture(p0: Visualizer?, p1: ByteArray?, p2: Int) {}
+
+
+        }, Visualizer.getMaxCaptureRate() / 2, true, false)
+
+        visualizer.enabled = true
+    }
+
     fun setFavouriteAudio(chosenSongIndex: Int) {
         viewModelScope.launch {
             withContext(Dispatchers.IO)
@@ -208,6 +233,8 @@ class ChosenSongViewModel(application: Application,
 
     override fun onCleared() {
         super.onCleared()
+        if (::visualizer.isInitialized)
+            visualizer.release()
         //un Bind fragment from service
         audioService.removeObserver(this)
         mApplication.unbindService(connection)
