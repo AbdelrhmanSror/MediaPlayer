@@ -51,7 +51,7 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
     }
 
     //to give flexibility if i want to do extra work while releasing the player like stopping service
-    private lateinit var extraRelease: () -> Unit
+    private var extraRelease: (() -> Unit)? = null
 
     private val mediaSessionConnector: MediaSessionConnector by lazy {
         MediaSessionConnector(mediaSession)
@@ -61,7 +61,7 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
     private var isUiVisible = true
 
     /**
-     * //to indicate if the player is released or not so when the ui is not visible we release the player
+     * to indicate if the player is released or not so when the ui is not visible we release the player
      * this is to avoid reinitializing the player again when user release the player and ui
      * is still visible so if he resume the player we do not have to initialize it again
      */
@@ -261,6 +261,13 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
         this.onPlayerStateChanged.add(onPlayerStateChanged)
     }
 
+    /**
+     * WARNING :DO NOT CALL [removeObserver] inside  [release]  OTHERWISE THERE WILL BE CRASHING
+     *
+     * call this if u just want to un register your observer,this will not release the player
+     * if u want to release every thing use [release]
+     * if you have registered to listen to progress this [removeObserver] will stop the progress
+     */
     override fun removeObserver(onPlayerStateChanged: OnPlayerStateChanged) {
         stopProgress()
         this.onPlayerStateChanged.remove(onPlayerStateChanged)
@@ -288,7 +295,7 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
                             onPlayerStateChanged.forEach {
                                 it?.onAudioChanged(currentAudioIndex, isPlaying)
                             }
-                            setDuration()
+                            triggerDurationCallback()
 
 
                         }
@@ -303,10 +310,11 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
                             //when player stop we stop listening to plug off events of headphone because player is already stopped
                             context.unregisterReceiver(myNoisyAudioStreamReceiver)
                             isPlaying = false
+                            Log.v("isrelwaseddff", "if  isplayerstopped")
+
                             onPlayerStateChanged.forEach {
                                 it?.onPause()
                             }
-
                         }
                         isPlayerPlaying() -> {
                             if (isFocusPermanentLost)
@@ -397,7 +405,7 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
      * to get duration it require player to be in ready state so we handle
      * this in runnable so to keep trying until getting the duration
      */
-    private fun setDuration() {
+    private fun triggerDurationCallback() {
         val handler = Handler()
         var runnable: Runnable? = null
         runnable = Runnable {
@@ -441,7 +449,7 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
         }
         if (!isPlaying)
             play()
-        setDuration()
+        triggerDurationCallback()
 
     }
 
@@ -457,7 +465,8 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
      */
     fun play() {
         isReleased = false
-        resumeProgress()
+        if (isUiVisible)
+            resumeProgress()
         player?.playWhenReady = true
     }
 
@@ -465,7 +474,6 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
      * pause audio and remove runnable callback of Audio progress if it is initialized
      */
     fun pause() {
-        isReleased = false
         pauseProgress()
         player?.playWhenReady = false
     }
@@ -504,28 +512,6 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
         }
     }
 
-    /**
-     * to release audio player when lifecycle owner is destroyed
-     */
-    fun release(extra: () -> Unit) {
-        extraRelease = extra
-        player?.let {
-            pause()
-            if (!isUiVisible) {
-                releasePlayerPermanently()
-            } else {
-                isReleased = true
-            }
-        }
-    }
-
-    private fun releasePlayerPermanently() {
-        extraRelease()
-        player!!.release()
-        player = null
-        mediaSession.release()
-        mediaSessionConnector.setPlayer(null)
-    }
 
     /**
      *detect if player already stopped
@@ -570,6 +556,7 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
         }
     }
 
+
     private fun setOnProgressChanged(onPlayerStateChanged: OnPlayerStateChanged) {
         onPlayerStateChanged.onProgressChangedLiveData(ProgressLiveData())
     }
@@ -588,6 +575,13 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
             handler?.postDelayed(runnable, 50)
         }
 
+        /**
+         *we do not update isUiVisisble here cause this variable
+         * is actually represent the actual state of ui if its already visible or not visible
+         * which means that ui is completely destroyed
+         * so that is why we do not update this variable here because if the screen goes black
+         * and user dismiss the notification the player would be released and we don not want this
+         */
         override fun onInactive() {
             pauseProgress()
 
@@ -612,6 +606,45 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
         }
     }
 
+
+    private fun releasePlayerPermanently() {
+        extraRelease?.invoke()
+        player!!.release()
+        player = null
+        mediaSession.release()
+        mediaSessionConnector.setPlayer(null)
+    }
+
+
+    /**
+     * if u want to release every thing use [release]
+     *
+     * this has no effect if the observer of progress is still attached
+     *
+     * this will delay the releasing of player until the observer of progress is not attached unless user resume the player again nothing wil happen
+     *
+     * use [release] if u have no observer for progress its effect will be executed immediately
+     *
+     * if there was observer of progress this will have no effect until the observer of progress get unsubscribed using [removeObserver]
+     *
+     *if u have progress observer and  u want to immediately release the player call [removeObserver] and [release] together
+     *
+     * WARNING :DO NOT CALL [removeObserver] inside  [release]  OTHERWISE THERE WILL BE CRASHING(STACK OVER FLOW)
+     */
+    fun release(extra: (() -> Unit)? = null) {
+        extraRelease = extra
+        player?.let {
+            if (!isUiVisible) {
+                releasePlayerPermanently()
+            } else {
+                isReleased = true
+            }
+        }
+    }
+
+    /**
+     * this will only be called if the ui is completely destroyed
+     */
     private fun stopProgress() {
         isUiVisible = false
         pauseProgress()

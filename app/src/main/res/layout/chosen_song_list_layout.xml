@@ -87,9 +87,19 @@
                     tools:visibility="visible"
                     app:foregroundColor="@color/blue"
                     android:visibility="gone"
-                    app:animDuration="3500"
+                    app:animDuration="35000"
                     android:layout_gravity="center|end"
                     />
+                <com.example.mediaplayer.customViews.VisualizerView
+                    android:orientation="horizontal"
+                    android:id="@+id/wave_form_anim"
+                    android:layout_width="0dp"
+                    android:layout_weight="2"
+                    android:visibility="gone"
+                    tools:visibility="visible"
+                    android:layout_marginStart="@dimen/medium_horizontal_spacing"
+                    android:layout_gravity="center|end"
+                    android:layout_height="30dp"/>
                 <ImageButton
                     android:id="@+id/favourite_shape"
                     android:layout_width="48dp"

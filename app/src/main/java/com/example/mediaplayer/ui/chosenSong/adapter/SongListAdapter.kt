@@ -21,6 +21,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.*
+import com.example.mediaplayer.customViews.VisualizerView
 import com.example.mediaplayer.databinding.ChosenSongListLayoutBinding
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.startFavouriteAnimation
@@ -55,6 +56,8 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
     private var isSnapAttached = false
     private val snapHelper = LinearSnapHelper()
     private var equalizerEnabled: Boolean = true
+    private var visualizerEnabled: Boolean = true
+
     private val smoothScroller: LinearSmoothScroller by lazy {
         object : LinearSmoothScroller(context) {
             override fun getVerticalSnapPreference(): Int {
@@ -107,6 +110,7 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
                 return ViewHolder(binding)
 
             }
+
         }
 
 
@@ -163,35 +167,41 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
 
     // update the current view and remove any state was existed before recycling
     private fun updateCurrentSelectedView(item: View, position: Int) {
-       // Log.v("playpausestate", "$equalizerEnabled  $position  rec upcu")
+        // Log.v("playpausestate", "$equalizerEnabled  $position  rec upcu")
 
         if (position == currentSelectedItemPosition) {
             item.divider.visibility = View.VISIBLE
-            item.equalizer_anim.visibility = View.VISIBLE
-           // Log.v("playpausestate", "$equalizerEnabled  rec up")
-
-            if (equalizerEnabled) {
-                item.equalizer_anim.animateBars()
-            }
+            item.wave_form_anim.visibility = View.VISIBLE
+             //item.equalizer_anim.visibility = View.VISIBLE
             lastSelectedItemPosition = position
 
 
         } else {
             item.divider.visibility = View.GONE
-            item.equalizer_anim.visibility = View.GONE
+            item.wave_form_anim.visibility = View.GONE
+            //item.equalizer_anim.visibility = View.GONE
             item.equalizer_anim.stopBars()
 
 
         }
     }
 
-    fun equalizerEnabled(enabled: Boolean) {
-        equalizerEnabled = enabled
+
+    fun equalizerEnabled(byteArray: ByteArray) {
+        equalizerEnabled = true
         recyclerView.findViewHolderForAdapterPosition(currentSelectedItemPosition)?.itemView?.equalizer_anim?.apply {
-            if (enabled) this.animateBars() else this.stopBars()
+            if (byteArray[0].compareTo(-128)==0) this.stopBars() else this.animateBars(byteArray)
         }
 
     }
+    fun visualizerEnabled(byteArray: ByteArray) {
+        visualizerEnabled = true
+        recyclerView.findViewHolderForAdapterPosition(currentSelectedItemPosition)?.itemView?.wave_form_anim?.apply {
+            this.updateVisualizer(byteArray)
+        }
+
+    }
+
 
     private fun firstTimeInstantScrolling(position: Int) {
         snapHelper.attachToRecyclerView(recyclerView)

@@ -6,8 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.media.audiofx.Visualizer
+import android.os.Handler
 import android.os.IBinder
-import android.util.Log
 import androidx.lifecycle.*
 import com.example.mediaplayer.*
 import com.example.mediaplayer.audioPlayer.OnPlayerStateChanged
@@ -16,6 +16,7 @@ import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.repositry.Repository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -75,8 +76,10 @@ class ChosenSongViewModel(application: Application,
         }
     }
 
-    private val _equalizerAnimationEnabled = MutableLiveData<Boolean?>()
-    val equalizerAnimationEnabled: LiveData<Boolean?> = _equalizerAnimationEnabled
+    private val _visualizerAnimationEnabled = MutableLiveData<ByteArray?>()
+    val visualizerAnimationEnabled: LiveData<ByteArray?> = _visualizerAnimationEnabled
+
+
     /**
      * Defines callbacks for service binding, passed to bindService()
      */
@@ -133,20 +136,17 @@ class ChosenSongViewModel(application: Application,
 
 
     override fun onAudioChanged(index: Int, isPlaying: Boolean) {
-        _equalizerAnimationEnabled.value = isPlaying
         _playPauseStateInitial.value = isPlaying
         _chosenSongIndex.value = Event(index)
 
     }
 
     override fun onPlay() {
-        _equalizerAnimationEnabled.value = true
         _playPauseState.value = Event(true)
 
     }
 
     override fun onPause() {
-        _equalizerAnimationEnabled.value = false
         _playPauseState.value = Event(false)
     }
 
@@ -167,20 +167,20 @@ class ChosenSongViewModel(application: Application,
     }
 
     override fun onAudioSessionId(audioSessionId: Int) {
-        Log.v("visulaizerBytes", " audio seesioon2 $audioSessionId")
-
         //YOU NEED android.permission.RECORD_AUDIO for that in AndroidManifest.xml
         visualizer = Visualizer(audioSessionId)
+        visualizer.enabled = false
         visualizer.captureSize = Visualizer.getCaptureSizeRange()[1]
         visualizer.setDataCaptureListener(object : Visualizer.OnDataCaptureListener {
             override fun onWaveFormDataCapture(p0: Visualizer?, p1: ByteArray?, p2: Int) {
+                    _visualizerAnimationEnabled.value=p1
 
             }
 
             override fun onFftDataCapture(p0: Visualizer?, p1: ByteArray?, p2: Int) {}
 
 
-        }, Visualizer.getMaxCaptureRate() / 2, true, false)
+        }, Visualizer.getMaxCaptureRate()/2, true, false)
 
         visualizer.enabled = true
     }

@@ -7,6 +7,7 @@ import android.media.AudioManager
 import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import com.example.mediaplayer.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.LIST_SONG
@@ -36,6 +37,7 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
     //responsible for updating the notification
     private lateinit var mNotificationManager: NotificationManagerCompat
 
+
     override fun onCreate() {
         super.onCreate()
         // The service is being created.
@@ -45,6 +47,7 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
         }
 
     }
+
     fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged) {
         audioPlayer.registerObserver(onPlayerStateChanged)
     }
@@ -168,12 +171,10 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
 
     private fun cancelForeground() {
         //remove the notification and stop the service when user press the close button on notification
-        audioPlayer.release {
-            removeObserver(this)
-            stopSelf()
-            mNotificationManager.cancelAll()
-        }
-
+        audioPlayer.pause()
+        stopForeground(false)
+        mNotificationManager.cancelAll()
+        audioPlayer.release { stopSelf() }
 
     }
 
@@ -190,7 +191,6 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
     override fun onPause() {
         stopForeground(false)
         mNotificationManager.notify(NOTIFICATION_ID, getNotification())
-
 
     }
 

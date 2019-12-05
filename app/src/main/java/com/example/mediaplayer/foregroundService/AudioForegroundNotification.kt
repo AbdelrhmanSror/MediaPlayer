@@ -27,8 +27,10 @@ class AudioForegroundNotification(private val songModels: ArrayList<SongModel>?
     private val customExpandedNotification = RemoteViews(context.packageName, R.layout.custom_audio_notification_expanded).apply {
         setImageViewResource(R.id.notification_prev, R.drawable.previous__expanded_notification)
         setImageViewResource(R.id.notification_next, R.drawable.next__expanded_notification)
+        setImageViewResource(R.id.notification_close, R.drawable.close__expanded_notification)
         setOnClickPendingIntent(R.id.notification_next, pendingIntentNext())
         setOnClickPendingIntent(R.id.notification_prev, pendingIntentPrevious())
+        setOnClickPendingIntent(R.id.notification_close,pendingIntentDelete())
 
     }
 

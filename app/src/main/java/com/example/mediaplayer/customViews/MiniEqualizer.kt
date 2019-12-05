@@ -24,6 +24,10 @@ import androidx.databinding.DataBindingUtil
 import com.example.mediaplayer.Event
 import com.example.mediaplayer.R
 import com.example.mediaplayer.databinding.MinEqualizerBinding
+import java.util.function.LongFunction
+import kotlin.math.abs
+import kotlin.math.round
+import kotlin.random.Random
 
 
 class EqualizerView : LinearLayout {
@@ -33,6 +37,10 @@ class EqualizerView : LinearLayout {
     private var isAnimating = false
     private var foregroundColor = 0
     private var duration = 0
+
+    /*private val bars: Array<ObjectAnimator> by lazy {
+        getBar()
+    }*/
 
     constructor(context: Context?) : super(context) {
         initViews()
@@ -73,8 +81,9 @@ class EqualizerView : LinearLayout {
 
         setPivots()
     }
-    private fun ImageView.setColor(colorRefId:Int){
-        setColorFilter(ContextCompat.getColor(context,colorRefId))
+
+    private fun ImageView.setColor(colorRefId: Int) {
+        setColorFilter(ContextCompat.getColor(context, colorRefId))
 
     }
 
@@ -100,33 +109,107 @@ class EqualizerView : LinearLayout {
         binding.musicBar5.setPivot()
     }
 
-    fun animateBars() {
+   /* private fun getBar(): Array<ObjectAnimator> {
+        val scaleYbar1 = ObjectAnimator.ofFloat(binding.musicBar1, "scaleY", 0.2f, 0.8f, 0.1f, 0.1f, 0.3f, 0.1f, 0.2f, 0.8f, 0.7f, 0.2f, 0.4f, 0.9f, 0.7f, 0.6f, 0.1f, 0.3f, 0.1f, 0.4f, 0.1f, 0.8f, 0.7f, 0.9f, 0.5f, 0.6f, 0.3f, 0.1f)
+        scaleYbar1.repeatCount = ValueAnimator.INFINITE
+        val scaleYbar2 = ObjectAnimator.ofFloat(binding.musicBar2, "scaleY", 0.2f, 0.5f, 1.0f, 0.5f, 0.3f, 0.1f, 0.2f, 0.3f, 0.5f, 0.1f, 0.6f, 0.5f, 0.3f, 0.7f, 0.8f, 0.9f, 0.3f, 0.1f, 0.5f, 0.3f, 0.6f, 1.0f, 0.6f, 0.7f, 0.4f, 0.1f)
+        scaleYbar2.repeatCount = ValueAnimator.INFINITE
+        val scaleYbar3 = ObjectAnimator.ofFloat(binding.musicBar3, "scaleY", 0.6f, 0.5f, 1.0f, 0.6f, 0.5f, 1.0f, 0.6f, 0.5f, 1.0f, 0.5f, 0.6f, 0.7f, 0.2f, 0.3f, 0.1f, 0.5f, 0.4f, 0.6f, 0.7f, 0.1f, 0.4f, 0.3f, 0.1f, 0.4f, 0.3f, 0.7f)
+        scaleYbar3.repeatCount = ValueAnimator.INFINITE
+        val scaleYbar4 = ObjectAnimator.ofFloat(binding.musicBar4, "scaleY", 0.2f, 0.8f, 0.1f, 0.1f, 0.3f, 0.1f, 0.2f, 0.8f, 0.7f, 0.2f, 0.4f, 0.9f, 0.7f, 0.6f, 0.1f, 0.3f, 0.1f, 0.4f, 0.1f, 0.8f, 0.7f, 0.9f, 0.5f, 0.6f, 0.3f, 0.1f)
+        scaleYbar4.repeatCount = ValueAnimator.INFINITE
+        val scaleYbar5 = ObjectAnimator.ofFloat(binding.musicBar5, "scaleY", 0.2f, 0.5f, 1.0f, 0.5f, 0.3f, 0.1f, 0.2f, 0.3f, 0.5f, 0.1f, 0.6f, 0.5f, 0.3f, 0.7f, 0.8f, 0.9f, 0.3f, 0.1f, 0.5f, 0.3f, 0.6f, 1.0f, 0.6f, 0.7f, 0.4f, 0.1f)
+        scaleYbar5.repeatCount = ValueAnimator.INFINITE
+        return arrayOf(scaleYbar1, scaleYbar2, scaleYbar3, scaleYbar4, scaleYbar5)
+    }*/
+
+    /**
+     * remember to make invalidate
+     */
+    private fun getBarByteArray(byteArray: ByteArray): Array<ObjectAnimator> {
+        val x0: List<Float> = byteArray.asList().subList(0, 202).map {
+            Log.v("animtinvalue","${ ( ((abs((it ).toFloat()) / 128)*10).toInt()).toFloat()/10}")
+
+            ( ((abs((it ).toFloat()) / 128)*10).toInt()).toFloat()/10
+        }
+        val x1: List<Float> = byteArray.asList().subList(202, 404).map {
+
+            ( ((abs((it ).toFloat()) / 128)*10).toInt()).toFloat()/10
+
+        }
+        val x2: List<Float> = byteArray.asList().subList(404, 606).map {
+
+            ( ((abs((it ).toFloat()) / 128)*10).toInt()).toFloat()/10
+
+        }
+        val x3: List<Float> = byteArray.asList().subList(606, 808).map {
+
+            ( ((abs((it ).toFloat()) / 128)*10).toInt()).toFloat()/10
+
+        }
+        val x4: List<Float> = byteArray.asList().subList(808, 1010).map {
+
+            ( ((abs((it ).toFloat()) / 128)*10).toInt()).toFloat()/10
+
+        }
+        val scaleYbar1 = ObjectAnimator.ofFloat(binding.musicBar1, "scaleY", *x0.toFloatArray())
+        scaleYbar1.repeatCount = ValueAnimator.INFINITE
+        val scaleYbar2 = ObjectAnimator.ofFloat(binding.musicBar2, "scaleY", *x1.toFloatArray())
+        scaleYbar2.repeatCount = ValueAnimator.INFINITE
+        val scaleYbar3 = ObjectAnimator.ofFloat(binding.musicBar3, "scaleY", *x2.toFloatArray())
+        scaleYbar3.repeatCount = ValueAnimator.INFINITE
+        val scaleYbar4 = ObjectAnimator.ofFloat(binding.musicBar4, "scaleY", *x3.toFloatArray())
+        scaleYbar4.repeatCount = ValueAnimator.INFINITE
+        val scaleYbar5 = ObjectAnimator.ofFloat(binding.musicBar5, "scaleY", *x4.toFloatArray())
+        scaleYbar5.repeatCount = ValueAnimator.INFINITE
+        return arrayOf(scaleYbar1, scaleYbar2, scaleYbar3, scaleYbar4, scaleYbar5)
+    }
+
+    fun animateBars(byteArray: ByteArray) {
         isAnimating = true
         if (!::playingSet.isInitialized) {
-            val scaleYbar1 = ObjectAnimator.ofFloat(binding.musicBar1, "scaleY", 0.2f, 0.8f, 0.1f, 0.1f, 0.3f, 0.1f, 0.2f, 0.8f, 0.7f, 0.2f, 0.4f, 0.9f, 0.7f, 0.6f, 0.1f, 0.3f, 0.1f, 0.4f, 0.1f, 0.8f, 0.7f, 0.9f, 0.5f, 0.6f, 0.3f, 0.1f)
-            scaleYbar1.repeatCount = ValueAnimator.INFINITE
-            val scaleYbar2 = ObjectAnimator.ofFloat(binding.musicBar2, "scaleY", 0.2f, 0.5f, 1.0f, 0.5f, 0.3f, 0.1f, 0.2f, 0.3f, 0.5f, 0.1f, 0.6f, 0.5f, 0.3f, 0.7f, 0.8f, 0.9f, 0.3f, 0.1f, 0.5f, 0.3f, 0.6f, 1.0f, 0.6f, 0.7f, 0.4f, 0.1f)
-            scaleYbar2.repeatCount = ValueAnimator.INFINITE
-            val scaleYbar3 = ObjectAnimator.ofFloat(binding.musicBar3, "scaleY", 0.6f, 0.5f, 1.0f, 0.6f, 0.5f, 1.0f, 0.6f, 0.5f, 1.0f, 0.5f, 0.6f, 0.7f, 0.2f, 0.3f, 0.1f, 0.5f, 0.4f, 0.6f, 0.7f, 0.1f, 0.4f, 0.3f, 0.1f, 0.4f, 0.3f, 0.7f)
-            scaleYbar3.repeatCount = ValueAnimator.INFINITE
-            val scaleYbar4 = ObjectAnimator.ofFloat(binding.musicBar4, "scaleY", 0.2f, 0.8f, 0.1f, 0.1f, 0.3f, 0.1f, 0.2f, 0.8f, 0.7f, 0.2f, 0.4f, 0.9f, 0.7f, 0.6f, 0.1f, 0.3f, 0.1f, 0.4f, 0.1f, 0.8f, 0.7f, 0.9f, 0.5f, 0.6f, 0.3f, 0.1f)
-            scaleYbar4.repeatCount = ValueAnimator.INFINITE
-            val scaleYbar5 = ObjectAnimator.ofFloat(binding.musicBar5, "scaleY", 0.2f, 0.5f, 1.0f, 0.5f, 0.3f, 0.1f, 0.2f, 0.3f, 0.5f, 0.1f, 0.6f, 0.5f, 0.3f, 0.7f, 0.8f, 0.9f, 0.3f, 0.1f, 0.5f, 0.3f, 0.6f, 1.0f, 0.6f, 0.7f, 0.4f, 0.1f)
-            scaleYbar5.repeatCount = ValueAnimator.INFINITE
             playingSet = AnimatorSet()
-            playingSet.playTogether(scaleYbar2, scaleYbar3, scaleYbar1, scaleYbar5, scaleYbar4)
+            getBarByteArray(byteArray).apply {
+                playingSet.playTogether(this[0], this[1], this[2], this[3], this[4])
+            }
+            playingSet.duration = duration.toLong()
+            playingSet.interpolator = LinearInterpolator()
+            playingSet.start()
+        } else {
+            //if (playingSet.isPaused) {
+                getBarByteArray(byteArray).apply {
+                    playingSet.childAnimations.clear()
+                    playingSet.playTogether(this[0], this[1], this[2], this[3], this[4])
+                    playingSet.resume()
+                }
+
+           //}
+        }
+    }
+
+
+    /* fun animateBars() {
+        isAnimating = true
+        if (!::playingSet.isInitialized) {
+            playingSet = AnimatorSet()
+            bars.asList().shuffled().apply {
+                playingSet.playTogether(this[0], this[1], this[2], this[3], this[4])
+            }
             playingSet.duration = duration.toLong()
             playingSet.interpolator = LinearInterpolator()
             playingSet.start()
         } else {
             if (playingSet.isPaused) {
-                playingSet.resume()
+                bars.asList().shuffled().apply {
+                    playingSet.playTogether(this[0], this[1], this[2], this[3], this[4])
+                    playingSet.resume()
+                }
+
             }
         }
     }
-
+*/
     fun stopBars() {
-        isAnimating = false
         if (::playingSet.isInitialized && playingSet.isRunning && playingSet.isStarted) {
             playingSet.pause()
         }
@@ -136,14 +219,14 @@ class EqualizerView : LinearLayout {
             val scaleY3 = ObjectAnimator.ofFloat(binding.musicBar3, "scaleY", 0.1f)
             val scaleY4 = ObjectAnimator.ofFloat(binding.musicBar4, "scaleY", 0.1f)
             val scaleY5 = ObjectAnimator.ofFloat(binding.musicBar5, "scaleY", 0.1f)
-
             stopSet = AnimatorSet()
             stopSet.playTogether(scaleY3, scaleY2, scaleY1, scaleY4, scaleY5)
             stopSet.duration = 500
             stopSet.start()
-        } else if (!stopSet.isStarted) {
+        } else if (!stopSet.isStarted && isAnimating) {
             stopSet.start()
         }
+        isAnimating = false
     }
 
 }

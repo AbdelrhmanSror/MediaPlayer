@@ -2,18 +2,13 @@ package com.example.mediaplayer.ui.chosenSong
 
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.addCallback
-import androidx.core.view.ViewCompat
-import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.transition.ChangeBounds
 import androidx.transition.TransitionInflater
 import com.example.mediaplayer.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.PlayerDestinations
@@ -24,10 +19,6 @@ import com.example.mediaplayer.ui.chosenSong.adapter.SongListAdapter
 import com.example.mediaplayer.viewModels.ChosenSongViewModel
 import com.example.mediaplayer.viewModels.ChosenSongViewModelFactory
 import dagger.android.support.DaggerFragment
-import kotlinx.android.synthetic.main.chosen_song_list_layout.view.*
-import kotlinx.android.synthetic.main.player_controller.*
-import kotlinx.android.synthetic.main.player_image_library.view.*
-import kotlinx.android.synthetic.main.playlist_layout.view.*
 import javax.inject.Inject
 
 
@@ -49,13 +40,13 @@ class ChosenSongFragment : DaggerFragment() {
     private lateinit var songListAdapter: SongListAdapter
     private lateinit var imageListAdapter: ImageListAdapter
     private lateinit var binding: ChosenSongFragmentBinding
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
         }
     }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
 
@@ -73,6 +64,8 @@ class ChosenSongFragment : DaggerFragment() {
         return binding.root
     }
 
+
+
     private fun setUpObserver() {
         with(viewModel)
         {
@@ -87,12 +80,13 @@ class ChosenSongFragment : DaggerFragment() {
                     previousRecyclerViewPosition = it
                 }
             })
-            equalizerAnimationEnabled.observe(viewLifecycleOwner, Observer {
+            visualizerAnimationEnabled.observe(viewLifecycleOwner, Observer {
                 it?.let {
-                    songListAdapter.equalizerEnabled(it)
+                    songListAdapter.visualizerEnabled(it)
 
                 }
             })
+
 
         }
     }
