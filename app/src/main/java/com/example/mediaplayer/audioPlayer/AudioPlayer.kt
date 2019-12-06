@@ -20,7 +20,6 @@ import android.net.Uri
 import android.os.Handler
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.session.MediaSessionCompat
-import android.util.Log
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.MutableLiveData
 import com.example.mediaplayer.audioPlayer.audioFocus.AudioFocusCallBacks
@@ -44,7 +43,9 @@ import com.google.android.exoplayer2.util.Util
 
 class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayerObservable {
 
-    private var player: SimpleExoPlayer? = ExoPlayerFactory.newSimpleInstance(context)
+    private var player: SimpleExoPlayer? = ExoPlayerFactory.newSimpleInstance(context).apply {
+
+    }
 
     private val mediaSession: MediaSessionCompat by lazy {
         MediaSessionCompat(context, context.packageName)
@@ -238,18 +239,17 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
     /**
      *to enable progress callback of audio ,can be used in ui to setup timer
      */
-    fun enableProgress(onPlayerStateChanged: OnPlayerStateChanged) {
+    fun enableProgressCallback(onPlayerStateChanged: OnPlayerStateChanged) {
         setOnProgressChanged(onPlayerStateChanged)
     }
 
     /**
-     *to trigger auio session call back first time observer is attached ,it won't trigger the callback if the audioSession is -1
+     *to trigger audio session call back first time observer is attached ,it won't trigger the callback if the audioSession is -1
      */
-    fun triggerAudioSessionCallbackFirstTime(onPlayerStateChanged: OnPlayerStateChanged) {
+    fun enableAudioSessionCallback(onPlayerStateChanged: OnPlayerStateChanged) {
         if (audioSessionId == -1)
             setOnAudioSessionIdChangeListener()
         else onPlayerStateChanged.onAudioSessionId(audioSessionId)
-
 
     }
 
@@ -310,8 +310,6 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
                             //when player stop we stop listening to plug off events of headphone because player is already stopped
                             context.unregisterReceiver(myNoisyAudioStreamReceiver)
                             isPlaying = false
-                            Log.v("isrelwaseddff", "if  isplayerstopped")
-
                             onPlayerStateChanged.forEach {
                                 it?.onPause()
                             }
@@ -367,7 +365,6 @@ class AudioPlayer(private val context: Context) : LifecycleObserver, AudioPlayer
              * @param audioSessionId The audio session id.
              */
             override fun onAudioSessionId(eventTime: AnalyticsListener.EventTime?, audioSessionId: Int) {
-                Log.v("visulaizerBytes", " audio seesioon1 $audioSessionId")
                 this@AudioPlayer.audioSessionId = audioSessionId
                 onPlayerStateChanged.forEach {
                     it?.onAudioSessionId(audioSessionId)

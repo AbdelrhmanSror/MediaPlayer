@@ -25,7 +25,7 @@ data class SongEntity(
         var actor: String,
         var audioUri: String,
         var albumCoverUri: String?,
-        var duration: Long
+        var duration: Long?
         , var isFavourite: Boolean = false)
 
 @Dao

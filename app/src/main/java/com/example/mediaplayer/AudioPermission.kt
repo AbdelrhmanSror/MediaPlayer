@@ -15,15 +15,12 @@ import com.google.android.material.snackbar.Snackbar
 class AudioPermission(private val activityCompat: AppCompatActivity
                       , private val onPermissionGranted: () -> Unit) {
 
-    init {
-        checkPermission()
-    }
 
     companion object {
         const val MY_PERMISSIONS_REQUEST = 5
     }
 
-    private fun checkPermission() {
+    fun checkPermission() {
         // Here, thisActivity is the current activity
         if (!activityCompat.application.isPermissionGranted()) {
             requestPermission()

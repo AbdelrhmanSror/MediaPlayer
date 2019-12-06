@@ -1,30 +1,22 @@
 package com.example.mediaplayer.ui.playlist
 
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
-import androidx.navigation.fragment.FragmentNavigatorExtras
 import com.example.mediaplayer.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.R
 import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.databinding.PlaylistFragmentBinding
-import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.ui.OnItemClickListener
 import com.example.mediaplayer.viewModels.PlayListViewModel
-import com.google.android.exoplayer2.offline.DownloadService.startForeground
-import com.google.android.material.bottomsheet.BottomSheetBehavior
 import dagger.android.support.DaggerFragment
-import kotlinx.android.synthetic.main.bottom_sheet_chosen_song.view.*
-import kotlinx.android.synthetic.main.playlist_layout.view.*
 import javax.inject.Inject
 
 
@@ -48,6 +40,8 @@ class PlayListFragment : DaggerFragment() {
         //find the nav controller so i can use it to navigate
         navController = Navigation.findNavController(activity!!, R.id.nav_host_fragment)
         prepareMusicList()
+        binding.viewmodel = viewModel
+        binding.lifecycleOwner = this
         return binding.root
     }
 

@@ -47,18 +47,11 @@ class Repository @Inject constructor(private val application: Application, priva
 
 
     //inserting the audio file on user device into database so our local database will become our source of true
-    fun insertAudioIntoDatabase() {
+    suspend fun insertAudioIntoDatabase() {
         val deviceAudioFile = DeviceAudioFile(application)
-        var limit = 15
-        var offset = 0
-        while (true) {
-            val listOfSong = deviceAudioFile.getAudios(limit, offset).toSongEntity()
-            if (listOfSong.isNullOrEmpty()) {
-                break
-            }
-            insertSongs(listOfSong)
-            offset += limit
-            limit *= 3
-        }
+        val listOfSong = deviceAudioFile.getAudios().toSongEntity()
+        insertSongs(listOfSong)
+
     }
 }
+

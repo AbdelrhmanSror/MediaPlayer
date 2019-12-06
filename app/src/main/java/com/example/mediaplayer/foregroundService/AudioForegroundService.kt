@@ -7,7 +7,6 @@ import android.media.AudioManager
 import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
-import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import com.example.mediaplayer.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.LIST_SONG
@@ -89,12 +88,12 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
 
     }
 
-    fun enableProgress(onPlayerStateChanged: OnPlayerStateChanged) {
-        audioPlayer.enableProgress(onPlayerStateChanged)
+    fun enableProgressCallback(onPlayerStateChanged: OnPlayerStateChanged) {
+        audioPlayer.enableProgressCallback(onPlayerStateChanged)
     }
 
-    fun triggerAudioSessionCallbackFirstTime(onPlayerStateChanged: OnPlayerStateChanged) {
-        audioPlayer.triggerAudioSessionCallbackFirstTime(onPlayerStateChanged)
+    fun enableAudioSessionCallback(onPlayerStateChanged: OnPlayerStateChanged) {
+        audioPlayer.enableAudioSessionCallback(onPlayerStateChanged)
     }
 
     private fun getNotification(): Notification {

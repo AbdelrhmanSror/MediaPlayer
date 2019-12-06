@@ -18,8 +18,6 @@ import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
-import android.os.Handler
-import android.util.Log
 import androidx.annotation.RequiresApi
 
 /**
@@ -72,7 +70,6 @@ class MediaAudioFocus private constructor(context: Context) : MediaAudioFocusCom
                     resumeOnFocusGain = false
                     playbackDelayed = false
                 }
-                Log.v("hndlergained", "done loss")
                 audioFocusCallBacks.onAudioFocusLost(true)
 
 

@@ -18,14 +18,22 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
-    private lateinit var audioPermission: AudioPermission
+    private val audioPermission: AudioPermission by lazy {
+        AudioPermission(this) { navigateToStartDestination() }
+    }
+    private var isPermissionRequested = false
+
+    companion object {
+        const val PERMISSION_HAS_REQUESTED = "permission requested"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         ////reference to nav controller
         navController = findNavController(R.id.nav_host_fragment)
-        audioPermission = AudioPermission(this) { navigateToStartDestination() }
-        appBarConfiguration = AppBarConfiguration.Builder(setOf(R.id.playListFragment,R.id.favouriteFragment)).build()
+        checkPermission(savedInstanceState)
+        appBarConfiguration = AppBarConfiguration.Builder(setOf(R.id.playListFragment, R.id.favouriteFragment)).build()
         //reference to toolBar
         val toolbar = binding.toolbar
         //set toolbar as default action bar
@@ -33,18 +41,26 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         //to disable the action bar title and use my own custom title.
         this.disableActionBarTitle()
-       // binding.motionYoutube.bottomNav.setupWithNavController(navController)
+        // binding.motionYoutube.bottomNav.setupWithNavController(navController)
         setUpPlayListBottomSheet()
 
     }
 
     private fun setUpPlayListBottomSheet() {
-        binding.bottomSheetLayout.visibility= View.GONE
+        binding.bottomSheetLayout.visibility = View.GONE
         val bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheetLayout)
         binding.bottomSheetLayout.setOnClickListener {
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
         }
 
+    }
+
+    fun checkPermission(savedInstanceState: Bundle?) {
+        if (savedInstanceState != null) {
+            isPermissionRequested = savedInstanceState.getBoolean(PERMISSION_HAS_REQUESTED, false)
+        }
+        if (!isPermissionRequested)
+            audioPermission.checkPermission()
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -69,6 +85,10 @@ class MainActivity : AppCompatActivity() {
         audioPermission.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(PERMISSION_HAS_REQUESTED, true)
+    }
 
 }
 

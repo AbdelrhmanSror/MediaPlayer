@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.media.audiofx.Visualizer
-import android.os.Handler
 import android.os.IBinder
 import androidx.lifecycle.*
 import com.example.mediaplayer.*
@@ -16,7 +15,6 @@ import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.repositry.Repository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -92,8 +90,8 @@ class ChosenSongViewModel(application: Application,
             audioService = binder.service
             audioService.apply {
                 registerObserver(this@ChosenSongViewModel)
-                enableProgress(this@ChosenSongViewModel)
-                triggerAudioSessionCallbackFirstTime(this@ChosenSongViewModel)
+                enableProgressCallback(this@ChosenSongViewModel)
+                enableAudioSessionCallback(this@ChosenSongViewModel)
                 if (fromNotification)
                     instantTrigger(this@ChosenSongViewModel)
             }
