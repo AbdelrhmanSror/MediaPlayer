@@ -16,7 +16,7 @@ package com.example.mediaplayer.audioPlayer
 import androidx.lifecycle.MutableLiveData
 
 
-interface OnPlayerStateChanged {
+interface IpLayerState {
 
     /**
      * this will be called when the player complete playing all the the audio file in the list and no other files to play
@@ -56,7 +56,8 @@ interface OnPlayerStateChanged {
      * also will stop whenever there is no observer
      */
     fun onProgressChangedLiveData(progress: MutableLiveData<Long>) {}
-    fun onAudioSessionId(audioSessionId:Int){}
+
+    fun onAudioSessionId(audioSessionId: Int) {}
 
 
 }

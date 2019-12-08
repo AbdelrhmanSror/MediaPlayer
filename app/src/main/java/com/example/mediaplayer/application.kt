@@ -13,7 +13,6 @@
 
 package com.example.mediaplayer
 
-import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
@@ -31,7 +30,6 @@ class MediaApplication : DaggerApplication() {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
-
     }
 
     //creating notification channel
@@ -49,6 +47,5 @@ class MediaApplication : DaggerApplication() {
             notifyManager.createNotificationChannel(notificationChannel)
         }
     }
-
 
 }

@@ -56,9 +56,11 @@ dependencies {
     implementation 'androidx.room:room-ktx:2.2.2'
     kapt "androidx.room:room-compiler:$version_room"
     //exoPlayer library
-    implementation 'com.google.android.exoplayer:exoplayer-core:2.10.3'
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.10.4'
     implementation 'com.google.android.exoplayer:exoplayer-dash:2.10.3'
     implementation 'com.google.android.exoplayer:extension-mediasession:2.10.3'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.10.0'
+
 
     //glide
     implementation 'com.github.bumptech.glide:glide:4.10.0'
@@ -73,6 +75,8 @@ dependencies {
     implementation "androidx.core:core-ktx:1.1.0"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0-rc02"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
+
 
     // Coroutines
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$version_coroutine"

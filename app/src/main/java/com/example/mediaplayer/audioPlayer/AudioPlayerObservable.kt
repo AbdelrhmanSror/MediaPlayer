@@ -14,7 +14,7 @@
 package com.example.mediaplayer.audioPlayer
 
 interface AudioPlayerObservable {
-    fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged)
-    fun removeObserver(onPlayerStateChanged: OnPlayerStateChanged)
-    fun notifyObserver(onPlayerStateChanged: OnPlayerStateChanged)
+    fun registerObserver(ipLayerState: IpLayerState)
+    fun removeObserver(ipLayerState: IpLayerState)
+    fun notifyObserver(ipLayerState: IpLayerState)
 }

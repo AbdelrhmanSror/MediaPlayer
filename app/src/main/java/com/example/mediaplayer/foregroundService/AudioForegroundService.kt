@@ -1,58 +1,56 @@
 package com.example.mediaplayer.foregroundService
 
-import android.app.Notification
-import android.app.Service
 import android.content.Intent
-import android.media.AudioManager
-import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
-import androidx.core.app.NotificationManagerCompat
+import android.support.v4.media.session.MediaSessionCompat
+import androidx.lifecycle.LifecycleService
 import com.example.mediaplayer.CHOSEN_SONG_INDEX
+import com.example.mediaplayer.CustomScope
 import com.example.mediaplayer.LIST_SONG
 import com.example.mediaplayer.NOTIFICATION_ID
 import com.example.mediaplayer.PlayerActions.ACTION_FOREGROUND
-import com.example.mediaplayer.PlayerActions.DELETE_ACTION
-import com.example.mediaplayer.PlayerActions.NEXT_ACTION
-import com.example.mediaplayer.PlayerActions.PAUSE_ACTION
-import com.example.mediaplayer.PlayerActions.PLAY_ACTION
-import com.example.mediaplayer.PlayerActions.PREVIOUS_ACTION
 import com.example.mediaplayer.audioPlayer.AudioPlayer
-import com.example.mediaplayer.audioPlayer.OnPlayerStateChanged
+import com.example.mediaplayer.audioPlayer.IpLayerState
+import com.example.mediaplayer.audioPlayer.notification.AudioForegroundNotification
+import com.example.mediaplayer.di.inject
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.model.getMediaDescription
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 
-class AudioForegroundService : Service(), OnPlayerStateChanged {
+class AudioForegroundService @Inject constructor() : LifecycleService(), IpLayerState, CoroutineScope by CustomScope() {
+    @Inject
+    lateinit var mediaSession: MediaSessionCompat
 
-    private lateinit var audioPlayer: AudioPlayer
-
+    @Inject
+    lateinit var audioPlayer: AudioPlayer
     // indicates how to behave if the service is killed.
     private var mStartMode = START_STICKY
     // interface for clients that bind.
     private var mBinder: IBinder = SongBinder()
     //responsible for creating media player notification;
-    private lateinit var foregroundNotification: AudioForegroundNotification
-    //responsible for updating the notification
-    private lateinit var mNotificationManager: NotificationManagerCompat
-
+    @Inject
+    lateinit var foregroundNotification: AudioForegroundNotification
 
     override fun onCreate() {
         super.onCreate()
+        this.inject()
         // The service is being created.
-        mNotificationManager = NotificationManagerCompat.from(this)
-        audioPlayer = AudioPlayer.create(applicationContext).apply {
-            registerObserver(this@AudioForegroundService)
-        }
+        audioPlayer.registerObserver(this@AudioForegroundService)
+
 
     }
 
-    fun registerObserver(onPlayerStateChanged: OnPlayerStateChanged) {
-        audioPlayer.registerObserver(onPlayerStateChanged)
+
+    fun registerObserver(ipLayerState: IpLayerState) {
+        audioPlayer.registerObserver(ipLayerState)
     }
 
-    fun removeObserver(onPlayerStateChanged: OnPlayerStateChanged) {
-        audioPlayer.removeObserver(onPlayerStateChanged)
+    fun removeObserver(ipLayerState: IpLayerState) {
+        audioPlayer.removeObserver(ipLayerState)
     }
 
     fun seekToSecond(second: Int) {
@@ -67,37 +65,33 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
         audioPlayer.shuffleModeEnable()
     }
 
-    fun changeAudioState() {
-        audioPlayer.changeAudioState()
+    fun changeAudioState(dispatchEvent: Boolean = true) {
+        if (!audioPlayer.isPlaying)
+            stopForeground(false)
+        audioPlayer.changeAudioState(dispatchEvent)
+
     }
 
-    fun goToPrevious() {
-        audioPlayer.previous()
+    fun goToPrevious(dispatchEvent: Boolean = true) {
+        audioPlayer.previous(dispatchEvent)
+
     }
 
-    fun goToNext() {
-        audioPlayer.next()
+    fun goToNext(dispatchEvent: Boolean = true) {
+        audioPlayer.next(dispatchEvent)
+
     }
 
     fun seekTo(index: Int) {
         audioPlayer.seekTo(index)
-    }
-
-    fun instantTrigger(onPlayerStateChanged: OnPlayerStateChanged) {
-        audioPlayer.instantTrigger(onPlayerStateChanged)
 
     }
 
-    fun enableProgressCallback(onPlayerStateChanged: OnPlayerStateChanged) {
-        audioPlayer.enableProgressCallback(onPlayerStateChanged)
-    }
-
-    fun enableAudioSessionCallback(onPlayerStateChanged: OnPlayerStateChanged) {
-        audioPlayer.enableAudioSessionCallback(onPlayerStateChanged)
-    }
-
-    private fun getNotification(): Notification {
-        return foregroundNotification.build(audioPlayer.isPlaying, audioPlayer.currentAudioIndex)
+    fun onStop() {
+        //remove the notification and stop the service when user press the close button on notification
+        audioPlayer.pause()
+        foregroundNotification.cancel()
+        audioPlayer.release { stopSelf() }
     }
 
     internal inner class SongBinder : Binder() {
@@ -110,12 +104,14 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
     override fun onStartCommand(intent: Intent?,
                                 flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        // The service is starting, due to a call to startService().
         handleIntent(intent)
+
+        // The service is starting, due to a call to startService().
         return mStartMode
     }
 
     override fun onBind(intent: Intent): IBinder? {
+        super.onBind(intent)
         return mBinder
     }
 
@@ -125,20 +121,6 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
                 ACTION_FOREGROUND -> {
                     setUpPlayerForeground(intent)
                 }
-                PAUSE_ACTION, AudioManager.ACTION_AUDIO_BECOMING_NOISY -> {
-                    audioPlayer.pause()
-                }
-                PLAY_ACTION -> {
-                    audioPlayer.play()
-                }
-                PREVIOUS_ACTION ->
-                    audioPlayer.previous()
-                NEXT_ACTION ->
-                    audioPlayer.next()
-                DELETE_ACTION -> {
-                    cancelForeground()
-                }
-
             }
         }
     }
@@ -154,43 +136,34 @@ class AudioForegroundService : Service(), OnPlayerStateChanged {
     private fun setUpPlayerForeground(intent: Intent) {
         with(intentData(intent))
         {
-            val songListUris: ArrayList<Uri> = ArrayList()
-            for (item in first) {
-                songListUris.add(item.audioUri)
-            }
-            foregroundNotification = AudioForegroundNotification(first, applicationContext)
-            audioPlayer.startPlayer(songListUris, second)
+            audioPlayer.startPlayer(first, second)
             audioPlayer.enableCommandControl { index ->
                 first[index].getMediaDescription()
             }
-            startForeground(NOTIFICATION_ID, getNotification())
+            launch {
+                startForeground(NOTIFICATION_ID, foregroundNotification.update(first[second], true))
+            }
         }
 
     }
 
-    private fun cancelForeground() {
-        //remove the notification and stop the service when user press the close button on notification
-        audioPlayer.pause()
-        stopForeground(false)
-        mNotificationManager.cancelAll()
-        audioPlayer.release { stopSelf() }
-
-    }
-
-    override fun onAudioChanged(index: Int, isPlaying: Boolean) {
-        mNotificationManager.notify(NOTIFICATION_ID, getNotification())
-
-
-    }
-
     override fun onPlay() {
-        startForeground(NOTIFICATION_ID, getNotification())
+        /*  launch {
+              foregroundNotification.update(playerMediaObjects[audioPlayer.currentAudioIndex], true)
+          }*/
     }
 
     override fun onPause() {
-        stopForeground(false)
-        mNotificationManager.notify(NOTIFICATION_ID, getNotification())
+        //stopForeground(false)
+        /* launch {
+             foregroundNotification.update(playerMediaObjects[audioPlayer.currentAudioIndex], false)
+         }*/
+    }
 
+    override fun onAudioChanged(index: Int, isPlaying: Boolean) {
+        /* launch {
+             foregroundNotification.update(playerMediaObjects[index], isPlaying)
+         }*/
     }
 
     override fun onAudioListCompleted() {

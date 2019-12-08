@@ -13,7 +13,12 @@ import kotlinx.android.parcel.Parcelize
  * class represent an item in playlist
  */
 @Parcelize
-data class SongModel(val title: String, val actor: String, val audioUri: Uri, val albumCoverUri: String?, val duration: Long? = null, var isFavourite: Boolean = false) : Parcelable
+data class SongModel(val title: String,
+                     val actor: String,
+                     val audioUri: Uri,
+                     val albumCoverUri: String?,
+                     val duration: Long? = null,
+                     var isFavourite: Boolean = false) : Parcelable
 
 fun SongModel.getMediaDescription(): MediaDescriptionCompat {
     return MediaDescriptionCompat.Builder()

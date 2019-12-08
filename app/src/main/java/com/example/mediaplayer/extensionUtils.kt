@@ -13,18 +13,14 @@
 
 package com.example.mediaplayer
 
-import android.Manifest
 import android.app.Activity
-import android.app.Application
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.util.Log
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 
 
@@ -67,6 +63,7 @@ fun Activity.disableActionBarTitle() {
 fun Context.startForeground(foregroundIntent: Intent) {
     //Start service:
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
         startForegroundService(foregroundIntent)
 
     } else {

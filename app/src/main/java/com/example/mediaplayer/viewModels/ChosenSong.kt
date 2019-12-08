@@ -9,7 +9,7 @@ import android.media.audiofx.Visualizer
 import android.os.IBinder
 import androidx.lifecycle.*
 import com.example.mediaplayer.*
-import com.example.mediaplayer.audioPlayer.OnPlayerStateChanged
+import com.example.mediaplayer.audioPlayer.IpLayerState
 import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.model.SongModel
@@ -23,7 +23,7 @@ class ChosenSongViewModel(application: Application,
                           private val repository: Repository,
                           private val songIndex: Int,
                           private val fromNotification: Boolean)
-    : AndroidViewModel(application), OnPlayerStateChanged {
+    : AndroidViewModel(application), IpLayerState {
 
 
     private val mApplication = application
@@ -88,14 +88,7 @@ class ChosenSongViewModel(application: Application,
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             val binder = service as AudioForegroundService.SongBinder
             audioService = binder.service
-            audioService.apply {
-                registerObserver(this@ChosenSongViewModel)
-                enableProgressCallback(this@ChosenSongViewModel)
-                enableAudioSessionCallback(this@ChosenSongViewModel)
-                if (fromNotification)
-                    instantTrigger(this@ChosenSongViewModel)
-            }
-
+            audioService.registerObserver(this@ChosenSongViewModel)
 
         }
 
@@ -130,22 +123,23 @@ class ChosenSongViewModel(application: Application,
         foregroundIntent.putExtra(CHOSEN_SONG_INDEX, chosenSongIndex)
         foregroundIntent.putParcelableArrayListExtra(LIST_SONG, song)
         mApplication.startForeground(foregroundIntent)
+
     }
 
 
     override fun onAudioChanged(index: Int, isPlaying: Boolean) {
-        _playPauseStateInitial.value = isPlaying
-        _chosenSongIndex.value = Event(index)
+        _playPauseStateInitial.postValue(isPlaying)
+        _chosenSongIndex.postValue(Event(index))
 
     }
 
     override fun onPlay() {
-        _playPauseState.value = Event(true)
+        _playPauseState.postValue(Event(true))
 
     }
 
     override fun onPause() {
-        _playPauseState.value = Event(false)
+        _playPauseState.postValue(Event(false))
     }
 
     override fun onShuffleModeChanged(enable: Boolean) {
@@ -171,14 +165,14 @@ class ChosenSongViewModel(application: Application,
         visualizer.captureSize = Visualizer.getCaptureSizeRange()[1]
         visualizer.setDataCaptureListener(object : Visualizer.OnDataCaptureListener {
             override fun onWaveFormDataCapture(p0: Visualizer?, p1: ByteArray?, p2: Int) {
-                    _visualizerAnimationEnabled.value=p1
+                _visualizerAnimationEnabled.value = p1
 
             }
 
             override fun onFftDataCapture(p0: Visualizer?, p1: ByteArray?, p2: Int) {}
 
 
-        }, Visualizer.getMaxCaptureRate()/2, true, false)
+        }, Visualizer.getMaxCaptureRate() / 2, true, false)
 
         visualizer.enabled = true
     }
@@ -239,7 +233,9 @@ class ChosenSongViewModel(application: Application,
     }
 }
 
-class ChosenSongViewModelFactory @Inject constructor(private val application: Application, private val repository: Repository) : ViewModelProvider.Factory {
+class ChosenSongViewModelFactory @Inject constructor(private val application: Application,
+                                                     private val repository: Repository)
+    : ViewModelProvider.Factory {
 
     private var chosenSongIndex: Int? = null
     private var fromNotification: Boolean? = null

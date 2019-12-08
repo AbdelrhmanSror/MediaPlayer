@@ -15,6 +15,7 @@ package com.example.mediaplayer.ui.chosenSong
 
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.SeekBar
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.databinding.BindingAdapter
@@ -148,15 +149,20 @@ fun setInitialFavourite(imageButton: ImageButton, isFavourite: Boolean) {
         imageButton.setImageResource(R.drawable.ic_favourite)
     }
 }
-/*
 
-@BindingAdapter("animationEnabled")
-fun setAnimationEnabled(equalizerView: EqualizerView, enable: Event<Boolean>?) {
-    Log.v("animationEnabled", "${enable?.getContentIfNotHandled()}")
-    enable?.getContentIfNotHandled()?.let {
-        if (it) equalizerView.animateBars() else equalizerView.stopBars()
 
-    }
+@BindingAdapter("Progress")
+fun setProgress(textView: TextView, progresss: Long) {
+    val min = (progresss / 60).toInt().twoDigitNumber()
+    val sec = (progresss % 60).toInt().twoDigitNumber()
+    textView.text = textView.context.getString(R.string.duration_format, min, sec)
 }
-*/
+
+@BindingAdapter("Max")
+fun setMax(seekBar: SeekBar, max: Long) {
+
+    seekBar.max = (max / 1000).toInt()
+}
+
+
 
