@@ -23,21 +23,33 @@ interface IpLayerState {
      */
     fun onAudioListCompleted() {}
 
+    /**this is called when observer is being registered
+     */
+    fun onAttached(audioPlayerModel: AudioPlayerModel?) {}
+
     /**
      * this triggers whenever the audio start  playing
      */
-    fun onPlay()
+    fun onPlay() {}
 
     /**
      * this triggers whenever the audio stop playing
      */
-    fun onPause()
+    fun onPause() {}
+
+    /**this is called when observer is being removed
+     */
+    fun onDeattached() {}
+
+    /**this is called when the player  is being stopped
+     */
+    fun onStop() {}
 
     /**
      * this triggers whenever the audio track changes
      * also will trigger when the current audio track changes automatically without interference from user
      */
-    fun onAudioChanged(index: Int, isPlaying: Boolean)
+    fun onAudioChanged(index: Int, isPlaying: Boolean) {}
 
     /**
      * this triggers whenever the audio shuffle and repeat mode changes changes

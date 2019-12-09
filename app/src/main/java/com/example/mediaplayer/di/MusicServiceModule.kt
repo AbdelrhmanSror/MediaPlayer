@@ -5,7 +5,6 @@ import android.content.Context
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.lifecycle.Lifecycle
 import com.example.mediaplayer.audioPlayer.AudioPlayer
-import com.example.mediaplayer.audioPlayer.Noisy
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.google.android.exoplayer2.ExoPlayerFactory
 import dagger.Binds
@@ -52,8 +51,8 @@ abstract class MusicServiceModule {
         @Provides
         @JvmStatic
         @PerService
-        internal fun providePlayer(service: Service, mediaSessionCompat: MediaSessionCompat, noisy: Noisy): AudioPlayer {
-            return AudioPlayer(service, mediaSessionCompat, ExoPlayerFactory.newSimpleInstance(service), noisy)
+        internal fun providePlayer(service: AudioForegroundService, mediaSessionCompat: MediaSessionCompat): AudioPlayer {
+            return AudioPlayer(service, mediaSessionCompat, ExoPlayerFactory.newSimpleInstance(service))
         }
 
 

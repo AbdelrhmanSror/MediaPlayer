@@ -40,13 +40,19 @@ class AudioForegroundService @Inject constructor() : LifecycleService(), IpLayer
         this.inject()
         // The service is being created.
         audioPlayer.registerObserver(this@AudioForegroundService)
+        registerObserver(this)
 
 
     }
 
 
     fun registerObserver(ipLayerState: IpLayerState) {
-        audioPlayer.registerObserver(ipLayerState)
+        audioPlayer.apply {
+            registerObserver(ipLayerState)
+            setAudioSessionChangeListener()
+            setOnProgressChangedListener()
+            setNoisyListener()
+        }
     }
 
     fun removeObserver(ipLayerState: IpLayerState) {
@@ -66,8 +72,8 @@ class AudioForegroundService @Inject constructor() : LifecycleService(), IpLayer
     }
 
     fun changeAudioState(dispatchEvent: Boolean = true) {
-        if (!audioPlayer.isPlaying)
-            stopForeground(false)
+        /*if (!audioPlayer.isPlaying)
+            stopForeground(false)*/
         audioPlayer.changeAudioState(dispatchEvent)
 
     }
@@ -87,7 +93,7 @@ class AudioForegroundService @Inject constructor() : LifecycleService(), IpLayer
 
     }
 
-    fun onStop() {
+    override fun onStop() {
         //remove the notification and stop the service when user press the close button on notification
         audioPlayer.pause()
         foregroundNotification.cancel()

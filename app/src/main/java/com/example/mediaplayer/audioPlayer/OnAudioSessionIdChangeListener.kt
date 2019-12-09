@@ -1,36 +1,42 @@
 package com.example.mediaplayer.audioPlayer
 
 import android.util.Log
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
+import com.example.mediaplayer.updateList
 import com.google.android.exoplayer2.audio.AudioListener
 import kotlinx.coroutines.*
-import javax.inject.Inject
 
-internal class OnAudioSessionIdChangeListener @Inject constructor(
-        lifecycle: Lifecycle
+class OnAudioSessionIdChangeListener private constructor(
 
 ) : AudioListener,
-        DefaultLifecycleObserver,
+        IpLayerState,
         CoroutineScope by MainScope() {
-
     companion object {
         @JvmStatic
         private val TAG = "SM:${OnAudioSessionIdChangeListener::class.java.simpleName}"
         internal const val DELAY = 500L
+        private lateinit var onAudioSessionIdChangeListener: OnAudioSessionIdChangeListener
+        private var iPlayerState = HashSet<IpLayerState>()
+
+        fun createOrNullUpdate(updatedPlayerState: HashSet<IpLayerState>): OnAudioSessionIdChangeListener? {
+            iPlayerState.updateList(updatedPlayerState)
+            return if (!::onAudioSessionIdChangeListener.isInitialized) {
+                onAudioSessionIdChangeListener = OnAudioSessionIdChangeListener()
+                onAudioSessionIdChangeListener
+            } else {
+                null
+            }
+        }
+
+
     }
+
 
     private var job: Job? = null
 
-    private val hash by lazy { hashCode() }
 
-    init {
-        lifecycle.addObserver(this)
-    }
-
-    override fun onDestroy(owner: LifecycleOwner) {
+    override fun onStop() {
         job?.cancel()
+        iPlayerState.clear()
     }
 
     override fun onAudioSessionId(audioSessionId: Int) {
@@ -43,11 +49,9 @@ internal class OnAudioSessionIdChangeListener @Inject constructor(
 
     private fun onAudioSessionIdInternal(audioSessionId: Int) {
         Log.v(TAG, "on audio session id changed =$audioSessionId")
-
+        iPlayerState.forEach {
+            it.onAudioSessionId(audioSessionId)
+        }
     }
 
-    fun release() {
-        Log.v(TAG, "onDestroy")
-
-    }
 }

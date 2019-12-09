@@ -7,14 +7,12 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
 import android.util.Log
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
 import javax.inject.Inject
 
 class Noisy @Inject constructor(private val service: Service,
                                 eventDispatcher: EventDispatcher
 
-) : DefaultLifecycleObserver {
+) : IpLayerState {
 
     companion object {
         @JvmStatic
@@ -25,11 +23,21 @@ class Noisy @Inject constructor(private val service: Service,
 
     private var registered: Boolean = false
 
-    override fun onDestroy(owner: LifecycleOwner) {
+
+    override fun onPlay() {
+        register()
+    }
+
+    override fun onPause() {
         unregister()
     }
 
-    fun register() {
+    //just for precautions
+    override fun onStop() {
+        unregister()
+    }
+
+    private fun register() {
         if (registered) {
             Log.w(TAG, "trying to re-register")
             return
@@ -40,7 +48,7 @@ class Noisy @Inject constructor(private val service: Service,
         registered = true
     }
 
-    fun unregister() {
+    private fun unregister() {
         if (!registered) {
             Log.w(TAG, "trying to unregister but never registered")
             return

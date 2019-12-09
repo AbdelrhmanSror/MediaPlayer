@@ -7,8 +7,10 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.media.audiofx.Visualizer
 import android.os.IBinder
+import android.util.Log
 import androidx.lifecycle.*
 import com.example.mediaplayer.*
+import com.example.mediaplayer.audioPlayer.AudioPlayerModel
 import com.example.mediaplayer.audioPlayer.IpLayerState
 import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.foregroundService.AudioForegroundService
@@ -126,6 +128,17 @@ class ChosenSongViewModel(application: Application,
 
     }
 
+    override fun onAttached(audioPlayerModel: AudioPlayerModel?) {
+        audioPlayerModel?.let {
+            _playPauseStateInitial.postValue(it.isPlaying)
+            _chosenSongIndex.postValue(Event(it.currentIndex))
+            _shuffleMode.value = it.shuffleModeEnabled
+            _repeatMode.value = it.repeatMode
+            _duration.postValue(it.duration)
+
+
+        }
+    }
 
     override fun onAudioChanged(index: Int, isPlaying: Boolean) {
         _playPauseStateInitial.postValue(isPlaying)
@@ -134,11 +147,15 @@ class ChosenSongViewModel(application: Application,
     }
 
     override fun onPlay() {
+        Log.v("progresschanging", "on play")
+
         _playPauseState.postValue(Event(true))
 
     }
 
     override fun onPause() {
+        Log.v("progresschanging", "on pause")
+
         _playPauseState.postValue(Event(false))
     }
 
@@ -151,11 +168,11 @@ class ChosenSongViewModel(application: Application,
     }
 
     override fun onDurationChange(duration: Long) {
-        _duration.value = duration
+        _duration.postValue(duration)
     }
 
     override fun onProgressChangedLiveData(progress: MutableLiveData<Long>) {
-        _audioPlayerProgress.value = progress
+        _audioPlayerProgress.postValue(progress)
     }
 
     override fun onAudioSessionId(audioSessionId: Int) {
