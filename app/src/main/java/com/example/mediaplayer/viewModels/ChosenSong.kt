@@ -7,11 +7,10 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.media.audiofx.Visualizer
 import android.os.IBinder
-import android.util.Log
 import androidx.lifecycle.*
 import com.example.mediaplayer.*
 import com.example.mediaplayer.audioPlayer.AudioPlayerModel
-import com.example.mediaplayer.audioPlayer.IpLayerState
+import com.example.mediaplayer.audioPlayer.IPlayerState
 import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.model.SongModel
@@ -25,7 +24,7 @@ class ChosenSongViewModel(application: Application,
                           private val repository: Repository,
                           private val songIndex: Int,
                           private val fromNotification: Boolean)
-    : AndroidViewModel(application), IpLayerState {
+    : AndroidViewModel(application), IPlayerState {
 
 
     private val mApplication = application
@@ -147,15 +146,11 @@ class ChosenSongViewModel(application: Application,
     }
 
     override fun onPlay() {
-        Log.v("progresschanging", "on play")
-
         _playPauseState.postValue(Event(true))
 
     }
 
     override fun onPause() {
-        Log.v("progresschanging", "on pause")
-
         _playPauseState.postValue(Event(false))
     }
 

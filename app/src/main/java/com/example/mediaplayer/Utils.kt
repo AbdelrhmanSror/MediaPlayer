@@ -11,23 +11,28 @@ fun isOreo(): Boolean {
 }
 
 
-fun <T> HashSet<T>.updateList(updatedPlayerState: HashSet<T>) {
+fun <K, V> HashMap<K, V>.updateList(updatedPlayerState: HashMap<K, V>) {
+    val deletedItems = arrayListOf<K>()
     if (updatedPlayerState.size > this.size) {
-        updatedPlayerState.filterIndexed { _, ipLayerState ->
-            if (!(this.contains(ipLayerState))) {
-                this.add(ipLayerState)
+        updatedPlayerState.filter {
+            if (!(this.contains(it.key))) {
+                this[it.key] = it.value
 
             }
             true
         }
     } else if (updatedPlayerState.size < this.size) {
-        this.filterIndexed { _, ipLayerState ->
-            if (!(this.contains(ipLayerState))) {
-                this.remove(ipLayerState)
-
+        this.filter {
+            if (!(updatedPlayerState.contains(it.key))) {
+                deletedItems.add(it.key)
             }
             true
         }
+        for (i in 0 until deletedItems.size) {
+            this.remove(deletedItems[i])
+
+        }
+
     }
 
 }

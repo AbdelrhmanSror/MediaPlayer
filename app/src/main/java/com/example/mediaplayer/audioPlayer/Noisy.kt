@@ -12,7 +12,7 @@ import javax.inject.Inject
 class Noisy @Inject constructor(private val service: Service,
                                 eventDispatcher: EventDispatcher
 
-) : IpLayerState {
+) : IPlayerListener {
 
     companion object {
         @JvmStatic
@@ -23,17 +23,16 @@ class Noisy @Inject constructor(private val service: Service,
 
     private var registered: Boolean = false
 
-
-    override fun onPlay() {
+    override fun onActivePlayer() {
         register()
     }
 
-    override fun onPause() {
+    override fun onInActivePlayer() {
         unregister()
     }
 
-    //just for precautions
-    override fun onStop() {
+    //just for precaution
+    override fun onDetach(iPlayerState: IPlayerState) {
         unregister()
     }
 

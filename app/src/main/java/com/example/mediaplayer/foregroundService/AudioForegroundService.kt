@@ -11,7 +11,7 @@ import com.example.mediaplayer.LIST_SONG
 import com.example.mediaplayer.NOTIFICATION_ID
 import com.example.mediaplayer.PlayerActions.ACTION_FOREGROUND
 import com.example.mediaplayer.audioPlayer.AudioPlayer
-import com.example.mediaplayer.audioPlayer.IpLayerState
+import com.example.mediaplayer.audioPlayer.IPlayerState
 import com.example.mediaplayer.audioPlayer.notification.AudioForegroundNotification
 import com.example.mediaplayer.di.inject
 import com.example.mediaplayer.model.SongModel
@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-class AudioForegroundService @Inject constructor() : LifecycleService(), IpLayerState, CoroutineScope by CustomScope() {
+class AudioForegroundService @Inject constructor() : LifecycleService(), IPlayerState, CoroutineScope by CustomScope() {
     @Inject
     lateinit var mediaSession: MediaSessionCompat
 
@@ -46,17 +46,14 @@ class AudioForegroundService @Inject constructor() : LifecycleService(), IpLayer
     }
 
 
-    fun registerObserver(ipLayerState: IpLayerState) {
-        audioPlayer.apply {
-            registerObserver(ipLayerState)
-            setAudioSessionChangeListener()
-            setOnProgressChangedListener()
-            setNoisyListener()
-        }
+    fun registerObserver(iPlayerState: IPlayerState) {
+        audioPlayer.registerObserver(iPlayerState
+                , progressCallBackEnabled = true
+                , audioSessionIdCallbackEnable = true)
     }
 
-    fun removeObserver(ipLayerState: IpLayerState) {
-        audioPlayer.removeObserver(ipLayerState)
+    fun removeObserver(IPlayerState: IPlayerState) {
+        audioPlayer.removeObserver(IPlayerState)
     }
 
     fun seekToSecond(second: Int) {
@@ -143,7 +140,7 @@ class AudioForegroundService @Inject constructor() : LifecycleService(), IpLayer
         with(intentData(intent))
         {
             audioPlayer.startPlayer(first, second)
-            audioPlayer.enableCommandControl { index ->
+            audioPlayer.setCommandControl { index ->
                 first[index].getMediaDescription()
             }
             launch {

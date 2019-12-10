@@ -1,42 +1,46 @@
 package com.example.mediaplayer.audioPlayer
 
 import android.util.Log
-import com.example.mediaplayer.updateList
+import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.audio.AudioListener
 import kotlinx.coroutines.*
 
+/**
+ * class to register listeners for audio session id
+ */
 class OnAudioSessionIdChangeListener private constructor(
 
 ) : AudioListener,
-        IpLayerState,
+        IPlayerListener,
         CoroutineScope by MainScope() {
     companion object {
         @JvmStatic
         private val TAG = "SM:${OnAudioSessionIdChangeListener::class.java.simpleName}"
         internal const val DELAY = 500L
         private lateinit var onAudioSessionIdChangeListener: OnAudioSessionIdChangeListener
-        private var iPlayerState = HashSet<IpLayerState>()
+        private var observers = HashSet<IPlayerState>()
 
-        fun createOrNullUpdate(updatedPlayerState: HashSet<IpLayerState>): OnAudioSessionIdChangeListener? {
-            iPlayerState.updateList(updatedPlayerState)
+        fun createOrUpdate(player: SimpleExoPlayer, updatedPlayerState: IPlayerState): OnAudioSessionIdChangeListener {
+            observers.add(updatedPlayerState)
             return if (!::onAudioSessionIdChangeListener.isInitialized) {
                 onAudioSessionIdChangeListener = OnAudioSessionIdChangeListener()
+                player.addAudioListener(onAudioSessionIdChangeListener)
                 onAudioSessionIdChangeListener
             } else {
-                null
+                onAudioSessionIdChangeListener
             }
         }
 
 
     }
 
-
     private var job: Job? = null
 
 
-    override fun onStop() {
-        job?.cancel()
-        iPlayerState.clear()
+    override fun onDetach(iPlayerState: IPlayerState) {
+        if (observers.remove(iPlayerState) && observers.isEmpty()) {
+            job?.cancel()
+        }
     }
 
     override fun onAudioSessionId(audioSessionId: Int) {
@@ -49,7 +53,7 @@ class OnAudioSessionIdChangeListener private constructor(
 
     private fun onAudioSessionIdInternal(audioSessionId: Int) {
         Log.v(TAG, "on audio session id changed =$audioSessionId")
-        iPlayerState.forEach {
+        observers.forEach {
             it.onAudioSessionId(audioSessionId)
         }
     }

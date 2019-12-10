@@ -18,7 +18,7 @@ data class AudioPlayerModel(val currentIndex: Int,
                             val shuffleModeEnabled: Boolean,
                             val repeatMode: Int,
                             val duration: Long,
-                            val audioSessionId: Int)
+                            val audioSessionId: Int?)
 
 
 class AudioPlayer @Inject constructor(private val service: AudioForegroundService,
@@ -29,9 +29,11 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
         DefaultLifecycleObserver,
         AudioPlayerObservable {
 
-    private var audioSessionId: Int = -1
 
-    private val iPlayerState: HashSet<IpLayerState> = HashSet()
+    /**
+     * store observers and their corresponding listeners into hash map so it could be easily to notify or remove listener when registered observer
+     */
+    private val observers: HashMap<IPlayerState, ArrayList<IPlayerListener>> = HashMap()
 
     //to give flexibility if i want to do extra work while releasing the player like stopping service
     private var extraRelease: (() -> Unit)? = null
@@ -70,29 +72,40 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
     /**
      * to register observer we need to give it the class that implement the interface of observer
      */
-    override fun registerObserver(ipLayerState: IpLayerState) {
-        this.iPlayerState.add(ipLayerState)
-        notifyObserver(ipLayerState)
-        updateListeners(iPlayerState)
+    override fun registerObserver(iPlayerState: IPlayerState
+                                  , audioSessionIdCallbackEnable: Boolean
+                                  , audioNoisyControlEnable: Boolean
+                                  , progressCallBackEnabled: Boolean) {
+        val listOfListeners = arrayListOf<IPlayerListener>()
+        if (audioSessionIdCallbackEnable) listOfListeners.add(setAudioSessionChangeListener(iPlayerState))
+        if (audioNoisyControlEnable) listOfListeners.add(setNoisyListener())
+        if (progressCallBackEnabled) listOfListeners.add(setOnProgressChangedListener(iPlayerState))
+        observers[iPlayerState] = listOfListeners
+        notifyObserver(iPlayerState)
+        setOnPlayerStateChangedListener(observers)
     }
 
     /**
-     * WARNING :DO NOT CALL [removeObserver] inside  [release]  OTHERWISE THERE WILL BE CRASHING
      *
      * call this if u just want to un register your observer,this will not release the player
      * if u want to release every thing use [release]
      * if you have registered to listen to progress this [removeObserver] will stop the progress
      */
-    override fun removeObserver(ipLayerState: IpLayerState) {
-        this.iPlayerState.remove(ipLayerState)
-        ipLayerState.onDeattached()
-        updateListeners(iPlayerState)
+    override fun removeObserver(iPlayerState: IPlayerState) {
+        //calling onDatch fun of every listenr first
+        observers[iPlayerState]?.forEach {
+            it.onDetach(iPlayerState)
+        }
+        //removing the observer
+        observers.remove(iPlayerState)
+        //update the observer in the playerStateChangeListener so if any event happened it will have the latest list of observers
+        setOnPlayerStateChangedListener(observers)
     }
 
 
-    override fun notifyObserver(ipLayerState: IpLayerState) {
+    override fun notifyObserver(iPlayerState: IPlayerState) {
         if (player!!.isPlayerStateReady()) {
-            ipLayerState.onAttached(AudioPlayerModel(
+            iPlayerState.onAttached(AudioPlayerModel(
                     player!!.currentWindowIndex
                     , player!!.playWhenReady,
                     player!!.shuffleModeEnabled,
@@ -100,31 +113,14 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
                     player!!.duration,
                     player!!.audioSessionId))
         } else {
-            ipLayerState.onAttached(null)
+            iPlayerState.onAttached(null)
         }
 
     }
+
 
     private fun Player.isPlayerStateReady(): Boolean {
         return this.playbackState == ExoPlayer.STATE_READY
-    }
-
-    fun setAudioSessionChangeListener() {
-        setAudioSessionChangeListener(iPlayerState) {
-            registerObserver(it)
-        }
-    }
-
-    fun setOnProgressChangedListener() {
-        setOnProgressChangedListener(iPlayerState) {
-            registerObserver(it)
-        }
-    }
-
-    fun setNoisyListener() {
-        setNoisyListener(EventDispatcher(service)) {
-            registerObserver(it)
-        }
     }
 
 
@@ -168,7 +164,7 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
     /**
      * to control the player through headset or google assistant
      */
-    fun enableCommandControl(mediaDescriptionCompat: (Int) -> MediaDescriptionCompat) {
+    fun setCommandControl(mediaDescriptionCompat: (Int) -> MediaDescriptionCompat) {
         mediaSessionConnector.setPlayer(player)
         mediaSessionCompat.isActive = true
         val queueNavigator: TimelineQueueNavigator = object : TimelineQueueNavigator(mediaSessionCompat) {

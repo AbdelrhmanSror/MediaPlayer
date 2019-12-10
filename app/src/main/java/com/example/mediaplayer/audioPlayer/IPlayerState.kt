@@ -16,14 +16,14 @@ package com.example.mediaplayer.audioPlayer
 import androidx.lifecycle.MutableLiveData
 
 
-interface IpLayerState {
+interface IPlayerState {
 
     /**
      * this will be called when the player complete playing all the the audio file in the list and no other files to play
      */
     fun onAudioListCompleted() {}
 
-    /**this is called when observer is being registered
+    /**this is called when observer is being registered and there is data to deliver otherwise return null
      */
     fun onAttached(audioPlayerModel: AudioPlayerModel?) {}
 
@@ -36,10 +36,6 @@ interface IpLayerState {
      * this triggers whenever the audio stop playing
      */
     fun onPause() {}
-
-    /**this is called when observer is being removed
-     */
-    fun onDeattached() {}
 
     /**this is called when the player  is being stopped
      */

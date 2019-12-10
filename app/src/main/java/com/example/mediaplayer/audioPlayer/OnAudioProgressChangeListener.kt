@@ -1,18 +1,10 @@
 package com.example.mediaplayer.audioPlayer
 
 import android.os.Handler
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.google.android.exoplayer2.SimpleExoPlayer
 
-class OnAudioProgressChangeListener(private val player: SimpleExoPlayer) : MutableLiveData<Long>(), IpLayerState {
-    /**
-     * to indicate if the player is released or not so when the ui is not visible we release the player
-     * this is to avoid reinitializing the player again when user release the player and ui
-     * is still visible so if he resume the player we do not have to initialize it again
-     */
-    private var isReleased = false
-
+class OnAudioProgressChangeListener private constructor(private val player: SimpleExoPlayer) : MutableLiveData<Long>(), IPlayerListener {
     //to see if the ui is visible or not
     private var isUiVisible = true
 
@@ -20,25 +12,34 @@ class OnAudioProgressChangeListener(private val player: SimpleExoPlayer) : Mutab
 
     private var handler: Handler? = null
 
+    override fun onInActivePlayer() {
+        pauseProgress()
+    }
 
-    override fun onPlay() {
-        isReleased = false
+
+    override fun onDetach(iPlayerState: IPlayerState) {
+        pauseProgress()
+        handler = null
+    }
+
+    override fun onActivePlayer() {
         if (isUiVisible) {
-            Log.v("progresschanging", "resying")
             resumeProgress()
         }
-    }
-
-    override fun onPause() {
-        isReleased = false
-        Log.v("progresschanging", "pausing")
-        pauseProgress()
 
     }
 
-    override fun onDeattached() {
-        Log.v("progressActivity", "deattached")
-        stopProgress()
+    //singleton creation of object
+    companion object {
+        private lateinit var onAudioProgressChangeListener: OnAudioProgressChangeListener
+        fun create(player: SimpleExoPlayer): OnAudioProgressChangeListener {
+            return if (!::onAudioProgressChangeListener.isInitialized) {
+                onAudioProgressChangeListener = OnAudioProgressChangeListener(player)
+                onAudioProgressChangeListener
+            } else {
+                onAudioProgressChangeListener
+            }
+        }
     }
 
     /**
@@ -49,15 +50,12 @@ class OnAudioProgressChangeListener(private val player: SimpleExoPlayer) : Mutab
      * and user dismiss the notification the player would be released and we don not want this
      */
     override fun onInactive() {
-        Log.v("progresschanging", "inactive")
         isUiVisible = false
         pauseProgress()
 
     }
 
     override fun onActive() {
-        Log.v("progressActivity", "active")
-
         isUiVisible = true
         if (!::runnable.isInitialized) {
             handler = Handler()
@@ -86,13 +84,5 @@ class OnAudioProgressChangeListener(private val player: SimpleExoPlayer) : Mutab
         }
     }
 
-
-    /**
-     * this will only be called if the ui is completely destroyed
-     */
-    private fun stopProgress() {
-        pauseProgress()
-        handler = null
-    }
 
 }
