@@ -43,7 +43,7 @@ object NotificationActions {
     }
 
     fun stop(context: Context): PendingIntent {
-        return NotificationActions.buildMediaPendingIntent(
+        return buildMediaPendingIntent(
                 context,
                 PlaybackStateCompat.ACTION_STOP
         )
@@ -62,7 +62,7 @@ object NotificationActions {
                 .createPendingIntent()
     }
 
-    fun buildMediaPendingIntent(context: Context, action: Long): PendingIntent {
+    private fun buildMediaPendingIntent(context: Context, action: Long): PendingIntent {
         return MediaButtonReceiver.buildMediaButtonPendingIntent(
                 context,
                 ComponentName(context, NotificationIntentReceiver::class.java),

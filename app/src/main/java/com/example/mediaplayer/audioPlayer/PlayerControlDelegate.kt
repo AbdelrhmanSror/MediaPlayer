@@ -6,7 +6,6 @@ import android.os.Handler
 import com.example.mediaplayer.CustomScope
 import com.example.mediaplayer.audioPlayer.audioFocus.AudioFocusCallBacks
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompatFactory
-import com.example.mediaplayer.model.SongModel
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
@@ -17,13 +16,13 @@ import com.google.android.exoplayer2.util.Util
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-open class PlayerControlDelegate(private val context: Context,
-                                 private var player: SimpleExoPlayer?
-) :
-        IPlayerControl, CoroutineScope by CustomScope() {
+open class PlayerControlDelegate<T>(private val context: Context,
+                                    private var player: SimpleExoPlayer?
+) : IPlayerControl<T>, CoroutineScope by CustomScope() {
 
-    private lateinit var songList: ArrayList<SongModel>
-    private val songListUris: ArrayList<Uri> = ArrayList()
+
+    private var songList: ArrayList<T>? = null
+    private var songListUris: List<Uri> = emptyList()
     private var repeatModeActivated: Boolean = false
         set(value) {
             if (value) {
@@ -44,6 +43,9 @@ open class PlayerControlDelegate(private val context: Context,
 
     private val mMediaAudioFocus = MediaAudioFocusCompatFactory.create(context)
 
+    private lateinit var mediaSource: MediaSource
+
+
     /**
      * variable to indicate to the last state of player if audio focus happened
      * so if the last state of player was true then continue playing the audio after the focus gained otherwise do nothing
@@ -57,18 +59,16 @@ open class PlayerControlDelegate(private val context: Context,
 
 
     //creating concatenating media source for media player to play_notification
-    private fun buildMediaSource(audioUris: ArrayList<Uri>?): MediaSource? {
+    private fun buildMediaSource(): MediaSource {
         // Produces DataSource instances through which media data is loaded.
         val dataSourceFactory = DefaultDataSourceFactory(context,
                 Util.getUserAgent(context, "MediaPlayer"))
         val concatenatingMediaSource = ConcatenatingMediaSource()
-        when (audioUris) {
-            null -> return null
-            else -> for (item in audioUris) {
-                concatenatingMediaSource.addMediaSource(ProgressiveMediaSource.Factory(dataSourceFactory)
-                        .createMediaSource(item))
-            }
+        for (item in songListUris.indices) {
+            concatenatingMediaSource.addMediaSource(ProgressiveMediaSource.Factory(dataSourceFactory).setTag(songList?.get(item))
+                    .createMediaSource(songListUris[item]))
         }
+
         return concatenatingMediaSource
     }
 
@@ -76,7 +76,7 @@ open class PlayerControlDelegate(private val context: Context,
         player?.apply {
             //to control to player the audio or video right now or wait user to play_collapsed_notification the audio himself
             playWhenReady = true
-            val mediaSource = buildMediaSource(songListUris)
+            mediaSource = buildMediaSource()
             prepare(mediaSource)
             //to control the starter location of audio and current track
             seekTo(chosenAudioIndex)
@@ -85,13 +85,11 @@ open class PlayerControlDelegate(private val context: Context,
     }
 
 
-    override fun startPlayer(audioList: ArrayList<SongModel>, chosenAudioIndex: Int) {
+    override fun startPlayer(audioList: ArrayList<T>?, Uris: List<Uri>, chosenAudioIndex: Int) {
         //only re setup the player when the playlist changes
-        if (!::songList.isInitialized || audioList != songList) {
+        if (audioList != songList) {
             songList = audioList
-            for (item in audioList) {
-                songListUris.add(item.audioUri)
-            }
+            songListUris = Uris
             setUpPlayer(chosenAudioIndex)
         } else {
             seekTo(chosenAudioIndex)
@@ -171,6 +169,7 @@ open class PlayerControlDelegate(private val context: Context,
      */
     override fun play() {
         player?.playWhenReady = true
+
     }
 
     /**

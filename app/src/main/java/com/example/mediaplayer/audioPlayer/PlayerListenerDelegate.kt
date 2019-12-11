@@ -1,11 +1,16 @@
 package com.example.mediaplayer.audioPlayer
 
 import android.util.Log
+import com.example.mediaplayer.CustomScope
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.updateList
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 interface IPlayerListener {
@@ -17,29 +22,28 @@ interface IPlayerListener {
 
     /**
      * this will be called when audio paused
+     * is also called when the player is stopped which mean player is completely destroyed
      */
-    fun onInActivePlayer() {}
+    fun onInActivePlayer(isStopped: Boolean) {}
 
     /**
      * will be called when there corresponding observer is remove from list of observers
      */
-    fun onDetach(iPlayerState: IPlayerState)
+    fun onDetach(iPlayerState: IPlayerState) {}
 }
 
 open class PlayerListenerDelegate(private val service: AudioForegroundService,
                                   private val player: SimpleExoPlayer?
-) {
+) : CoroutineScope by CustomScope(Dispatchers.Main) {
     private lateinit var onPlayerStateChanged: Player.EventListener
 
     private val onPlayerStateListListeners: HashMap<IPlayerState, ArrayList<IPlayerListener>> = HashMap()
-    private lateinit var onProgressChanged: OnAudioProgressChangeListener
-
-    private lateinit var noisy: Noisy
     private var isPlaying = true
 
     private var currentAudioIndex = -1
 
     private var durationSet: Boolean = false
+    private var isPLayerPreparedBefore = false
 
 
     //handle the player when actions happen in notification
@@ -51,11 +55,17 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                 onPlayerStateChanged = object : Player.EventListener {
                     override fun onPositionDiscontinuity(reason: Int) {
                         if (player.isTrackChanging(reason)) {
-                            Log.v("playbackstakestate", " tracking  ")
                             currentAudioIndex = currentWindowIndex
                             durationSet = false
-                            onPlayerStateListListeners.forEach {
-                                it.key.onAudioChanged(currentWindowIndex, playWhenReady)
+                            isPLayerPreparedBefore = true
+                            launch {
+                                //give time for ui to prepare
+                                delay(200)
+                                Log.v("registeringAudioSession", " tracking  tag ${player.currentTag} ")
+                                onPlayerStateListListeners.forEach {
+                                    it.key.onAudioChanged(currentWindowIndex, playWhenReady)
+                                }
+
                             }
 
                         }
@@ -64,15 +74,19 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
                         when {
                             player.isNewDurationReady() -> {
-                                Log.v("playbackstakestate", " duration  ")
 
-                                onPlayerStateListListeners.forEach {
-                                    it.key.onDurationChange(player.duration)
+                                launch {
+                                    //give time for player to prepare duration value
+                                    delay(300)
+                                    Log.v("registeringAudioSession", " duration ${player.duration}  ")
+                                    onPlayerStateListListeners.forEach {
+                                        it.key.onDurationChange(player.duration)
+                                    }
                                 }
                                 durationSet = true
                             }
                             player.isPlayerPlaying() -> {
-                                Log.v("playbackstakestate", " playing  ")
+                                Log.v("registeringAudioSession", " playing  ")
                                 // Active playback.
                                 //when player start again we start listening to  events of headphone
 
@@ -86,10 +100,11 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 
 
                             }
-                            playWhenReady -> {
+                            ExoPlayer.STATE_IDLE == playbackState && isPLayerPreparedBefore -> {
                                 // Not playing because playback ended, the player is buffering, stopped or
                                 // failed. Check playbackState and player.getPlaybackError for details.
-                                Log.v("playbackstakestate", " stopping ")
+                                Log.v("registeringAudioSession", " stopping ${playbackState}")
+
                             }
                             player.isTracksEnded() -> {
                                 onPlayerStateListListeners.forEach {
@@ -99,14 +114,14 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 
                             }
                             player.isPlayerPausing() -> {
-                                Log.v("playbackstakestate", " pausing")
+                                Log.v("registeringAudioSession", " pausing")
                                 if (playWhenReady != isPlaying) {
                                     // Paused by app.
                                     isPlaying = false
                                     onPlayerStateListListeners.forEach { entry ->
                                         entry.key.onPause()
                                         entry.value.forEach {
-                                            it.onInActivePlayer()
+                                            it.onInActivePlayer(false)
                                         }
                                     }
 
@@ -136,7 +151,6 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 
 
     protected fun removeListeners() {
-        player?.addListener(null)
         player?.addAudioListener(null)
 
     }
@@ -145,10 +159,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
      * will create singleton noisy listener only one time
      */
     protected fun setNoisyListener(): IPlayerListener {
-        if (!::noisy.isInitialized) {
-            noisy = Noisy(service, EventDispatcher(service))
-        }
-        return noisy
+        return Noisy.create(service, EventDispatcher(service))
     }
 
     protected fun setAudioSessionChangeListener(updatedPlayerState: IPlayerState): IPlayerListener {
@@ -157,7 +168,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
     }
 
     protected fun setOnProgressChangedListener(iPlayerState: IPlayerState): IPlayerListener {
-        onProgressChanged = OnAudioProgressChangeListener.create(player!!)
+        val onProgressChanged = OnAudioProgressChangeListener(player!!)
         iPlayerState.onProgressChangedLiveData(onProgressChanged)
         return onProgressChanged
 

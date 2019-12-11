@@ -13,13 +13,11 @@ import androidx.core.app.NotificationCompat
 import com.example.mediaplayer.CHANNEL_ID
 import com.example.mediaplayer.NOTIFICATION_ID
 import com.example.mediaplayer.R
-import com.example.mediaplayer.audioPlayer.AudioPlayer
 import com.example.mediaplayer.model.SongModel
 import kotlinx.coroutines.yield
 import javax.inject.Inject
 
-open class AudioForegroundNotification @Inject constructor(val service: Service,
-                                                           val audioPlayer: AudioPlayer
+open class AudioForegroundNotification @Inject constructor(val service: Service
                                                            , private val mediaSession: MediaSessionCompat)
     : INotification {
 

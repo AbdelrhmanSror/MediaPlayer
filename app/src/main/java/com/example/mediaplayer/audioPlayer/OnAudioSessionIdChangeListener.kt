@@ -8,20 +8,22 @@ import kotlinx.coroutines.*
 /**
  * class to register listeners for audio session id
  */
-class OnAudioSessionIdChangeListener private constructor(
-
-) : AudioListener,
+class OnAudioSessionIdChangeListener private constructor() : AudioListener,
         IPlayerListener,
         CoroutineScope by MainScope() {
+
+
     companion object {
         @JvmStatic
         private val TAG = "SM:${OnAudioSessionIdChangeListener::class.java.simpleName}"
         internal const val DELAY = 500L
         private lateinit var onAudioSessionIdChangeListener: OnAudioSessionIdChangeListener
         private var observers = HashSet<IPlayerState>()
-
+        private var audioSessionId = -1
         fun createOrUpdate(player: SimpleExoPlayer, updatedPlayerState: IPlayerState): OnAudioSessionIdChangeListener {
             observers.add(updatedPlayerState)
+            if (audioSessionId > 0)
+                updatedPlayerState.onAudioSessionId(audioSessionId)
             return if (!::onAudioSessionIdChangeListener.isInitialized) {
                 onAudioSessionIdChangeListener = OnAudioSessionIdChangeListener()
                 player.addAudioListener(onAudioSessionIdChangeListener)
@@ -37,13 +39,19 @@ class OnAudioSessionIdChangeListener private constructor(
     private var job: Job? = null
 
 
-    override fun onDetach(iPlayerState: IPlayerState) {
-        if (observers.remove(iPlayerState) && observers.isEmpty()) {
+    override fun onInActivePlayer(isStopped: Boolean) {
+        //we cancel the job if the player is at stop Stage
+        if (isStopped) {
             job?.cancel()
         }
     }
 
+    override fun onDetach(iPlayerState: IPlayerState) {
+        observers.remove(iPlayerState)
+    }
+
     override fun onAudioSessionId(audioSessionId: Int) {
+        Companion.audioSessionId = audioSessionId
         job?.cancel()
         job = launch {
             delay(DELAY)

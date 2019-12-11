@@ -135,7 +135,6 @@ class ChosenSongViewModel(application: Application,
             _repeatMode.value = it.repeatMode
             _duration.postValue(it.duration)
 
-
         }
     }
 
@@ -171,7 +170,12 @@ class ChosenSongViewModel(application: Application,
     }
 
     override fun onAudioSessionId(audioSessionId: Int) {
+        setUpVisualizer(audioSessionId)
+    }
+
+    private fun setUpVisualizer(audioSessionId: Int) {
         //YOU NEED android.permission.RECORD_AUDIO for that in AndroidManifest.xml
+        if (audioSessionId == 0) return
         visualizer = Visualizer(audioSessionId)
         visualizer.enabled = false
         visualizer.captureSize = Visualizer.getCaptureSizeRange()[1]

@@ -5,17 +5,15 @@ import android.os.Build
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.annotation.RequiresApi
 import com.example.mediaplayer.R
-import com.example.mediaplayer.audioPlayer.AudioPlayer
 import com.example.mediaplayer.twoDigitNumber
 import javax.inject.Inject
 
 @RequiresApi(Build.VERSION_CODES.N)
 internal open class AudioForegroundNotification24 @Inject constructor(
         service: Service,
-        audioPlayer: AudioPlayer,
         mediaSession: MediaSessionCompat
 
-) : AudioForegroundNotification(service, audioPlayer, mediaSession) {
+) : AudioForegroundNotification(service, mediaSession) {
 
     override fun startChronometer(bookmark: Long) {
         builder.setWhen(System.currentTimeMillis() - bookmark)

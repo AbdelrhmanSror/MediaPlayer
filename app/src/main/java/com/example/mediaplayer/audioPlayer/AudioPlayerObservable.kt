@@ -19,6 +19,12 @@ interface AudioPlayerObservable {
                          , audioNoisyControlEnable: Boolean = true,
                          progressCallBackEnabled: Boolean = false)
 
+    fun removeAllObservers()
     fun removeObserver(iPlayerState: IPlayerState)
     fun notifyObserver(iPlayerState: IPlayerState)
+    /**
+     *will be called to check all observers again if any thing has changed will update the observers
+     * the best place to call this after [removeAllObservers]
+     */
+    fun invalidate()
 }

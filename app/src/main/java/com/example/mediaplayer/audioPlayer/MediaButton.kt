@@ -1,11 +1,11 @@
-package dev.olog.service.music
+package com.example.mediaplayer.audioPlayer
 
 import android.util.Log
-import com.example.mediaplayer.audioPlayer.EventDispatcher
 import kotlinx.coroutines.*
+import javax.inject.Inject
 
 
-class MediaButton(
+class MediaButton @Inject constructor(
         private val eventDispatcher: EventDispatcher
 
 ) : CoroutineScope by MainScope() {

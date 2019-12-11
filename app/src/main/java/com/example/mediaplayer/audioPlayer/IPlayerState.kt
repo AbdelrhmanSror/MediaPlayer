@@ -24,6 +24,7 @@ interface IPlayerState {
     fun onAudioListCompleted() {}
 
     /**this is called when observer is being registered and there is data to deliver otherwise return null
+     *best use is when entering the activity or fragment from notification this will always trigger returned the the state of player
      */
     fun onAttached(audioPlayerModel: AudioPlayerModel?) {}
 

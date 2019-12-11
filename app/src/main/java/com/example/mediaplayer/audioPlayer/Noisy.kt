@@ -7,9 +7,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
 import android.util.Log
-import javax.inject.Inject
 
-class Noisy @Inject constructor(private val service: Service,
+class Noisy private constructor(private val service: Service,
                                 eventDispatcher: EventDispatcher
 
 ) : IPlayerListener {
@@ -17,6 +16,18 @@ class Noisy @Inject constructor(private val service: Service,
     companion object {
         @JvmStatic
         private val TAG = "SM:${Noisy::class.java.simpleName}"
+        private lateinit var noisy: Noisy
+
+        /**
+         * will create singleton noisy listener only one time
+         */
+        fun create(service: Service, eventDispatcher: EventDispatcher): IPlayerListener {
+            if (!::noisy.isInitialized) {
+                noisy = Noisy(service, eventDispatcher)
+            }
+            return noisy
+        }
+
     }
 
     private val noisyFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
@@ -24,36 +35,39 @@ class Noisy @Inject constructor(private val service: Service,
     private var registered: Boolean = false
 
     override fun onActivePlayer() {
+        Log.w("hiFromNoisy", "trying to re-register")
         register()
     }
 
-    override fun onInActivePlayer() {
+    override fun onInActivePlayer(isStopped: Boolean) {
+        Log.w("hiFromNoisy", "trying to unregister")
         unregister()
     }
 
-    //just for precaution
-    override fun onDetach(iPlayerState: IPlayerState) {
+    /**
+     * BAD: do not do it otherwise will unregister the noisy every time observer is removed
+     * and will lead to cancel the noisy and we do not want this
+     * we want to unregister the noisy every time player is being playing or pausing
+     * so the best place to do this is @[onInActivePlayer] and @[onActivePlayer]
+     * @[onInActivePlayer] is also called when the player is stopped which mean player is completely destroyed
+
+     */
+    /*override fun onDetach(iPlayerState: IPlayerState) {
         unregister()
-    }
+    }*/
 
     private fun register() {
         if (registered) {
-            Log.w(TAG, "trying to re-register")
             return
         }
-
-        Log.v(TAG, "register")
         service.registerReceiver(receiver, noisyFilter)
         registered = true
     }
 
     private fun unregister() {
         if (!registered) {
-            Log.w(TAG, "trying to unregister but never registered")
             return
         }
-
-        Log.v(TAG, "unregister")
         service.unregisterReceiver(receiver)
         registered = false
     }
@@ -61,7 +75,6 @@ class Noisy @Inject constructor(private val service: Service,
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
-                Log.v(TAG, "on receiver noisy broadcast")
                 eventDispatcher.dispatchEvent(EventDispatcher.Event.PLAY_PAUSE)
             }
 

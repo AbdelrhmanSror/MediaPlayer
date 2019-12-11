@@ -1,4 +1,3 @@
-/*
 package com.example.mediaplayer.audioPlayer
 
 import android.content.Intent
@@ -6,10 +5,10 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.view.KeyEvent
 import com.example.mediaplayer.CustomScope
 import com.example.mediaplayer.foregroundService.AudioForegroundService
-import dev.olog.service.music.MediaButton
 import kotlinx.coroutines.CoroutineScope
+import javax.inject.Inject
 
-class MediaSessionCallback(
+class MediaSessionCallback @Inject constructor(
         private val service: AudioForegroundService,
         private val mediaButton: MediaButton
 
@@ -40,4 +39,3 @@ class MediaSessionCallback(
 
 
 }
-*/

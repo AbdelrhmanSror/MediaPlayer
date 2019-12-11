@@ -9,15 +9,14 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.mediaplayer.CHANNEL_ID
-import com.example.mediaplayer.audioPlayer.AudioPlayer
 import javax.inject.Inject
 
 @RequiresApi(Build.VERSION_CODES.O)
 internal class AudioForegroundNotification26 @Inject constructor(
-        service: Service, audioPlayer: AudioPlayer,
+        service: Service,
         mediaSession: MediaSessionCompat
 
-) : AudioForegroundNotification24(service, audioPlayer, mediaSession) {
+) : AudioForegroundNotification24(service, mediaSession) {
 
     override fun extendInitialization() {
         builder.setColorized(true)

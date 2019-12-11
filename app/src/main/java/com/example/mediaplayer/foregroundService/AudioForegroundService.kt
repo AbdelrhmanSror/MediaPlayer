@@ -1,6 +1,7 @@
 package com.example.mediaplayer.foregroundService
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
@@ -26,7 +27,7 @@ class AudioForegroundService @Inject constructor() : LifecycleService(), IPlayer
     lateinit var mediaSession: MediaSessionCompat
 
     @Inject
-    lateinit var audioPlayer: AudioPlayer
+    lateinit var audioPlayer: AudioPlayer<SongModel>
     // indicates how to behave if the service is killed.
     private var mStartMode = START_STICKY
     // interface for clients that bind.
@@ -40,8 +41,6 @@ class AudioForegroundService @Inject constructor() : LifecycleService(), IPlayer
         this.inject()
         // The service is being created.
         audioPlayer.registerObserver(this@AudioForegroundService)
-        registerObserver(this)
-
 
     }
 
@@ -69,8 +68,6 @@ class AudioForegroundService @Inject constructor() : LifecycleService(), IPlayer
     }
 
     fun changeAudioState(dispatchEvent: Boolean = true) {
-        /*if (!audioPlayer.isPlaying)
-            stopForeground(false)*/
         audioPlayer.changeAudioState(dispatchEvent)
 
     }
@@ -92,7 +89,7 @@ class AudioForegroundService @Inject constructor() : LifecycleService(), IPlayer
 
     override fun onStop() {
         //remove the notification and stop the service when user press the close button on notification
-        audioPlayer.pause()
+        stopForeground(false)
         foregroundNotification.cancel()
         audioPlayer.release { stopSelf() }
     }
@@ -139,34 +136,36 @@ class AudioForegroundService @Inject constructor() : LifecycleService(), IPlayer
     private fun setUpPlayerForeground(intent: Intent) {
         with(intentData(intent))
         {
-            audioPlayer.startPlayer(first, second)
+            val songListUris: ArrayList<Uri> = arrayListOf()
+            for (item in first) {
+                songListUris.add(item.audioUri)
+            }
+            audioPlayer.startPlayer(first, songListUris, second)
             audioPlayer.setCommandControl { index ->
                 first[index].getMediaDescription()
             }
-            launch {
-                startForeground(NOTIFICATION_ID, foregroundNotification.update(first[second], true))
-            }
+
         }
 
     }
 
     override fun onPlay() {
-        /*  launch {
-              foregroundNotification.update(playerMediaObjects[audioPlayer.currentAudioIndex], true)
-          }*/
+        launch {
+            startForeground(NOTIFICATION_ID, foregroundNotification.update(audioPlayer.player!!.currentTag as SongModel, true))
+        }
     }
 
     override fun onPause() {
-        //stopForeground(false)
-        /* launch {
-             foregroundNotification.update(playerMediaObjects[audioPlayer.currentAudioIndex], false)
-         }*/
+        stopForeground(false)
+        launch {
+            foregroundNotification.update(audioPlayer.player!!.currentTag as SongModel, false)
+        }
     }
 
     override fun onAudioChanged(index: Int, isPlaying: Boolean) {
-        /* launch {
-             foregroundNotification.update(playerMediaObjects[index], isPlaying)
-         }*/
+        launch {
+            startForeground(NOTIFICATION_ID, foregroundNotification.update(audioPlayer.player!!.currentTag as SongModel, isPlaying))
+        }
     }
 
     override fun onAudioListCompleted() {
@@ -174,6 +173,5 @@ class AudioForegroundService @Inject constructor() : LifecycleService(), IPlayer
         seekTo(0)
 
     }
-
 }
 
