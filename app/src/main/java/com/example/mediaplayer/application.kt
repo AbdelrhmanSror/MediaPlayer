@@ -18,6 +18,7 @@ import android.app.NotificationManager
 import android.os.Build
 import androidx.core.app.NotificationManagerCompat
 import com.example.mediaplayer.di.DaggerApplicationComponent
+import com.example.mediaplayer.shared.CHANNEL_ID
 import dagger.android.AndroidInjector
 import dagger.android.support.DaggerApplication
 

@@ -4,16 +4,17 @@ import android.app.Notification
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.graphics.Typeface
 import android.support.v4.media.session.MediaSessionCompat
 import android.text.SpannableString
 import android.text.style.StyleSpan
 import androidx.core.app.NotificationCompat
-import com.example.mediaplayer.CHANNEL_ID
-import com.example.mediaplayer.NOTIFICATION_ID
 import com.example.mediaplayer.R
 import com.example.mediaplayer.model.SongModel
+import com.example.mediaplayer.shared.CHANNEL_ID
+import com.example.mediaplayer.shared.ImageLoader
+import com.example.mediaplayer.shared.NOTIFICATION_ID
+import com.example.mediaplayer.shared.toUri
 import kotlinx.coroutines.yield
 import javax.inject.Inject
 
@@ -95,6 +96,7 @@ open class AudioForegroundNotification @Inject constructor(val service: Service
     }
 
 
+    @Suppress("BlockingMethodInNonBlockingContext")
     protected open suspend fun updateMetadataImpl(
             title: SpannableString,
             artist: String,
@@ -103,9 +105,7 @@ open class AudioForegroundNotification @Inject constructor(val service: Service
         builder.mActions[0] = NotificationActions.skipPrevious(service)
         builder.mActions[2] = NotificationActions.skipNext(service)
 
-        val bitmap = BitmapFactory.decodeFile(album)
-                ?: BitmapFactory.decodeResource(service.resources, R.drawable.default_image)
-        builder.setLargeIcon(bitmap)
+        builder.setLargeIcon(ImageLoader.getImageBitmap(service, album.toUri()))
                 .setContentTitle(title)
                 .setContentText(artist)
                 .setSubText(album)

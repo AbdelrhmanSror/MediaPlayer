@@ -1,4 +1,4 @@
-package com.example.mediaplayer
+package com.example.mediaplayer.shared
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope

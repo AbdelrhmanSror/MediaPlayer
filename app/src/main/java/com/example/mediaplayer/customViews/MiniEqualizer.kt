@@ -16,18 +16,11 @@ import android.view.ViewTreeObserver
 import android.view.animation.LinearInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.DrawableCompat
-import androidx.databinding.BindingAdapter
 import androidx.databinding.DataBindingUtil
-import com.example.mediaplayer.Event
 import com.example.mediaplayer.R
 import com.example.mediaplayer.databinding.MinEqualizerBinding
-import java.util.function.LongFunction
 import kotlin.math.abs
-import kotlin.math.round
-import kotlin.random.Random
 
 
 class EqualizerView : LinearLayout {

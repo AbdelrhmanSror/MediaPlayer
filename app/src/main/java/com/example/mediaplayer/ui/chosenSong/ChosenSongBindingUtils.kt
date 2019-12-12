@@ -24,10 +24,10 @@ import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
-import com.example.mediaplayer.Event
 import com.example.mediaplayer.R
 import com.example.mediaplayer.model.SongModel
-import com.example.mediaplayer.twoDigitNumber
+import com.example.mediaplayer.shared.Event
+import com.example.mediaplayer.shared.twoDigitNumber
 import com.example.mediaplayer.ui.chosenSong.adapter.ImageListAdapter
 import com.example.mediaplayer.ui.chosenSong.adapter.SongListAdapter
 import com.google.android.exoplayer2.Player

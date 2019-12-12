@@ -8,9 +8,9 @@ import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
 import androidx.media.session.MediaButtonReceiver
 import androidx.navigation.NavDeepLinkBuilder
-import com.example.mediaplayer.CHOSEN_SONG_INDEX
-import com.example.mediaplayer.PlayerDestinations
 import com.example.mediaplayer.R
+import com.example.mediaplayer.shared.CHOSEN_SONG_INDEX
+import com.example.mediaplayer.shared.PlayerDestinations
 
 object NotificationActions {
 

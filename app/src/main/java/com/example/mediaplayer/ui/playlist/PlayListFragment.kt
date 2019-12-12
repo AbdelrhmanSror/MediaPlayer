@@ -10,10 +10,10 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
-import com.example.mediaplayer.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.R
 import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.databinding.PlaylistFragmentBinding
+import com.example.mediaplayer.shared.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.ui.OnItemClickListener
 import com.example.mediaplayer.viewModels.PlayListViewModel
 import dagger.android.support.DaggerFragment

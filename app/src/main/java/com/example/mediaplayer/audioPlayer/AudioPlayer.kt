@@ -2,6 +2,7 @@ package com.example.mediaplayer.audioPlayer
 
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.util.Log
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
@@ -158,6 +159,7 @@ class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundSer
         if (isReleased && !player!!.playWhenReady) {
             //if number of observers was less than 2  and the player was released then we release the player permanently
             if (getCountObservers() < 2) {
+                Log.v("onaduiochange", "releasing")
                 releasePlayerPermanently()
             }
         } else isReleased = false

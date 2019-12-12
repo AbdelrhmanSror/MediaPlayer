@@ -3,9 +3,9 @@ package com.example.mediaplayer.audioPlayer
 import android.content.Context
 import android.net.Uri
 import android.os.Handler
-import com.example.mediaplayer.CustomScope
 import com.example.mediaplayer.audioPlayer.audioFocus.AudioFocusCallBacks
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompatFactory
+import com.example.mediaplayer.shared.CustomScope
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource

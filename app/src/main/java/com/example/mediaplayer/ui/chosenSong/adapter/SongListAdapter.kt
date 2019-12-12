@@ -15,19 +15,15 @@ package com.example.mediaplayer.ui.chosenSong.adapter
 
 import android.content.Context
 import android.os.Handler
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.*
-import com.example.mediaplayer.customViews.VisualizerView
 import com.example.mediaplayer.databinding.ChosenSongListLayoutBinding
 import com.example.mediaplayer.model.SongModel
-import com.example.mediaplayer.startFavouriteAnimation
+import com.example.mediaplayer.shared.startFavouriteAnimation
 import com.example.mediaplayer.viewModels.ChosenSongViewModel
 import kotlinx.android.synthetic.main.chosen_song_list_layout.view.*
-import javax.inject.Inject
 
 
 /*

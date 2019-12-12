@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 
-package com.example.mediaplayer
+package com.example.mediaplayer.shared
 
 import androidx.lifecycle.Observer
 

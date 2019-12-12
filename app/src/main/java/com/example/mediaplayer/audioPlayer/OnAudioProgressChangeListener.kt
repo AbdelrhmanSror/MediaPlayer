@@ -1,8 +1,7 @@
 package com.example.mediaplayer.audioPlayer
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
-import com.example.mediaplayer.CustomScope
+import com.example.mediaplayer.shared.CustomScope
 import com.google.android.exoplayer2.SimpleExoPlayer
 import kotlinx.coroutines.*
 
@@ -14,19 +13,16 @@ class OnAudioProgressChangeListener(private val player: SimpleExoPlayer) :
 
     private var job: Job? = null
     override fun onInActivePlayer(isStopped: Boolean) {
-        Log.w("hiFromProgress", "inactive")
         stopTimer()
 
     }
 
 
     override fun onDetach(iPlayerState: IPlayerState) {
-        Log.w("hiFromProgress", "deatch")
         stopTimer()
     }
 
     override fun onActivePlayer() {
-        Log.w("hiFromProgress", "active")
         if (isUiVisible) {
             startTimer()
         }
@@ -42,7 +38,6 @@ class OnAudioProgressChangeListener(private val player: SimpleExoPlayer) :
     override fun onInactive() {
         isUiVisible = false
         stopTimer()
-        // pauseProgress()
 
     }
 

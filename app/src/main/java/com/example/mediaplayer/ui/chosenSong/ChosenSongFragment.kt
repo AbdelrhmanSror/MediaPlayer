@@ -10,9 +10,9 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
-import com.example.mediaplayer.CHOSEN_SONG_INDEX
-import com.example.mediaplayer.PlayerDestinations
 import com.example.mediaplayer.databinding.ChosenSongFragmentBinding
+import com.example.mediaplayer.shared.CHOSEN_SONG_INDEX
+import com.example.mediaplayer.shared.PlayerDestinations
 import com.example.mediaplayer.ui.chosenSong.adapter.CenterZoomLayoutManager
 import com.example.mediaplayer.ui.chosenSong.adapter.ImageListAdapter
 import com.example.mediaplayer.ui.chosenSong.adapter.SongListAdapter

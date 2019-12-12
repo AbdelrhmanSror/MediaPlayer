@@ -1,17 +1,19 @@
 package com.example.mediaplayer.audioPlayer
 
-import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
 import android.util.Log
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import com.example.mediaplayer.foregroundService.AudioForegroundService
 
-class Noisy private constructor(private val service: Service,
+class Noisy private constructor(private val service: AudioForegroundService,
                                 eventDispatcher: EventDispatcher
 
-) : IPlayerListener {
+) : IPlayerListener, DefaultLifecycleObserver {
 
     companion object {
         @JvmStatic
@@ -21,7 +23,7 @@ class Noisy private constructor(private val service: Service,
         /**
          * will create singleton noisy listener only one time
          */
-        fun create(service: Service, eventDispatcher: EventDispatcher): IPlayerListener {
+        fun create(service: AudioForegroundService, eventDispatcher: EventDispatcher): IPlayerListener {
             if (!::noisy.isInitialized) {
                 noisy = Noisy(service, eventDispatcher)
             }
@@ -34,6 +36,14 @@ class Noisy private constructor(private val service: Service,
 
     private var registered: Boolean = false
 
+    init {
+        service.lifecycle.addObserver(this)
+    }
+
+    override fun onDestroy(owner: LifecycleOwner) {
+        unregister()
+    }
+
     override fun onActivePlayer() {
         Log.w("hiFromNoisy", "trying to re-register")
         register()
@@ -43,6 +53,7 @@ class Noisy private constructor(private val service: Service,
         Log.w("hiFromNoisy", "trying to unregister")
         unregister()
     }
+
 
     /**
      * BAD: do not do it otherwise will unregister the noisy every time observer is removed

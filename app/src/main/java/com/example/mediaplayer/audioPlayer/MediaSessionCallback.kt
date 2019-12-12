@@ -3,8 +3,8 @@ package com.example.mediaplayer.audioPlayer
 import android.content.Intent
 import android.support.v4.media.session.MediaSessionCompat
 import android.view.KeyEvent
-import com.example.mediaplayer.CustomScope
 import com.example.mediaplayer.foregroundService.AudioForegroundService
+import com.example.mediaplayer.shared.CustomScope
 import kotlinx.coroutines.CoroutineScope
 import javax.inject.Inject
 

@@ -1,9 +1,9 @@
 package com.example.mediaplayer.audioPlayer
 
 import android.util.Log
-import com.example.mediaplayer.CustomScope
 import com.example.mediaplayer.foregroundService.AudioForegroundService
-import com.example.mediaplayer.updateList
+import com.example.mediaplayer.shared.CustomScope
+import com.example.mediaplayer.shared.updateList
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
@@ -57,11 +57,10 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                         if (player.isTrackChanging(reason)) {
                             currentAudioIndex = currentWindowIndex
                             durationSet = false
-                            isPLayerPreparedBefore = true
                             launch {
                                 //give time for ui to prepare
-                                delay(200)
-                                Log.v("registeringAudioSession", " tracking  tag ${player.currentTag} ")
+                                delay(350)
+                                Log.v("registeringAudioSession", " tracking  $currentWindowIndex ")
                                 onPlayerStateListListeners.forEach {
                                     it.key.onAudioChanged(currentWindowIndex, playWhenReady)
                                 }
@@ -163,7 +162,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
     }
 
     protected fun setAudioSessionChangeListener(updatedPlayerState: IPlayerState): IPlayerListener {
-        return OnAudioSessionIdChangeListener.createOrUpdate(player!!, updatedPlayerState)
+        return OnAudioSessionIdChangeListener.createOrUpdate(service, player!!, updatedPlayerState)
 
     }
 

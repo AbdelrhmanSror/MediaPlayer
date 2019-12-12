@@ -5,19 +5,21 @@ import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
+import android.util.Log
 import androidx.lifecycle.LifecycleService
-import com.example.mediaplayer.CHOSEN_SONG_INDEX
-import com.example.mediaplayer.CustomScope
-import com.example.mediaplayer.LIST_SONG
-import com.example.mediaplayer.NOTIFICATION_ID
-import com.example.mediaplayer.PlayerActions.ACTION_FOREGROUND
 import com.example.mediaplayer.audioPlayer.AudioPlayer
 import com.example.mediaplayer.audioPlayer.IPlayerState
 import com.example.mediaplayer.audioPlayer.notification.AudioForegroundNotification
 import com.example.mediaplayer.di.inject
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.model.getMediaDescription
+import com.example.mediaplayer.shared.CHOSEN_SONG_INDEX
+import com.example.mediaplayer.shared.CustomScope
+import com.example.mediaplayer.shared.LIST_SONG
+import com.example.mediaplayer.shared.NOTIFICATION_ID
+import com.example.mediaplayer.shared.PlayerActions.ACTION_FOREGROUND
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -150,21 +152,39 @@ class AudioForegroundService @Inject constructor() : LifecycleService(), IPlayer
     }
 
     override fun onPlay() {
-        launch {
-            startForeground(NOTIFICATION_ID, foregroundNotification.update(audioPlayer.player!!.currentTag as SongModel, true))
-        }
+        updateNotification(true)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.v("onaduiochange", "desrtoy")
+
     }
 
     override fun onPause() {
+        Log.v("onaduiochange", "pausing")
+
         stopForeground(false)
-        launch {
-            foregroundNotification.update(audioPlayer.player!!.currentTag as SongModel, false)
-        }
+        updateNotification(false)
     }
 
     override fun onAudioChanged(index: Int, isPlaying: Boolean) {
+        updateNotification(isPlaying)
+    }
+
+    private fun updateNotification(isPlaying: Boolean) {
         launch {
-            startForeground(NOTIFICATION_ID, foregroundNotification.update(audioPlayer.player!!.currentTag as SongModel, isPlaying))
+            (audioPlayer.player!!.currentTag).let {
+                val start = System.currentTimeMillis()
+                while (it == null) {
+                    if (System.currentTimeMillis() - start <= 1000)
+                        delay(50)
+                }
+                if (isPlaying)
+                    startForeground(NOTIFICATION_ID, foregroundNotification.update(it as SongModel, isPlaying))
+                else
+                    foregroundNotification.update(it as SongModel, isPlaying)
+            }
         }
     }
 

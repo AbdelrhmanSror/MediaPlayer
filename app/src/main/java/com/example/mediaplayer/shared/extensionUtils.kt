@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 
-package com.example.mediaplayer
+package com.example.mediaplayer.shared
 
 import android.app.Activity
 import android.content.Context
@@ -22,6 +22,7 @@ import android.util.Log
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
+import com.example.mediaplayer.R
 
 
 /**

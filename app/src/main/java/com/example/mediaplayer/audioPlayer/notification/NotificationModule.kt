@@ -1,8 +1,8 @@
 package com.example.mediaplayer.audioPlayer.notification
 
 import com.example.mediaplayer.di.PerService
-import com.example.mediaplayer.isNougat
-import com.example.mediaplayer.isOreo
+import com.example.mediaplayer.shared.isNougat
+import com.example.mediaplayer.shared.isOreo
 import dagger.Lazy
 import dagger.Module
 import dagger.Provides
