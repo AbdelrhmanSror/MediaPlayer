@@ -25,6 +25,7 @@ class CenterZoomLayoutManager : LinearLayoutManager {
     private val mShrinkAmount = 0.15f
     private val mShrinkDistance = 0.9f
 
+
     constructor(context: Context) : super(context)
 
     constructor(context: Context, orientation: Int, reverseLayout: Boolean) : super(context, orientation, reverseLayout)
@@ -79,6 +80,5 @@ class CenterZoomLayoutManager : LinearLayoutManager {
         }
 
     }
-
 
 }

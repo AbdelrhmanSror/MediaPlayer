@@ -13,9 +13,13 @@
 
 package com.example.mediaplayer.di
 
+import androidx.lifecycle.ViewModel
 import com.example.mediaplayer.ui.chosenSong.ChosenSongFragment
+import com.example.mediaplayer.viewModels.ChosenSongViewModel
+import dagger.Binds
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
+import dagger.multibindings.IntoMap
 
 /**
  * Dagger module for the chosen song feature.
@@ -23,7 +27,13 @@ import dagger.android.ContributesAndroidInjector
 @Module
 abstract class ChosenSongModule {
 
-    @ContributesAndroidInjector
+    @ContributesAndroidInjector(modules = [
+        ViewModelBuilder::class
+    ])
     internal abstract fun chosenSongFragment(): ChosenSongFragment
 
+    @Binds
+    @IntoMap
+    @ViewModelKey(ChosenSongViewModel::class)
+    abstract fun bindViewModel(viewmodel: ChosenSongViewModel): ViewModel
 }

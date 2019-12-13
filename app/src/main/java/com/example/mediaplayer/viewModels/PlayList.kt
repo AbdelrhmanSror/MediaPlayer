@@ -1,7 +1,6 @@
 package com.example.mediaplayer.viewModels
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -24,12 +23,9 @@ class PlayListViewModel @Inject constructor(application: Application, repository
         viewModelScope.launch {
             withContext(Dispatchers.IO)
             {
-                Log.v("insertingdatabse", "inserting")
                 _inProgress.postValue(true)
                 repository.insertAudioIntoDatabase()
                 _inProgress.postValue(null)
-                Log.v("insertingdatabse", "finishing")
-
 
             }
 

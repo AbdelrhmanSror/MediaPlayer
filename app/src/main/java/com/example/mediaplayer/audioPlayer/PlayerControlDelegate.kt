@@ -2,6 +2,7 @@ package com.example.mediaplayer.audioPlayer
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import com.example.mediaplayer.audioPlayer.audioFocus.AudioFocusCallBacks
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompatFactory
 import com.example.mediaplayer.shared.CustomScope
@@ -46,14 +47,13 @@ open class PlayerControlDelegate<T>(private val context: Context,
 
     private lateinit var mediaSource: MediaSource
 
-
     /**
      * variable to indicate to the last state of player if audio focus happened
      * so if the last state of player was true then continue playing the audio after the focus gained otherwise do nothing
      * because user himself paused the player so it makes no sense to continue playing as it was already paused
      */
     private var prevPlayerState = false
-    private var isPlaying = true
+    private var isPlaying = false
     private var isFocusLost = false
 
 
@@ -75,30 +75,21 @@ open class PlayerControlDelegate<T>(private val context: Context,
         return concatenatingMediaSource
     }
 
-    private fun setUpPlayer(chosenAudioIndex: Int) {
-        player?.apply {
-            //to control to player the audio or video right now or wait user to play_collapsed_notification the audio himself
-            playWhenReady = true
-            mediaSource = buildMediaSource()
-            prepare(mediaSource)
-            //to control the starter location of audio and current track
-            seekTo(chosenAudioIndex)
-
-        }
-    }
-
-
-    override fun startPlayer(audioList: ArrayList<T>?, Uris: List<Uri>, chosenAudioIndex: Int) {
+    override fun setUpPlayer(audioList: ArrayList<T>?, Uris: List<Uri>) {
         //only re setup the player when the playlist changes
         if (audioList != songList) {
             songList = audioList
             songListUris = Uris
-            setUpPlayer(chosenAudioIndex)
-        } else {
-            seekTo(chosenAudioIndex)
-        }
+            player?.apply {
+                playWhenReady = isPlaying
+                mediaSource = buildMediaSource()
+                player?.prepare(mediaSource)
+                requestFocus()
 
+            }
+        }
     }
+
 
     /**
      * request focus for audio player to start
@@ -144,8 +135,12 @@ open class PlayerControlDelegate<T>(private val context: Context,
      * seek to different track
      */
     override fun seekTo(index: Int) {
+        Log.v("scrollingbehaviour", "seek to $index player")
+
         player?.seekTo(index, 0)
         play()
+
+
     }
 
 

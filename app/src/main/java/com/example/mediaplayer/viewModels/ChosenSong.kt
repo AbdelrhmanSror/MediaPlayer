@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.media.audiofx.Visualizer
 import android.os.IBinder
+import android.util.Log
 import androidx.lifecycle.*
 import com.example.mediaplayer.audioPlayer.AudioPlayerModel
 import com.example.mediaplayer.audioPlayer.IPlayerState
@@ -14,21 +15,21 @@ import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.repositry.Repository
-import com.example.mediaplayer.shared.*
+import com.example.mediaplayer.shared.Event
+import com.example.mediaplayer.shared.LIST_SONG
+import com.example.mediaplayer.shared.PlayerActions
+import com.example.mediaplayer.shared.startForeground
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class ChosenSongViewModel(application: Application,
-                          private val repository: Repository,
-                          private val songIndex: Int,
-                          private val fromNotification: Boolean)
+class ChosenSongViewModel @Inject constructor(application: Application,
+                                              private val repository: Repository)
     : AndroidViewModel(application), IPlayerState<SongModel> {
 
 
     private val mApplication = application
-
     private lateinit var visualizer: Visualizer
     private lateinit var audioService: AudioForegroundService
 
@@ -99,29 +100,31 @@ class ChosenSongViewModel(application: Application,
     }
 
     init {
+        setUpForeground()
+    }
+
+    private fun setUpForeground() {
         startService()
         //binding this fragment to service
         mApplication.bindService(Intent(mApplication, AudioForegroundService::class.java), connection, Context.BIND_AUTO_CREATE)
     }
-
 
     private fun startService() {
         viewModelScope.launch {
             val songlist = withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
                 repository.getSongs().toSongModel()
             }
-            if (!fromNotification) {
-                startForeground(songlist as ArrayList<SongModel>, songIndex)
-            }
+            //if (!fromNotification) {
+            startForeground(songlist as ArrayList<SongModel>)
+            //}
         }
 
 
     }
 
-    private fun startForeground(song: ArrayList<SongModel>, chosenSongIndex: Int) {
+    private fun startForeground(song: ArrayList<SongModel>) {
         val foregroundIntent = Intent(mApplication, AudioForegroundService::class.java)
         foregroundIntent.action = PlayerActions.ACTION_FOREGROUND
-        foregroundIntent.putExtra(CHOSEN_SONG_INDEX, chosenSongIndex)
         foregroundIntent.putParcelableArrayListExtra(LIST_SONG, song)
         mApplication.startForeground(foregroundIntent)
 
@@ -213,6 +216,7 @@ class ChosenSongViewModel(application: Application,
      */
 
     fun seekTo(index: Int) {
+        Log.v("scrollingbehaviour", "seek to $index viewmodel")
 
         audioService.seekTo(index)
     }
@@ -252,28 +256,4 @@ class ChosenSongViewModel(application: Application,
         audioService.removeObserver(this)
         mApplication.unbindService(connection)
     }
-}
-
-class ChosenSongViewModelFactory @Inject constructor(private val application: Application,
-                                                     private val repository: Repository)
-    : ViewModelProvider.Factory {
-
-    private var chosenSongIndex: Int? = null
-    private var fromNotification: Boolean? = null
-    fun setData(songIndex: Int, fromNotification: Boolean) {
-        chosenSongIndex = songIndex
-        this.fromNotification = fromNotification
-
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-
-        if (modelClass.isAssignableFrom(ChosenSongViewModel::class.java)) {
-            return ChosenSongViewModel(application, repository, chosenSongIndex!!, fromNotification!!) as T
-
-        }
-        throw IllegalArgumentException("unknown class")
-    }
-
 }

@@ -13,21 +13,17 @@
 
 package com.example.mediaplayer.ui.chosenSong.adapter
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.*
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
 import com.example.mediaplayer.databinding.ChosenSongListLayoutBinding
 import com.example.mediaplayer.model.SongModel
-import com.example.mediaplayer.shared.CustomScope
 import com.example.mediaplayer.shared.startFavouriteAnimation
 import com.example.mediaplayer.viewModels.ChosenSongViewModel
 import kotlinx.android.synthetic.main.chosen_song_list_layout.view.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 
 /*
@@ -43,28 +39,17 @@ import kotlinx.coroutines.launch
  * limitations under the License.
  */
 
+class SongListAdapter(private val viewmodel: ChosenSongViewModel, private val scrollingBehaviour: ScrollingBehaviour?) :
+        ListAdapter<SongModel, SongListAdapter.ViewHolder>(DiffCallBack) {
 
-
-
-class SongListAdapter(private val viewmodel: ChosenSongViewModel) :
-        ListAdapter<SongModel, SongListAdapter.ViewHolder>(DiffCallBack), CoroutineScope by CustomScope(Dispatchers.Main) {
-
-    private lateinit var context: Context
     private lateinit var recyclerView: RecyclerView
     private var lastSelectedItemPosition: Int = 0
     private var currentSelectedItemPosition: Int = 0
-    private var firstTimeInflating: Boolean = true
-    private var isSnapAttached = false
-    private val snapHelper = LinearSnapHelper()
     private var equalizerEnabled: Boolean = true
     private var visualizerEnabled: Boolean = true
 
-    private val smoothScroller: LinearSmoothScroller by lazy {
-        object : LinearSmoothScroller(context) {
-            override fun getVerticalSnapPreference(): Int {
-                return SNAP_TO_END
-            }
-        }
+    private val scroller: LinearScrolling by lazy {
+        LinearScrolling(recyclerView, itemCount, scrollingBehaviour)
     }
 
     /**
@@ -91,12 +76,6 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) :
             binding.favouriteShape.setOnClickListener {
                 binding.favouriteShape.startFavouriteAnimation(item.isFavourite)
             }
-            /*viewModel.playPauseState.observeForever(Observer {
-                it?.getContentIfNotHandled()?.let {
-                    if (it) binding.equalizerAnim.animateBars() else binding.equalizerAnim.stopBars()
-
-                }
-            })*/
             binding.executePendingBindings()
 
         }
@@ -120,21 +99,10 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) :
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
         this.recyclerView = recyclerView
-        snapHelper.attachToRecyclerView(recyclerView)
-        isSnapAttached = true
-        context = recyclerView.context
-        onRecyclerViewScrolling()
+
 
     }
 
-    private fun onRecyclerViewScrolling() {
-        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-
-            }
-
-        })
-    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
 
@@ -159,7 +127,7 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) :
                 return
             notifyItemChanged(lastSelectedItemPosition)
             notifyItemChanged(currentSelectedItemPosition)
-            scrollTo(position)
+            scroller.scrollTo(position + 1)
 
         }
 
@@ -204,44 +172,6 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) :
 
     }
 
-
-    private fun firstTimeInstantScrolling(position: Int) {
-        snapHelper.attachToRecyclerView(recyclerView)
-        launch {
-            delay(200)
-            //instant scroll at first time recyclerview started
-            recyclerView.scrollToPosition(position + 1)
-        }
-        firstTimeInflating = false
-    }
-
-    private fun normalScrolling(position: Int) {
-        //if position was the first or last then just scroll
-        if (position == 0 || position == itemCount - 1) {
-            if (isSnapAttached) {
-                snapHelper.attachToRecyclerView(null)
-                isSnapAttached = false
-            }
-
-        } else {
-            //we attach snaphelper if it is not
-            if (!isSnapAttached) {
-                snapHelper.attachToRecyclerView(recyclerView)
-                isSnapAttached = true
-            }
-        }
-        smoothScroller.targetPosition = position + 1
-        (recyclerView.layoutManager as CenterZoomLayoutManager).startSmoothScroll(smoothScroller)
-    }
-
-    private fun scrollTo(position: Int) {
-
-        if (firstTimeInflating) {
-            firstTimeInstantScrolling(position)
-        } else {
-            normalScrolling(position)
-        }
-    }
 
 }
 
