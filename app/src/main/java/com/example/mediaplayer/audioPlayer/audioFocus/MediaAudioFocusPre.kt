@@ -19,6 +19,7 @@ import android.media.AudioManager
 /**
  * worked on devices pre api 26 (oreo)
  */
+@Suppress("DEPRECATION")
 class MediaAudioFocusPre(context: Context) : MediaAudioFocusCompat() {
 
     private lateinit var audioFocusCallBacks: AudioFocusCallBacks

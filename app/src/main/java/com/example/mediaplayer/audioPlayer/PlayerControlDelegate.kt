@@ -2,9 +2,9 @@ package com.example.mediaplayer.audioPlayer
 
 import android.content.Context
 import android.net.Uri
-import android.os.Handler
 import com.example.mediaplayer.audioPlayer.audioFocus.AudioFocusCallBacks
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompatFactory
+import com.example.mediaplayer.shared.CustomScope
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
@@ -12,10 +12,14 @@ import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 open class PlayerControlDelegate<T>(private val context: Context,
                                     private var player: SimpleExoPlayer?
-) : IPlayerControl<T> {
+) : IPlayerControl<T>, CoroutineScope by CustomScope(Dispatchers.Main) {
 
 
     private var songList: ArrayList<T>? = null
@@ -49,10 +53,12 @@ open class PlayerControlDelegate<T>(private val context: Context,
      * because user himself paused the player so it makes no sense to continue playing as it was already paused
      */
     private var prevPlayerState = false
+    private var isPlaying = true
+    private var isFocusLost = false
 
 
     //var indicates if the focus is permanently lost so we can request focus again
-    private var isFocusPermanentLost = false
+    private var isFocusPermanentLost = true
 
 
     //creating concatenating media source for media player to play_notification
@@ -90,15 +96,7 @@ open class PlayerControlDelegate<T>(private val context: Context,
             setUpPlayer(chosenAudioIndex)
         } else {
             seekTo(chosenAudioIndex)
-            //if the player was being stopped then play
-            if (!player!!.playWhenReady) {
-                Handler().postDelayed({
-                    play()
-                }, 1000)
-
-            }
         }
-        requestFocus()
 
     }
 
@@ -109,15 +107,19 @@ open class PlayerControlDelegate<T>(private val context: Context,
         mMediaAudioFocus.requestAudioFocus(object : AudioFocusCallBacks {
             //when the focus gained we start playing audio if it was previously running
             override fun onAudioFocusGained() {
-                if (prevPlayerState) {
-                    play()
+                isFocusLost = false
+                launch {
+                    delay(1000)
+                    if (prevPlayerState && !isFocusLost) {
+                        play()
+                    }
                 }
 
             }
 
             //when the focus lost we pause the player and set prevPlayerState to the current state of player
             override fun onAudioFocusLost(Permanent: Boolean) {
-                prevPlayerState = player!!.playWhenReady
+                isFocusLost = true
                 pause()
                 isFocusPermanentLost = Permanent
             }
@@ -143,10 +145,7 @@ open class PlayerControlDelegate<T>(private val context: Context,
      */
     override fun seekTo(index: Int) {
         player?.seekTo(index, 0)
-        if (!player!!.playWhenReady)
-            play()
-
-
+        play()
     }
 
 
@@ -161,7 +160,15 @@ open class PlayerControlDelegate<T>(private val context: Context,
      * play audio and reset runnable callback of Audio progress if it was initialized before
      */
     override fun play() {
-        player?.playWhenReady = true
+        if (isFocusPermanentLost) {
+            requestFocus()
+            isFocusPermanentLost = false
+        }
+        if (!isPlaying) {
+            isPlaying = true
+            prevPlayerState = false
+            player?.playWhenReady = true
+        }
 
     }
 
@@ -169,7 +176,11 @@ open class PlayerControlDelegate<T>(private val context: Context,
      * pause audio and remove runnable callback of Audio progress if it is initialized
      */
     override fun pause() {
-        player?.playWhenReady = false
+        if (isPlaying) {
+            isPlaying = false
+            prevPlayerState = true
+            player?.playWhenReady = false
+        }
     }
 
     /**
