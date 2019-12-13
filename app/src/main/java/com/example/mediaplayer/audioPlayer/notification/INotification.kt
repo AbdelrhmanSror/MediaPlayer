@@ -1,11 +1,11 @@
 package com.example.mediaplayer.audioPlayer.notification
 
 import android.app.Notification
-import com.example.mediaplayer.model.SongModel
+import com.example.mediaplayer.model.MusicNotificationModel
 
 
 interface INotification {
-    suspend fun update(songModel: SongModel, isPlaying: Boolean): Notification
+    suspend fun update(state: MusicNotificationModel): Notification
     fun cancel()
 
 }

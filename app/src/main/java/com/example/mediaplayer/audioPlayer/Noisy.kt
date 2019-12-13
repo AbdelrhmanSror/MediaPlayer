@@ -10,24 +10,25 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 
-class Noisy private constructor(private val service: AudioForegroundService,
-                                eventDispatcher: EventDispatcher
+@Suppress("UNCHECKED_CAST")
+class Noisy<T> private constructor(private val service: AudioForegroundService,
+                                   eventDispatcher: EventDispatcher
 
-) : IPlayerListener, DefaultLifecycleObserver {
+) : IPlayerListener<T>, DefaultLifecycleObserver {
 
     companion object {
         @JvmStatic
         private val TAG = "SM:${Noisy::class.java.simpleName}"
-        private lateinit var noisy: Noisy
+        private lateinit var noisy: Noisy<*>
 
         /**
          * will create singleton noisy listener only one time
          */
-        fun create(service: AudioForegroundService, eventDispatcher: EventDispatcher): IPlayerListener {
+        fun <T> create(service: AudioForegroundService, eventDispatcher: EventDispatcher): Noisy<T> {
             if (!::noisy.isInitialized) {
-                noisy = Noisy(service, eventDispatcher)
+                noisy = Noisy<T>(service, eventDispatcher)
             }
-            return noisy
+            return noisy as Noisy<T>
         }
 
     }

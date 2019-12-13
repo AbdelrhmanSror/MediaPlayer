@@ -16,7 +16,7 @@ package com.example.mediaplayer.audioPlayer
 import androidx.lifecycle.MutableLiveData
 
 
-interface IPlayerState {
+interface IPlayerState<T> {
 
     /**
      * this will be called when the player complete playing all the the audio file in the list and no other files to play
@@ -46,7 +46,7 @@ interface IPlayerState {
      * this triggers whenever the audio track changes
      * also will trigger when the current audio track changes automatically without interference from user
      */
-    fun onAudioChanged(index: Int, isPlaying: Boolean) {}
+    fun onAudioChanged(index: Int, isPlaying: Boolean, currentInstance: T?) {}
 
     /**
      * this triggers whenever the audio shuffle and repeat mode changes changes

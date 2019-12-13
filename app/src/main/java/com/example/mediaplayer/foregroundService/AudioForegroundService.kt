@@ -9,25 +9,23 @@ import android.util.Log
 import androidx.lifecycle.LifecycleService
 import com.example.mediaplayer.audioPlayer.AudioPlayer
 import com.example.mediaplayer.audioPlayer.IPlayerState
-import com.example.mediaplayer.audioPlayer.notification.AudioForegroundNotification
+import com.example.mediaplayer.audioPlayer.notification.AudioForegroundNotificationManager
 import com.example.mediaplayer.di.inject
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.model.getMediaDescription
 import com.example.mediaplayer.shared.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.shared.CustomScope
 import com.example.mediaplayer.shared.LIST_SONG
-import com.example.mediaplayer.shared.NOTIFICATION_ID
 import com.example.mediaplayer.shared.PlayerActions.ACTION_FOREGROUND
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-class AudioForegroundService @Inject constructor() : LifecycleService(), IPlayerState, CoroutineScope by CustomScope() {
+class AudioForegroundService @Inject constructor() : LifecycleService(),
+        IPlayerState<SongModel>,
+        CoroutineScope by CustomScope() {
     @Inject
     lateinit var mediaSession: MediaSessionCompat
-
     @Inject
     lateinit var audioPlayer: AudioPlayer<SongModel>
     // indicates how to behave if the service is killed.
@@ -36,24 +34,25 @@ class AudioForegroundService @Inject constructor() : LifecycleService(), IPlayer
     private var mBinder: IBinder = SongBinder()
     //responsible for creating media player notification;
     @Inject
-    lateinit var foregroundNotification: AudioForegroundNotification
+    lateinit var notificationManager: AudioForegroundNotificationManager
+
 
     override fun onCreate() {
         super.onCreate()
         this.inject()
         // The service is being created.
-        audioPlayer.registerObserver(this@AudioForegroundService)
+        audioPlayer.registerObserver(this)
 
     }
 
 
-    fun registerObserver(iPlayerState: IPlayerState) {
-        audioPlayer.registerObserver(iPlayerState
+    fun registerObserver(iPlayerState: IPlayerState<SongModel>) {
+        audioPlayer.registerObserver(iPlayerState, audioSessionIdCallbackEnable = true
                 , progressCallBackEnabled = true
-                , audioSessionIdCallbackEnable = true)
+                , isMainObserver = true)
     }
 
-    fun removeObserver(IPlayerState: IPlayerState) {
+    fun removeObserver(IPlayerState: IPlayerState<SongModel>) {
         audioPlayer.removeObserver(IPlayerState)
     }
 
@@ -89,10 +88,14 @@ class AudioForegroundService @Inject constructor() : LifecycleService(), IPlayer
 
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.v("audioManagerNotificati", "ondestoryservice")
+
+    }
+
     override fun onStop() {
-        //remove the notification and stop the service when user press the close button on notification
-        stopForeground(false)
-        foregroundNotification.cancel()
+        Log.v("audioManagerNotificati", "onstop")
         audioPlayer.release { stopSelf() }
     }
 
@@ -151,42 +154,6 @@ class AudioForegroundService @Inject constructor() : LifecycleService(), IPlayer
 
     }
 
-    override fun onPlay() {
-        updateNotification(true)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.v("onaduiochange", "desrtoy")
-
-    }
-
-    override fun onPause() {
-        Log.v("onaduiochange", "pausing")
-
-        stopForeground(false)
-        updateNotification(false)
-    }
-
-    override fun onAudioChanged(index: Int, isPlaying: Boolean) {
-        updateNotification(isPlaying)
-    }
-
-    private fun updateNotification(isPlaying: Boolean) {
-        launch {
-            (audioPlayer.player!!.currentTag).let {
-                val start = System.currentTimeMillis()
-                while (it == null) {
-                    if (System.currentTimeMillis() - start <= 1000)
-                        delay(50)
-                }
-                if (isPlaying)
-                    startForeground(NOTIFICATION_ID, foregroundNotification.update(it as SongModel, isPlaying))
-                else
-                    foregroundNotification.update(it as SongModel, isPlaying)
-            }
-        }
-    }
 
     override fun onAudioListCompleted() {
         audioPlayer.pause()

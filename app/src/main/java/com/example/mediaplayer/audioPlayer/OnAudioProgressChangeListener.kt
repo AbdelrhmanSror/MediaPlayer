@@ -5,9 +5,9 @@ import com.example.mediaplayer.shared.CustomScope
 import com.google.android.exoplayer2.SimpleExoPlayer
 import kotlinx.coroutines.*
 
-class OnAudioProgressChangeListener(private val player: SimpleExoPlayer) :
+class OnAudioProgressChangeListener<T>(private val player: SimpleExoPlayer) :
         MutableLiveData<Long>(),
-        IPlayerListener, CoroutineScope by CustomScope(Dispatchers.Default) {
+        IPlayerListener<T>, CoroutineScope by CustomScope(Dispatchers.Default) {
     //to see if the ui is visible or not
     private var isUiVisible = true
 
@@ -17,8 +17,7 @@ class OnAudioProgressChangeListener(private val player: SimpleExoPlayer) :
 
     }
 
-
-    override fun onDetach(iPlayerState: IPlayerState) {
+    override fun onDetach(iPlayerState: IPlayerState<T>) {
         stopTimer()
     }
 

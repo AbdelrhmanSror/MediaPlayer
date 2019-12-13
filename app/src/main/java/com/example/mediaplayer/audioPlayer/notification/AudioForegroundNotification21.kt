@@ -10,7 +10,7 @@ import android.text.SpannableString
 import android.text.style.StyleSpan
 import androidx.core.app.NotificationCompat
 import com.example.mediaplayer.R
-import com.example.mediaplayer.model.SongModel
+import com.example.mediaplayer.model.MusicNotificationModel
 import com.example.mediaplayer.shared.CHANNEL_ID
 import com.example.mediaplayer.shared.ImageLoader
 import com.example.mediaplayer.shared.NOTIFICATION_ID
@@ -18,8 +18,8 @@ import com.example.mediaplayer.shared.toUri
 import kotlinx.coroutines.yield
 import javax.inject.Inject
 
-open class AudioForegroundNotification @Inject constructor(val service: Service
-                                                           , private val mediaSession: MediaSessionCompat)
+open class AudioForegroundNotification21 @Inject constructor(val service: Service
+                                                             , private val mediaSession: MediaSessionCompat)
     : INotification {
 
     val notificationManager by lazy {
@@ -71,18 +71,18 @@ open class AudioForegroundNotification @Inject constructor(val service: Service
         isCreated = true
     }
 
-    override suspend fun update(songModel: SongModel, isPlaying: Boolean): Notification {
+    override suspend fun update(state: MusicNotificationModel): Notification {
         create()
-        val title = songModel.title
-        val artist = songModel.actor
-        val album = songModel.albumCoverUri
+        val title = state.title
+        val artist = state.artist
+        val album = state.album
 
         val spannableTitle = SpannableString(title)
         spannableTitle.setSpan(StyleSpan(Typeface.BOLD), 0, title.length, 0)
+        // if(isPlaying)startChronometer()
         updateMetadataImpl(spannableTitle, artist, album)
-        updateState(isPlaying)
+        updateState(state.isPlaying)
         yield()
-
         val notification = builder.build()
         notificationManager.notify(NOTIFICATION_ID, notification)
         return notification
@@ -104,7 +104,6 @@ open class AudioForegroundNotification @Inject constructor(val service: Service
     ) {
         builder.mActions[0] = NotificationActions.skipPrevious(service)
         builder.mActions[2] = NotificationActions.skipNext(service)
-
         builder.setLargeIcon(ImageLoader.getImageBitmap(service, album.toUri()))
                 .setContentTitle(title)
                 .setContentText(artist)

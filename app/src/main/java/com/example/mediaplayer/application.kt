@@ -15,10 +15,10 @@ package com.example.mediaplayer
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.os.Build
 import androidx.core.app.NotificationManagerCompat
 import com.example.mediaplayer.di.DaggerApplicationComponent
 import com.example.mediaplayer.shared.CHANNEL_ID
+import com.example.mediaplayer.shared.isOreo
 import dagger.android.AndroidInjector
 import dagger.android.support.DaggerApplication
 
@@ -27,16 +27,16 @@ class MediaApplication : DaggerApplication() {
     override fun applicationInjector(): AndroidInjector<out DaggerApplication> {
         return DaggerApplicationComponent.factory().create(this)
     }
-
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+
     }
 
     //creating notification channel
     private fun createNotificationChannel() {
         val notifyManager = NotificationManagerCompat.from(this)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (isOreo()) {
             // Create a ForegroundNotification
             val notificationChannel = NotificationChannel(CHANNEL_ID,
                     "Media Notification", NotificationManager.IMPORTANCE_HIGH).apply {

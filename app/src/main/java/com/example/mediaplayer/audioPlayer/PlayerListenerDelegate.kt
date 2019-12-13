@@ -13,7 +13,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
-interface IPlayerListener {
+interface IPlayerListener<T> {
+
 
     /**
      * this will be called when there is audio playing
@@ -29,15 +30,16 @@ interface IPlayerListener {
     /**
      * will be called when there corresponding observer is remove from list of observers
      */
-    fun onDetach(iPlayerState: IPlayerState) {}
+    fun onDetach(iPlayerState: IPlayerState<T>) {}
 }
 
-open class PlayerListenerDelegate(private val service: AudioForegroundService,
-                                  private val player: SimpleExoPlayer?
+@Suppress("UNCHECKED_CAST")
+open class PlayerListenerDelegate<T>(private val service: AudioForegroundService,
+                                     private val player: SimpleExoPlayer?
 ) : CoroutineScope by CustomScope(Dispatchers.Main) {
     private lateinit var onPlayerStateChanged: Player.EventListener
 
-    private val onPlayerStateListListeners: HashMap<IPlayerState, ArrayList<IPlayerListener>> = HashMap()
+    private val onPlayerStateListListeners: HashMap<IPlayerState<T>, ArrayList<IPlayerListener<T>>> = HashMap()
     private var isPlaying = true
 
     private var currentAudioIndex = -1
@@ -45,9 +47,16 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
     private var durationSet: Boolean = false
     private var isPLayerPreparedBefore = false
 
+    /**
+     * to indicate if the player is released or not so when the ui is not visible we release the player
+     * this is to avoid reinitializing the player again when user release the player from notification and ui
+     * is still visible so if he resume the player we do not have to initialize it again
+     */
+    protected var isReleased = false
+
 
     //handle the player when actions happen in notification
-    protected fun setOnPlayerStateChangedListener(observers: HashMap<IPlayerState, ArrayList<IPlayerListener>>) {
+    protected fun setOnPlayerStateChangedListener(observers: HashMap<IPlayerState<T>, ArrayList<IPlayerListener<T>>>) {
         onPlayerStateListListeners.updateList(observers)
         //onPlayerStateListListeners.addAll(ipLayerState)
         player!!.run {
@@ -57,12 +66,15 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                         if (player.isTrackChanging(reason)) {
                             currentAudioIndex = currentWindowIndex
                             durationSet = false
+                            if (isReleased) {
+                                isReleased = false
+                            }
                             launch {
                                 //give time for ui to prepare
                                 delay(350)
                                 Log.v("registeringAudioSession", " tracking  $currentWindowIndex ")
                                 onPlayerStateListListeners.forEach {
-                                    it.key.onAudioChanged(currentWindowIndex, playWhenReady)
+                                    it.key.onAudioChanged(currentAudioIndex, isPlaying, player.currentTag as T)
                                 }
 
                             }
@@ -88,7 +100,9 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                                 Log.v("registeringAudioSession", " playing  ")
                                 // Active playback.
                                 //when player start again we start listening to  events of headphone
-
+                                if (isReleased) {
+                                    isReleased = false
+                                }
                                 isPlaying = true
                                 onPlayerStateListListeners.forEach { entry ->
                                     entry.key.onPlay()
@@ -117,6 +131,9 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                                 if (playWhenReady != isPlaying) {
                                     // Paused by app.
                                     isPlaying = false
+                                    if (isReleased) {
+                                        isReleased = false
+                                    }
                                     onPlayerStateListListeners.forEach { entry ->
                                         entry.key.onPause()
                                         entry.value.forEach {
@@ -154,20 +171,21 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 
     }
 
+
     /**
      * will create singleton noisy listener only one time
      */
-    protected fun setNoisyListener(): IPlayerListener {
+    protected fun setNoisyListener(): IPlayerListener<T> {
         return Noisy.create(service, EventDispatcher(service))
     }
 
-    protected fun setAudioSessionChangeListener(updatedPlayerState: IPlayerState): IPlayerListener {
+    protected fun setAudioSessionChangeListener(updatedPlayerState: IPlayerState<T>): IPlayerListener<T> {
         return OnAudioSessionIdChangeListener.createOrUpdate(service, player!!, updatedPlayerState)
 
     }
 
-    protected fun setOnProgressChangedListener(iPlayerState: IPlayerState): IPlayerListener {
-        val onProgressChanged = OnAudioProgressChangeListener(player!!)
+    protected fun setOnProgressChangedListener(iPlayerState: IPlayerState<T>): IPlayerListener<T> {
+        val onProgressChanged = OnAudioProgressChangeListener<T>(player!!)
         iPlayerState.onProgressChangedLiveData(onProgressChanged)
         return onProgressChanged
 

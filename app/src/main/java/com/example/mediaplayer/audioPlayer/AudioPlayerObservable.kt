@@ -13,15 +13,16 @@
 
 package com.example.mediaplayer.audioPlayer
 
-interface AudioPlayerObservable {
-    fun registerObserver(iPlayerState: IPlayerState
-                         , audioSessionIdCallbackEnable: Boolean = false
-                         , audioNoisyControlEnable: Boolean = true,
-                         progressCallBackEnabled: Boolean = false)
+interface AudioPlayerObservable<T> {
+    fun registerObserver(iPlayerState: IPlayerState<T>, audioSessionIdCallbackEnable: Boolean = false
+                         , audioNoisyControlEnable: Boolean = true
+                         , progressCallBackEnabled: Boolean = false,
+                         isMainObserver: Boolean = false)
 
     fun removeAllObservers()
-    fun removeObserver(iPlayerState: IPlayerState)
-    fun notifyObserver(iPlayerState: IPlayerState)
+    fun getCountOfMainObservers(): Int
+    fun removeObserver(iPlayerState: IPlayerState<T>)
+    fun notifyObserver(iPlayerState: IPlayerState<T>)
     /**
      *will be called to check all observers again if any thing has changed will update the observers
      * the best place to call this after [removeAllObservers]

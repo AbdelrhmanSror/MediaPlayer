@@ -11,28 +11,35 @@ import kotlinx.coroutines.*
 /**
  *  register listeners for audio session id
  */
-object OnAudioSessionIdChangeListener : AudioListener,
-        IPlayerListener, DefaultLifecycleObserver,
+class OnAudioSessionIdChangeListener<T> private constructor(service: AudioForegroundService) : AudioListener,
+        IPlayerListener<T>, DefaultLifecycleObserver,
         CoroutineScope by MainScope() {
+    @Suppress("UNCHECKED_CAST")
+    companion object {
+        private const val DELAY = 500L
+        private var observers = HashSet<IPlayerState<*>>()
+        private var audioSessionId = -1
+        private lateinit var onAudioSessionIdChangeListener: OnAudioSessionIdChangeListener<*>
 
-    private const val DELAY = 500L
-    private lateinit var onAudioSessionIdChangeListener: OnAudioSessionIdChangeListener
-    private var observers = HashSet<IPlayerState>()
-    private var audioSessionId = -1
-    fun createOrUpdate(service: AudioForegroundService, player: SimpleExoPlayer, updatedPlayerState: IPlayerState): OnAudioSessionIdChangeListener {
-        observers.add(updatedPlayerState)
-        if (audioSessionId > 0) {
-            Log.v("onaduiochange", "$audioSessionId")
-            updatedPlayerState.onAudioSessionId(audioSessionId)
+        fun <T> createOrUpdate(service: AudioForegroundService, player: SimpleExoPlayer, updatedPlayerState: IPlayerState<T>): OnAudioSessionIdChangeListener<T> {
+            observers.add(updatedPlayerState)
+            if (audioSessionId > 0) {
+                Log.v("onaduiochange", "$audioSessionId")
+                updatedPlayerState.onAudioSessionId(audioSessionId)
+            }
+            return if (!::onAudioSessionIdChangeListener.isInitialized) {
+                onAudioSessionIdChangeListener = OnAudioSessionIdChangeListener<T>(service)
+                player.addAudioListener(onAudioSessionIdChangeListener)
+                onAudioSessionIdChangeListener as OnAudioSessionIdChangeListener<T>
+            } else {
+                onAudioSessionIdChangeListener as OnAudioSessionIdChangeListener<T>
+            }
         }
-        return if (!::onAudioSessionIdChangeListener.isInitialized) {
-            onAudioSessionIdChangeListener = OnAudioSessionIdChangeListener
-            service.lifecycle.addObserver(this)
-            player.addAudioListener(onAudioSessionIdChangeListener)
-            onAudioSessionIdChangeListener
-        } else {
-            onAudioSessionIdChangeListener
-        }
+    }
+
+    init {
+        service.lifecycle.addObserver(this)
+
     }
 
     private var job: Job? = null
@@ -48,7 +55,7 @@ object OnAudioSessionIdChangeListener : AudioListener,
         }
     }
 
-    override fun onDetach(iPlayerState: IPlayerState) {
+    override fun onDetach(iPlayerState: IPlayerState<T>) {
         Log.v("onaduiochange", "on detatc")
 
         observers.remove(iPlayerState)
@@ -57,7 +64,7 @@ object OnAudioSessionIdChangeListener : AudioListener,
     override fun onAudioSessionId(audioSessionId: Int) {
         Log.v("onaduiochange", "on call$audioSessionId")
 
-        this.audioSessionId = audioSessionId
+        Companion.audioSessionId = audioSessionId
         job?.cancel()
         job = launch {
             delay(DELAY)

@@ -13,7 +13,7 @@ internal open class AudioForegroundNotification24 @Inject constructor(
         service: Service,
         mediaSession: MediaSessionCompat
 
-) : AudioForegroundNotification(service, mediaSession) {
+) : AudioForegroundNotification21(service, mediaSession) {
 
     override fun startChronometer(bookmark: Long) {
         builder.setWhen(System.currentTimeMillis() - bookmark)

@@ -22,58 +22,66 @@ class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundSer
                                          private val mediaSessionCompat: MediaSessionCompat,
                                          private val mediaSessionCallback: MediaSessionCallback,
                                          var player: SimpleExoPlayer?)
-    : PlayerListenerDelegate(service, player!!),
+    : PlayerListenerDelegate<T>(service, player!!),
         IPlayerControl<T> by PlayerControlDelegate<T>(service, player),
-        AudioPlayerObservable {
+        AudioPlayerObservable<T> {
 
 
     /**
      * store observers and their corresponding listeners into hash map so it could be easily to notify or remove listener when registered observer
      */
-    private val observers: HashMap<IPlayerState, ArrayList<IPlayerListener>> = HashMap()
+    private val observers: HashMap<IPlayerState<T>, ArrayList<IPlayerListener<T>>> = HashMap()
+
+
+    private val mainObservers: HashSet<IPlayerState<T>> = HashSet()
+
+
+    private var isNoisyModeEnabled = false
 
     //to give flexibility if i want to do extra work while releasing the player like stopping service
     private var extraRelease: (() -> Unit)? = null
 
 
-    private var isNoisyModeEnabled = false
-
-    /**
-     * to indicate if the player is released or not so when the ui is not visible we release the player
-     * this is to avoid reinitializing the player again when user release the player from notification and ui
-     * is still visible so if he resume the player we do not have to initialize it again
-     */
-    private var isReleased = false
-
     private val mediaSessionConnector: MediaSessionConnector by lazy {
         MediaSessionConnector(mediaSessionCompat)
     }
 
+    init {
+        Log.v("audioManagerNotificati", "audioplayer")
+
+    }
 
     /**
      * to register observer we need to give it the class that implement the interface of observer
      */
-    override fun registerObserver(iPlayerState: IPlayerState
-                                  , audioSessionIdCallbackEnable: Boolean
+    override fun registerObserver(iPlayerState: IPlayerState<T>, audioSessionIdCallbackEnable: Boolean
                                   , audioNoisyControlEnable: Boolean
-                                  , progressCallBackEnabled: Boolean) {
-        //only setup noisy filter once
-        if (!isNoisyModeEnabled && audioNoisyControlEnable) {
-            isNoisyModeEnabled = true
-            observers[iPlayerState] = getListOfListeners(audioSessionIdCallbackEnable, iPlayerState, true, progressCallBackEnabled)
-        } else
-            observers[iPlayerState] = getListOfListeners(audioSessionIdCallbackEnable, iPlayerState, false, progressCallBackEnabled)
-        notifyObserver(iPlayerState)
-        setOnPlayerStateChangedListener(observers)
+                                  , progressCallBackEnabled: Boolean
+                                  , isMainObserver: Boolean) {
+        /**
+         * as long as this observer is still registered as observer the app can not be released
+         */
+        if (isMainObserver)
+            mainObservers.add(iPlayerState)
+        if (!observers.containsKey(iPlayerState)) {
+            //only setup noisy filter once
+            if (!isNoisyModeEnabled && audioNoisyControlEnable) {
+                isNoisyModeEnabled = true
+                observers[iPlayerState] = getListOfListeners(audioSessionIdCallbackEnable, iPlayerState, true, progressCallBackEnabled)
+            } else
+                observers[iPlayerState] = getListOfListeners(audioSessionIdCallbackEnable, iPlayerState, false, progressCallBackEnabled)
+            notifyObserver(iPlayerState)
+            setOnPlayerStateChangedListener(observers)
+        }
     }
 
     /**
      * get list of listeners that is registered to be triggered
      */
     private fun getListOfListeners(audioSessionIdCallbackEnable: Boolean,
-                                   iPlayerState: IPlayerState, audioNoisyControlEnable: Boolean,
-                                   progressCallBackEnabled: Boolean): ArrayList<IPlayerListener> {
-        val listOfListeners = arrayListOf<IPlayerListener>()
+                                   iPlayerState: IPlayerState<T>, audioNoisyControlEnable: Boolean,
+                                   progressCallBackEnabled: Boolean): ArrayList<IPlayerListener<T>> {
+        val listOfListeners = arrayListOf<IPlayerListener<T>>()
         if (audioSessionIdCallbackEnable) listOfListeners.add(setAudioSessionChangeListener(iPlayerState))
         if (audioNoisyControlEnable) listOfListeners.add(setNoisyListener())
         if (progressCallBackEnabled) listOfListeners.add(setOnProgressChangedListener(iPlayerState))
@@ -90,12 +98,13 @@ class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundSer
      *
      * NOTE: this will act as [release] if there is only one observer so no need to call both together just one of them
      */
-    override fun removeObserver(iPlayerState: IPlayerState) {
+    override fun removeObserver(iPlayerState: IPlayerState<T>) {
         //calling onDatch fun of every listenr first
         observers[iPlayerState]?.forEach {
             it.onDetach(iPlayerState)
         }
-        //removing the observer
+        //removing the observers
+        mainObservers.remove(iPlayerState)
         observers.remove(iPlayerState)
         invalidate()
         //update the observer in the playerStateChangeListener so if any event happened it will have the latest list of observers
@@ -107,7 +116,7 @@ class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundSer
     }
 
 
-    override fun notifyObserver(iPlayerState: IPlayerState) {
+    override fun notifyObserver(iPlayerState: IPlayerState<T>) {
         //only notify observer if the player at state ready
         if (player!!.isPlayerStateReady()) {
             iPlayerState.onAttached(AudioPlayerModel(
@@ -129,13 +138,6 @@ class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundSer
 
 
     /**
-     * get number of observers that are registered
-     */
-    private fun getCountObservers(): Int {
-        return observers.size
-    }
-
-    /**
      * to control the player through headset or google assistant
      */
     fun setCommandControl(mediaDescriptionCompat: (Int) -> MediaDescriptionCompat) {
@@ -151,21 +153,19 @@ class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundSer
         mediaSessionConnector.setQueueNavigator(queueNavigator)
     }
 
+    override fun getCountOfMainObservers(): Int {
+        return mainObservers.size
+    }
+
     /**
      *will release the player if its release otherwise will update the release state
      */
     override fun invalidate() {
-        //if number of observers was less than 2  and the player was released then we release the player permanently
-        if (isReleased && !player!!.playWhenReady) {
-            //if number of observers was less than 2  and the player was released then we release the player permanently
-            if (getCountObservers() < 2) {
-                Log.v("onaduiochange", "releasing")
-                releasePlayerPermanently()
-            }
-        } else isReleased = false
-
+        if (isReleased && getCountOfMainObservers() == 0) {
+            Log.v("audioManagerNotificati", "release")
+            releasePlayerPermanently()
+        }
     }
-
 
     private fun releasePlayerPermanently() {
         removeListeners()
@@ -197,6 +197,5 @@ class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundSer
 
         }
     }
-
 
 }

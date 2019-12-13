@@ -24,7 +24,7 @@ class ChosenSongViewModel(application: Application,
                           private val repository: Repository,
                           private val songIndex: Int,
                           private val fromNotification: Boolean)
-    : AndroidViewModel(application), IPlayerState {
+    : AndroidViewModel(application), IPlayerState<SongModel> {
 
 
     private val mApplication = application
@@ -138,11 +138,11 @@ class ChosenSongViewModel(application: Application,
         }
     }
 
-    override fun onAudioChanged(index: Int, isPlaying: Boolean) {
+    override fun onAudioChanged(index: Int, isPlaying: Boolean, currentInstance: SongModel?) {
         _playPauseStateInitial.postValue(isPlaying)
         _chosenSongIndex.postValue(Event(index))
-
     }
+
 
     override fun onPlay() {
         _playPauseState.postValue(Event(true))
