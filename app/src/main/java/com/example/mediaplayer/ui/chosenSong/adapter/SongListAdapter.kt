@@ -14,16 +14,20 @@
 package com.example.mediaplayer.ui.chosenSong.adapter
 
 import android.content.Context
-import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.*
 import com.example.mediaplayer.databinding.ChosenSongListLayoutBinding
 import com.example.mediaplayer.model.SongModel
+import com.example.mediaplayer.shared.CustomScope
 import com.example.mediaplayer.shared.startFavouriteAnimation
 import com.example.mediaplayer.viewModels.ChosenSongViewModel
 import kotlinx.android.synthetic.main.chosen_song_list_layout.view.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 /*
@@ -42,7 +46,8 @@ import kotlinx.android.synthetic.main.chosen_song_list_layout.view.*
 
 
 
-class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<SongModel, SongListAdapter.ViewHolder>(DiffCallBack) {
+class SongListAdapter(private val viewmodel: ChosenSongViewModel) :
+        ListAdapter<SongModel, SongListAdapter.ViewHolder>(DiffCallBack), CoroutineScope by CustomScope(Dispatchers.Main) {
 
     private lateinit var context: Context
     private lateinit var recyclerView: RecyclerView
@@ -168,7 +173,7 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
         if (position == currentSelectedItemPosition) {
             item.divider.visibility = View.VISIBLE
             item.wave_form_anim.visibility = View.VISIBLE
-             //item.equalizer_anim.visibility = View.VISIBLE
+            //item.equalizer_anim.visibility = View.VISIBLE
             lastSelectedItemPosition = position
 
 
@@ -186,10 +191,11 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
     fun equalizerEnabled(byteArray: ByteArray) {
         equalizerEnabled = true
         recyclerView.findViewHolderForAdapterPosition(currentSelectedItemPosition)?.itemView?.equalizer_anim?.apply {
-            if (byteArray[0].compareTo(-128)==0) this.stopBars() else this.animateBars(byteArray)
+            if (byteArray[0].compareTo(-128) == 0) this.stopBars() else this.animateBars(byteArray)
         }
 
     }
+
     fun visualizerEnabled(byteArray: ByteArray) {
         visualizerEnabled = true
         recyclerView.findViewHolderForAdapterPosition(currentSelectedItemPosition)?.itemView?.wave_form_anim?.apply {
@@ -201,11 +207,11 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<
 
     private fun firstTimeInstantScrolling(position: Int) {
         snapHelper.attachToRecyclerView(recyclerView)
-        Handler().postDelayed({
+        launch {
+            delay(200)
             //instant scroll at first time recyclerview started
             recyclerView.scrollToPosition(position + 1)
-
-        }, 200)
+        }
         firstTimeInflating = false
     }
 

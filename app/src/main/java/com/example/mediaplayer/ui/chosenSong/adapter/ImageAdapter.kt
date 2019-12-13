@@ -14,18 +14,21 @@
 package com.example.mediaplayer.ui.chosenSong.adapter
 
 import android.content.Context
-import android.os.Handler
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.*
 import com.example.mediaplayer.databinding.PlayerImageLibraryBinding
+import com.example.mediaplayer.shared.CustomScope
 import com.example.mediaplayer.viewModels.ChosenSongViewModel
-import kotlinx.android.synthetic.main.player_controller.*
 import kotlinx.android.synthetic.main.player_image_library.view.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
-class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<String, ImageListAdapter.ViewHolder>(DiffCallBack) {
+class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<String, ImageListAdapter.ViewHolder>(DiffCallBack), CoroutineScope by CustomScope(Dispatchers.Main) {
 
     private lateinit var context: Context
     private lateinit var recyclerView: RecyclerView
@@ -83,7 +86,6 @@ class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter
     }
 
 
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder.from(parent)
     }
@@ -119,7 +121,8 @@ class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter
 
     private fun firstTimeInstantScrolling(position: Int) {
         snapHelper.attachToRecyclerView(recyclerView)
-        Handler().postDelayed({
+        launch {
+            delay(200)
             //instant scroll at first time recyclerview started
             //if position is 0 then instant scroll is enought
             //otherwise we make instant scroll and then we convert it to smooth scroll by adding 1
@@ -130,7 +133,7 @@ class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter
                 smoothScroller.targetPosition = 1
                 (recyclerView.layoutManager as CenterZoomLayoutManager).startSmoothScroll(smoothScroller)
             }
-        }, 200)
+        }
         firstTimeInflating = false
     }
 

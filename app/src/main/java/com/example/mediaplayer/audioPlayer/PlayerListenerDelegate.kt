@@ -72,7 +72,7 @@ open class PlayerListenerDelegate<T>(private val service: AudioForegroundService
                             launch {
                                 //give time for ui to prepare
                                 delay(350)
-                                Log.v("registeringAudioSession", " tracking  $currentWindowIndex ")
+                                Log.v("registeringAudioSession", " tracking  $currentWindowIndex $isPlaying ")
                                 onPlayerStateListListeners.forEach {
                                     it.key.onAudioChanged(currentAudioIndex, isPlaying, player.currentTag as T)
                                 }
