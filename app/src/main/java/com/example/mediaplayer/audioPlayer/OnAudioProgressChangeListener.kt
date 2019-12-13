@@ -7,7 +7,7 @@ import kotlinx.coroutines.*
 
 class OnAudioProgressChangeListener<T>(private val player: SimpleExoPlayer) :
         MutableLiveData<Long>(),
-        IPlayerListener<T>, CoroutineScope by CustomScope(Dispatchers.Default) {
+        IPlayerListener<T>, CoroutineScope by CustomScope(Dispatchers.Main) {
     //to see if the ui is visible or not
     private var isUiVisible = true
 

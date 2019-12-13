@@ -39,19 +39,19 @@ interface IPlayerControl<T> {
     /**
      * go to next audio
      */
-    fun next(dispatchEvent: Boolean)
+    fun next()
 
     /**
      * go to previous audio
      * if the current audio did not exceed the 3 second
      * and user pressed on previous button then we reset the player to the beginning
      */
-    fun previous(dispatchEvent: Boolean)
+    fun previous()
 
     /**
      * change the audio state from playing to pausing and vice verse
      */
-    fun changeAudioState(dispatchEvent: Boolean)
+    fun changeAudioState()
 
 
     fun requestFocus()

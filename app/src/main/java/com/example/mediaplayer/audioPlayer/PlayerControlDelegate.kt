@@ -5,7 +5,6 @@ import android.net.Uri
 import android.os.Handler
 import com.example.mediaplayer.audioPlayer.audioFocus.AudioFocusCallBacks
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompatFactory
-import com.example.mediaplayer.shared.CustomScope
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
@@ -13,12 +12,10 @@ import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 open class PlayerControlDelegate<T>(private val context: Context,
                                     private var player: SimpleExoPlayer?
-) : IPlayerControl<T>, CoroutineScope by CustomScope() {
+) : IPlayerControl<T> {
 
 
     private var songList: ArrayList<T>? = null
@@ -145,13 +142,9 @@ open class PlayerControlDelegate<T>(private val context: Context,
      * seek to different track
      */
     override fun seekTo(index: Int) {
-        launch {
-            // iNotification.update(songList[index], player!!.playWhenReady)
-            player?.seekTo(index, 0)
-
-            if (!player!!.playWhenReady)
-                play()
-        }
+        player?.seekTo(index, 0)
+        if (!player!!.playWhenReady)
+            play()
 
 
     }
@@ -182,12 +175,9 @@ open class PlayerControlDelegate<T>(private val context: Context,
     /**
      * go to next audio
      */
-    override fun next(dispatchEvent: Boolean) {
-        launch {
-            // iNotification.update(songList[player!!.currentWindowIndex], player!!.playWhenReady)
-            if (dispatchEvent)
-                player?.next()
-        }
+    override fun next() {
+        player?.next()
+
 
     }
 
@@ -196,39 +186,28 @@ open class PlayerControlDelegate<T>(private val context: Context,
      * if the current audio did not exceed the 3 second
      * and user pressed on previous button then we reset the player to the beginning
      */
-    override fun previous(dispatchEvent: Boolean) {
-        launch {
-            // iNotification.update(songList[player!!.currentWindowIndex], player!!.playWhenReady)
-            if (dispatchEvent) {
-                player?.apply {
-                    when {
-                        currentPosition > 3000 -> seekTo(0)
-                        else -> previous()
-                    }
-                }
+    override fun previous() {
+        player?.apply {
+            when {
+                currentPosition > 3000 -> seekTo(0)
+                else -> previous()
             }
-
         }
+
 
     }
 
     /**
      * change the audio state from playing to pausing and vice verse
      */
-    override fun changeAudioState(dispatchEvent: Boolean) {
-        launch {
-            if (dispatchEvent) {
-                if (player!!.playWhenReady) {
-                    pause()
-                } else {
-                    play()
-                }
-            }
-            //iNotification.update(songList[player!!.currentWindowIndex], player!!.playWhenReady)
-
+    override fun changeAudioState() {
+        if (player!!.playWhenReady) {
+            pause()
+        } else {
+            play()
         }
 
     }
 
-
 }
+

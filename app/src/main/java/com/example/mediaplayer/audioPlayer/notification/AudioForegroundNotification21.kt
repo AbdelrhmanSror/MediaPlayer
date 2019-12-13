@@ -63,6 +63,7 @@ open class AudioForegroundNotification21 @Inject constructor(val service: Servic
                 .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setStyle(mediaStyle)
+                .setUsesChronometer(true)
                 .addAction(NotificationActions.skipPrevious(service))
                 .addAction(NotificationActions.playPause(service, false))
                 .addAction(NotificationActions.skipNext(service))

@@ -68,18 +68,18 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
         audioPlayer.shuffleModeEnable()
     }
 
-    fun changeAudioState(dispatchEvent: Boolean = true) {
-        audioPlayer.changeAudioState(dispatchEvent)
+    fun changeAudioState() {
+        audioPlayer.changeAudioState()
 
     }
 
-    fun goToPrevious(dispatchEvent: Boolean = true) {
-        audioPlayer.previous(dispatchEvent)
+    fun goToPrevious() {
+        audioPlayer.previous()
 
     }
 
-    fun goToNext(dispatchEvent: Boolean = true) {
-        audioPlayer.next(dispatchEvent)
+    fun goToNext() {
+        audioPlayer.next()
 
     }
 
