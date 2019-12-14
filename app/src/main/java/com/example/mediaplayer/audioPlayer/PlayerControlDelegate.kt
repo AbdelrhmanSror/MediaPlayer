@@ -75,19 +75,19 @@ open class PlayerControlDelegate<T>(private val context: Context,
         return concatenatingMediaSource
     }
 
-    override fun setUpPlayer(audioList: ArrayList<T>?, Uris: List<Uri>) {
+    override fun setUpPlayer(audioList: ArrayList<T>?, Uris: List<Uri>, index: Int) {
         //only re setup the player when the playlist changes
         if (audioList != songList) {
             songList = audioList
             songListUris = Uris
             player?.apply {
-                playWhenReady = isPlaying
                 mediaSource = buildMediaSource()
                 player?.prepare(mediaSource)
                 requestFocus()
 
             }
         }
+        seekTo(index)
     }
 
 
@@ -139,6 +139,7 @@ open class PlayerControlDelegate<T>(private val context: Context,
 
         player?.seekTo(index, 0)
         play()
+
 
 
     }

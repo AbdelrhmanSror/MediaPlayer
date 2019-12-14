@@ -4,7 +4,7 @@ import android.net.Uri
 
 interface IPlayerControl<T> {
 
-    fun setUpPlayer(audioList: ArrayList<T>? = null, Uris: List<Uri>)
+    fun setUpPlayer(audioList: ArrayList<T>? = null, Uris: List<Uri>, index: Int)
 
     /**
      * enable repeat mode

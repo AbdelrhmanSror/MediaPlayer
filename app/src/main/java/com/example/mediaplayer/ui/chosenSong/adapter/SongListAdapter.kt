@@ -39,7 +39,7 @@ import kotlinx.android.synthetic.main.chosen_song_list_layout.view.*
  * limitations under the License.
  */
 
-class SongListAdapter(private val viewmodel: ChosenSongViewModel, private val scrollingBehaviour: ScrollingBehaviour?) :
+class SongListAdapter(private val viewmodel: ChosenSongViewModel) :
         ListAdapter<SongModel, SongListAdapter.ViewHolder>(DiffCallBack) {
 
     private lateinit var recyclerView: RecyclerView
@@ -49,7 +49,7 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel, private val sc
     private var visualizerEnabled: Boolean = true
 
     private val scroller: LinearScrolling by lazy {
-        LinearScrolling(recyclerView, itemCount, scrollingBehaviour)
+        LinearScrolling(recyclerView, itemCount)
     }
 
     /**

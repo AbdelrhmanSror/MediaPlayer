@@ -27,14 +27,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 
-class ImageListAdapter(private val viewmodel: ChosenSongViewModel, private val scrollingBehaviour: ScrollingBehaviour?) : ListAdapter<String, ImageListAdapter.ViewHolder>(DiffCallBack),
+class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<String, ImageListAdapter.ViewHolder>(DiffCallBack),
         CoroutineScope by CustomScope(Dispatchers.Main) {
 
     private lateinit var recyclerView: RecyclerView
     private var currentSelectedItemPosition: Int = -1
 
     private val scroller: LinearScrolling by lazy {
-        LinearScrolling(recyclerView, itemCount, scrollingBehaviour)
+        LinearScrolling(recyclerView, itemCount)
     }
 
 

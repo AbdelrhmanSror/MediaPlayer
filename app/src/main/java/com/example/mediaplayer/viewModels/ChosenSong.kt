@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.media.audiofx.Visualizer
 import android.os.IBinder
-import android.util.Log
 import androidx.lifecycle.*
 import com.example.mediaplayer.audioPlayer.AudioPlayerModel
 import com.example.mediaplayer.audioPlayer.IPlayerState
@@ -15,21 +14,21 @@ import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.repositry.Repository
-import com.example.mediaplayer.shared.Event
-import com.example.mediaplayer.shared.LIST_SONG
-import com.example.mediaplayer.shared.PlayerActions
-import com.example.mediaplayer.shared.startForeground
+import com.example.mediaplayer.shared.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class ChosenSongViewModel @Inject constructor(application: Application,
-                                              private val repository: Repository)
+class ChosenSongViewModel(application: Application,
+                          private val repository: Repository,
+                          private val songIndex: Int,
+                          private val fromNotification: Boolean)
     : AndroidViewModel(application), IPlayerState<SongModel> {
 
 
     private val mApplication = application
+
     private lateinit var visualizer: Visualizer
     private lateinit var audioService: AudioForegroundService
 
@@ -100,31 +99,29 @@ class ChosenSongViewModel @Inject constructor(application: Application,
     }
 
     init {
-        setUpForeground()
-    }
-
-    private fun setUpForeground() {
         startService()
         //binding this fragment to service
         mApplication.bindService(Intent(mApplication, AudioForegroundService::class.java), connection, Context.BIND_AUTO_CREATE)
     }
+
 
     private fun startService() {
         viewModelScope.launch {
             val songlist = withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
                 repository.getSongs().toSongModel()
             }
-            //if (!fromNotification) {
-            startForeground(songlist as ArrayList<SongModel>)
-            //}
+            if (!fromNotification) {
+                startForeground(songlist as ArrayList<SongModel>, songIndex)
+            }
         }
 
 
     }
 
-    private fun startForeground(song: ArrayList<SongModel>) {
+    private fun startForeground(song: ArrayList<SongModel>, chosenSongIndex: Int) {
         val foregroundIntent = Intent(mApplication, AudioForegroundService::class.java)
         foregroundIntent.action = PlayerActions.ACTION_FOREGROUND
+        foregroundIntent.putExtra(CHOSEN_SONG_INDEX, chosenSongIndex)
         foregroundIntent.putParcelableArrayListExtra(LIST_SONG, song)
         mApplication.startForeground(foregroundIntent)
 
@@ -132,28 +129,28 @@ class ChosenSongViewModel @Inject constructor(application: Application,
 
     override fun onAttached(audioPlayerModel: AudioPlayerModel?) {
         audioPlayerModel?.let {
-            _playPauseStateInitial.value = it.isPlaying
-            _chosenSongIndex.value = Event(it.currentIndex)
+            _playPauseStateInitial.postValue(it.isPlaying)
+            _chosenSongIndex.postValue(Event(it.currentIndex))
             _shuffleMode.value = it.shuffleModeEnabled
             _repeatMode.value = it.repeatMode
-            _duration.value = it.duration
+            _duration.postValue(it.duration)
 
         }
     }
 
     override fun onAudioChanged(index: Int, isPlaying: Boolean, currentInstance: SongModel?) {
-        _playPauseStateInitial.value = isPlaying
-        _chosenSongIndex.value = Event(index)
+        _playPauseStateInitial.postValue(isPlaying)
+        _chosenSongIndex.postValue(Event(index))
     }
 
 
     override fun onPlay() {
-        _playPauseState.value = Event(true)
+        _playPauseState.postValue(Event(true))
 
     }
 
     override fun onPause() {
-        _playPauseState.value = Event(false)
+        _playPauseState.postValue(Event(false))
     }
 
     override fun onShuffleModeChanged(enable: Boolean) {
@@ -165,11 +162,11 @@ class ChosenSongViewModel @Inject constructor(application: Application,
     }
 
     override fun onDurationChange(duration: Long) {
-        _duration.value = duration
+        _duration.postValue(duration)
     }
 
     override fun onProgressChangedLiveData(progress: MutableLiveData<Long>) {
-        _audioPlayerProgress.value = progress
+        _audioPlayerProgress.postValue(progress)
     }
 
     override fun onAudioSessionId(audioSessionId: Int) {
@@ -185,7 +182,6 @@ class ChosenSongViewModel @Inject constructor(application: Application,
         visualizer.setDataCaptureListener(object : Visualizer.OnDataCaptureListener {
             override fun onWaveFormDataCapture(p0: Visualizer?, p1: ByteArray?, p2: Int) {
                 _visualizerAnimationEnabled.value = p1
-
 
             }
 
@@ -211,12 +207,7 @@ class ChosenSongViewModel @Inject constructor(application: Application,
         }
     }
 
-    /**
-     * used by layout (data binding)
-     */
-
     fun seekTo(index: Int) {
-        Log.v("scrollingbehaviour", "seek to $index viewmodel")
 
         audioService.seekTo(index)
     }
@@ -256,4 +247,28 @@ class ChosenSongViewModel @Inject constructor(application: Application,
         audioService.removeObserver(this)
         mApplication.unbindService(connection)
     }
+}
+
+class ChosenSongViewModelFactory @Inject constructor(private val application: Application,
+                                                     private val repository: Repository)
+    : ViewModelProvider.Factory {
+
+    private var chosenSongIndex: Int? = null
+    private var fromNotification: Boolean? = null
+    fun setData(songIndex: Int, fromNotification: Boolean) {
+        chosenSongIndex = songIndex
+        this.fromNotification = fromNotification
+
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+
+        if (modelClass.isAssignableFrom(ChosenSongViewModel::class.java)) {
+            return ChosenSongViewModel(application, repository, chosenSongIndex!!, fromNotification!!) as T
+
+        }
+        throw IllegalArgumentException("unknown class")
+    }
+
 }

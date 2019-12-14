@@ -13,6 +13,7 @@ import com.example.mediaplayer.audioPlayer.notification.AudioForegroundNotificat
 import com.example.mediaplayer.di.inject
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.model.getMediaDescription
+import com.example.mediaplayer.shared.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.shared.CustomScope
 import com.example.mediaplayer.shared.LIST_SONG
 import com.example.mediaplayer.shared.PlayerActions.ACTION_FOREGROUND
@@ -83,8 +84,6 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
     }
 
     fun seekTo(index: Int) {
-        Log.v("scrollingbehaviour", "seek to $index service")
-
         audioPlayer.seekTo(index)
 
     }
@@ -131,24 +130,25 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
         }
     }
 
-    private fun intentData(intent: Intent): ArrayList<SongModel> {
+    private fun intentData(intent: Intent): Pair<ArrayList<SongModel>, Int> {
         //playList of songs
         //getting the current playing song index
         with(intent) {
-            return getParcelableArrayListExtra<SongModel>(LIST_SONG)!!
+            return getParcelableArrayListExtra<SongModel>(LIST_SONG)!! to getIntExtra(CHOSEN_SONG_INDEX, 0)
         }
     }
+
 
     private fun setUpPlayerForeground(intent: Intent) {
         with(intentData(intent))
         {
             val songListUris: ArrayList<Uri> = arrayListOf()
-            for (item in this) {
+            for (item in first) {
                 songListUris.add(item.audioUri)
             }
-            audioPlayer.setUpPlayer(this, songListUris)
+            audioPlayer.setUpPlayer(first, songListUris, second)
             audioPlayer.setCommandControl { index ->
-                this[index].getMediaDescription()
+                first[index].getMediaDescription()
             }
 
         }

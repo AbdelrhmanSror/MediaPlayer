@@ -16,8 +16,8 @@ interface ScrollingBehaviour {
     fun onScrollEnd(index: Int)
 }
 
-open class LinearScrolling(private val recyclerView: RecyclerView, private val itemCount: Int, private val scrollingBehaviour: ScrollingBehaviour?) : CoroutineScope by CustomScope((Dispatchers.Main)) {
-    var isSnapAttached = false
+open class LinearScrolling(private val recyclerView: RecyclerView, private val itemCount: Int) : CoroutineScope by CustomScope((Dispatchers.Main)) {
+    private var isSnapAttached = false
     private val snapHelper = LinearSnapHelper()
     private var isFirstTime = true
     private var selectedPosition = 0
@@ -38,7 +38,6 @@ open class LinearScrolling(private val recyclerView: RecyclerView, private val i
                     }
                     launch {
                         delay(100)
-                        scrollingBehaviour?.onScrollEnd(selectedPosition)
                     }
                     isListenerRegistered = false
                     recyclerView.removeOnScrollListener(this)
