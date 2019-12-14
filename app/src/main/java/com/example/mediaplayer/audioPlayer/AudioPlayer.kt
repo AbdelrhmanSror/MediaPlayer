@@ -20,7 +20,6 @@ data class AudioPlayerModel(val currentIndex: Int,
 
 class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundService,
                                          private val mediaSessionCompat: MediaSessionCompat,
-                                         private val mediaSessionCallback: MediaSessionCallback,
                                          var player: SimpleExoPlayer?)
     : PlayerListenerDelegate<T>(service, player!!),
         IPlayerControl<T> by PlayerControlDelegate<T>(service, player),
@@ -101,7 +100,7 @@ class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundSer
     override fun removeObserver(iPlayerState: IPlayerState<T>) {
         //calling onDatch fun of every listenr first
         observers[iPlayerState]?.forEach {
-            it.onDetach(iPlayerState)
+            it.onObserverDetach(iPlayerState)
         }
         //removing the observers
         mainObservers.remove(iPlayerState)
@@ -112,6 +111,12 @@ class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundSer
     }
 
     override fun removeAllObservers() {
+        //iterating over all observer and call ondetach method
+        observers.keys.forEach { observer ->
+            observers[observer]?.forEach { listener ->
+                listener.onObserverDetach(observer)
+            }
+        }
         observers.clear()
     }
 
@@ -142,7 +147,7 @@ class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundSer
      */
     fun setCommandControl(mediaDescriptionCompat: (Int) -> MediaDescriptionCompat) {
         mediaSessionConnector.setPlayer(player)
-        mediaSessionConnector.mediaSession.setCallback(mediaSessionCallback)
+        //mediaSessionConnector.mediaSession.setCallback(mediaSessionCallback)
         mediaSessionCompat.isActive = true
         val queueNavigator: TimelineQueueNavigator = object : TimelineQueueNavigator(mediaSessionCompat) {
             override fun getMediaDescription(player: Player?, windowIndex: Int): MediaDescriptionCompat {
@@ -162,13 +167,12 @@ class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundSer
      */
     override fun invalidate() {
         if (isReleased && getCountOfMainObservers() == 0) {
-            Log.v("audioManagerNotificati", "release")
             releasePlayerPermanently()
         }
     }
 
     private fun releasePlayerPermanently() {
-        removeListeners()
+        removeAllObservers()
         player?.release()
         player = null
         mediaSessionCompat.release()

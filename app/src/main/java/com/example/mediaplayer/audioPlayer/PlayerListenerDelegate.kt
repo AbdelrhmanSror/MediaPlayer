@@ -14,8 +14,6 @@ import kotlinx.coroutines.launch
 
 
 interface IPlayerListener<T> {
-
-
     /**
      * this will be called when there is audio playing
      */
@@ -23,14 +21,17 @@ interface IPlayerListener<T> {
 
     /**
      * this will be called when audio paused
-     * is also called when the player is stopped which mean player is completely destroyed
      */
-    fun onInActivePlayer(isStopped: Boolean) {}
+    fun onInActivePlayer() {}
 
     /**
-     * will be called when there corresponding observer is remove from list of observers
+     * will be called when the corresponding observer is remove from list of observers
      */
-    fun onDetach(iPlayerState: IPlayerState<T>) {}
+    fun onObserverDetach(iPlayerState: IPlayerState<T>) {}
+
+    /**this is called when the player  is being stopped
+     */
+    fun onPlayerStop() {}
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -40,10 +41,9 @@ open class PlayerListenerDelegate<T>(private val service: AudioForegroundService
     private lateinit var onPlayerStateChanged: Player.EventListener
 
     private val onPlayerStateListListeners: HashMap<IPlayerState<T>, ArrayList<IPlayerListener<T>>> = HashMap()
-    private var isPlaying = true
-
     private var currentAudioIndex = -1
-
+    private var isPlaying = true
+    private var playbackPosition = 0L
     private var durationSet: Boolean = false
     private var isPLayerPreparedBefore = false
 
@@ -64,7 +64,7 @@ open class PlayerListenerDelegate<T>(private val service: AudioForegroundService
                 onPlayerStateChanged = object : Player.EventListener {
                     override fun onPositionDiscontinuity(reason: Int) {
                         if (player.isTrackChanging(reason)) {
-                            currentAudioIndex = currentWindowIndex
+                            Log.v("registeringAudioSession", " tracking  $currentWindowIndex $playWhenReady ")
                             durationSet = false
                             if (isReleased) {
                                 isReleased = false
@@ -72,9 +72,10 @@ open class PlayerListenerDelegate<T>(private val service: AudioForegroundService
                             launch {
                                 //give time for ui to prepare
                                 delay(350)
-                                Log.v("registeringAudioSession", " tracking  $currentWindowIndex $isPlaying ")
+                                isPlaying = playWhenReady
+                                currentAudioIndex = currentWindowIndex
                                 onPlayerStateListListeners.forEach {
-                                    it.key.onAudioChanged(currentAudioIndex, isPlaying, player.currentTag as T)
+                                    it.key.onAudioChanged(currentAudioIndex, playWhenReady, player.currentTag as T)
                                 }
 
                             }
@@ -98,26 +99,51 @@ open class PlayerListenerDelegate<T>(private val service: AudioForegroundService
                             }
                             player.isPlayerPlaying() -> {
                                 Log.v("registeringAudioSession", " playing  ")
-                                // Active playback.
-                                //when player start again we start listening to  events of headphone
-                                if (isReleased) {
-                                    isReleased = false
-                                }
-                                isPlaying = true
-                                onPlayerStateListListeners.forEach { entry ->
-                                    entry.key.onPlay()
-                                    entry.value.forEach {
-                                        it.onActivePlayer()
+                                if (playWhenReady != isPlaying) {
+                                    isPlaying = playWhenReady
+                                    // Active playback.
+                                    //when player start again we start listening to  events of headphone
+                                    if (isReleased) {
+                                        isReleased = false
+                                    }
+                                    onPlayerStateListListeners.forEach { entry ->
+                                        entry.key.onPlay()
+                                        entry.value.forEach {
+                                            it.onActivePlayer()
+                                        }
                                     }
                                 }
 
-
                             }
-                            ExoPlayer.STATE_IDLE == playbackState && isPLayerPreparedBefore -> {
+                            player.isPlayerPausing() -> {
+                                Log.v("registeringAudioSession", " pausing")
+                                playbackPosition = currentPosition
+                                if (playWhenReady != isPlaying) {
+                                    isPlaying = playWhenReady
+                                    // Paused by app.
+                                    if (isReleased) {
+                                        isReleased = false
+                                    }
+                                    onPlayerStateListListeners.forEach { entry ->
+                                        entry.key.onPause()
+                                        entry.value.forEach {
+                                            it.onInActivePlayer()
+                                        }
+                                    }
+
+                                }
+                            }
+                            ExoPlayer.STATE_IDLE == playbackState -> {
                                 // Not playing because playback ended, the player is buffering, stopped or
                                 // failed. Check playbackState and player.getPlaybackError for details.
-                                Log.v("registeringAudioSession", " stopping ${playbackState}")
-
+                                PlayerControlDelegate.currentWindow = currentAudioIndex
+                                PlayerControlDelegate.playbackPosition = playbackPosition
+                                onPlayerStateListListeners.forEach { entry ->
+                                    entry.key.onStop()
+                                    entry.value.forEach {
+                                        it.onPlayerStop()
+                                    }
+                                }
                             }
                             player.isTracksEnded() -> {
                                 onPlayerStateListListeners.forEach {
@@ -125,23 +151,6 @@ open class PlayerListenerDelegate<T>(private val service: AudioForegroundService
 
                                 }
 
-                            }
-                            player.isPlayerPausing() -> {
-                                Log.v("registeringAudioSession", " pausing")
-                                if (playWhenReady != isPlaying) {
-                                    // Paused by app.
-                                    isPlaying = false
-                                    if (isReleased) {
-                                        isReleased = false
-                                    }
-                                    onPlayerStateListListeners.forEach { entry ->
-                                        entry.key.onPause()
-                                        entry.value.forEach {
-                                            it.onInActivePlayer(false)
-                                        }
-                                    }
-
-                                }
                             }
                         }
                     }
@@ -163,12 +172,6 @@ open class PlayerListenerDelegate<T>(private val service: AudioForegroundService
                 addListener(onPlayerStateChanged)
             }
         }
-    }
-
-
-    protected fun removeListeners() {
-        player?.addAudioListener(null)
-
     }
 
 
@@ -196,11 +199,11 @@ open class PlayerListenerDelegate<T>(private val service: AudioForegroundService
     }
 
     private fun Player.isPlayerPausing(): Boolean {
-        return !playWhenReady && playbackState == Player.STATE_READY && playWhenReady != isPlaying
+        return !playWhenReady && playbackState == Player.STATE_READY
     }
 
     private fun Player.isPlayerPlaying(): Boolean {
-        return playWhenReady && playbackState == Player.STATE_READY && playWhenReady != isPlaying
+        return playWhenReady && playbackState == Player.STATE_READY
 
     }
 

@@ -29,7 +29,6 @@ class ChosenSongFragment : DaggerFragment() {
 
     @Inject
     lateinit var viewModelFactory: ChosenSongViewModelFactory
-
     private val viewModel by viewModels<ChosenSongViewModel> {
         val index: Int? = arguments?.getInt(CHOSEN_SONG_INDEX)
         val fromNotification = arguments?.getBoolean(PlayerDestinations.NOTIFICATION, false)

@@ -12,10 +12,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
-interface ScrollingBehaviour {
-    fun onScrollEnd(index: Int)
-}
-
 open class LinearScrolling(private val recyclerView: RecyclerView, private val itemCount: Int) : CoroutineScope by CustomScope((Dispatchers.Main)) {
     private var isSnapAttached = false
     private val snapHelper = LinearSnapHelper()
@@ -58,7 +54,7 @@ open class LinearScrolling(private val recyclerView: RecyclerView, private val i
     }
 
     companion object {
-        private const val MILLISECONDS_PER_INCH = 10f //default is 25f (bigger = slower)
+        private const val MILLISECONDS_PER_INCH = 8f //default is 25f (bigger = slower)
     }
 
     init {

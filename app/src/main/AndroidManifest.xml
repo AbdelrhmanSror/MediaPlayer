@@ -31,8 +31,6 @@
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
-        <!--media button receiver-->
-        <!--media button receiver-->
         <!--music service-->
         <receiver android:name=".audioPlayer.notification.NotificationIntentReceiver">
             <intent-filter>
@@ -42,7 +40,7 @@
         <service
             android:name=".foregroundService.AudioForegroundService"
             android:enabled="true"
-            android:exported="false"></service>
+            android:exported="false" />
 
     </application>
 

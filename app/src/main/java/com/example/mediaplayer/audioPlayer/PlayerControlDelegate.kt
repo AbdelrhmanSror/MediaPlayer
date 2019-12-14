@@ -6,6 +6,7 @@ import android.util.Log
 import com.example.mediaplayer.audioPlayer.audioFocus.AudioFocusCallBacks
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompatFactory
 import com.example.mediaplayer.shared.CustomScope
+import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
@@ -17,6 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
 
 open class PlayerControlDelegate<T>(private val context: Context,
                                     private var player: SimpleExoPlayer?
@@ -53,9 +55,13 @@ open class PlayerControlDelegate<T>(private val context: Context,
      * because user himself paused the player so it makes no sense to continue playing as it was already paused
      */
     private var prevPlayerState = false
-    private var isPlaying = false
     private var isFocusLost = false
 
+
+    companion object {
+        var currentWindow = 0
+        var playbackPosition: Long = 0
+    }
 
     //var indicates if the focus is permanently lost so we can request focus again
     private var isFocusPermanentLost = true
@@ -135,13 +141,10 @@ open class PlayerControlDelegate<T>(private val context: Context,
      * seek to different track
      */
     override fun seekTo(index: Int) {
-        Log.v("scrollingbehaviour", "seek to $index player")
-
-        player?.seekTo(index, 0)
-        play()
-
-
-
+        if (!retryIfStopped(index, 0)) {
+            player?.seekTo(index, 0)
+            play()
+        }
     }
 
 
@@ -152,6 +155,18 @@ open class PlayerControlDelegate<T>(private val context: Context,
         player?.seekTo(second * 1000.toLong())
     }
 
+
+    private fun retryIfStopped(index: Int, playbackPosition: Long): Boolean {
+        Log.v("stoopinghandling", "$playbackPosition   $currentWindow")
+        if (player!!.playbackState == ExoPlayer.STATE_IDLE) {
+            player!!.seekTo(index, playbackPosition)
+            player!!.playWhenReady = true
+            player!!.prepare(mediaSource, false, false)
+            return true
+        }
+        return false
+    }
+
     /**
      * play audio and reset runnable callback of Audio progress if it was initialized before
      */
@@ -160,11 +175,8 @@ open class PlayerControlDelegate<T>(private val context: Context,
             requestFocus()
             isFocusPermanentLost = false
         }
-        if (!isPlaying) {
-            isPlaying = true
-            prevPlayerState = false
-            player?.playWhenReady = true
-        }
+        prevPlayerState = false
+        player?.playWhenReady = true
 
     }
 
@@ -172,11 +184,10 @@ open class PlayerControlDelegate<T>(private val context: Context,
      * pause audio and remove runnable callback of Audio progress if it is initialized
      */
     override fun pause() {
-        if (isPlaying) {
-            isPlaying = false
-            prevPlayerState = true
-            player?.playWhenReady = false
-        }
+        prevPlayerState = true
+        player?.playWhenReady = false
+        currentWindow = player!!.currentWindowIndex
+        playbackPosition = player!!.currentPosition
     }
 
     /**
@@ -184,8 +195,6 @@ open class PlayerControlDelegate<T>(private val context: Context,
      */
     override fun next() {
         player?.next()
-
-
     }
 
     /**
@@ -208,13 +217,15 @@ open class PlayerControlDelegate<T>(private val context: Context,
      * change the audio state from playing to pausing and vice verse
      */
     override fun changeAudioState() {
-        if (player!!.playWhenReady) {
-            pause()
-        } else {
-            play()
+        if (!retryIfStopped(currentWindow, playbackPosition)) {
+            if (player!!.playWhenReady) {
+                pause()
+            } else {
+                play()
+            }
         }
-
     }
+
 
 }
 

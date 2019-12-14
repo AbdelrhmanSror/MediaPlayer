@@ -17,8 +17,6 @@ class Noisy<T> private constructor(private val service: AudioForegroundService,
 ) : IPlayerListener<T>, DefaultLifecycleObserver {
 
     companion object {
-        @JvmStatic
-        private val TAG = "SM:${Noisy::class.java.simpleName}"
         private lateinit var noisy: Noisy<*>
 
         /**
@@ -50,7 +48,7 @@ class Noisy<T> private constructor(private val service: AudioForegroundService,
         register()
     }
 
-    override fun onInActivePlayer(isStopped: Boolean) {
+    override fun onInActivePlayer() {
         Log.w("hiFromNoisy", "trying to unregister")
         unregister()
     }

@@ -12,12 +12,12 @@ class OnAudioProgressChangeListener<T>(private val player: SimpleExoPlayer) :
     private var isUiVisible = true
 
     private var job: Job? = null
-    override fun onInActivePlayer(isStopped: Boolean) {
+    override fun onInActivePlayer() {
         stopTimer()
 
     }
 
-    override fun onDetach(iPlayerState: IPlayerState<T>) {
+    override fun onObserverDetach(iPlayerState: IPlayerState<T>) {
         stopTimer()
     }
 

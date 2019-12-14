@@ -29,7 +29,7 @@ class ChosenSongViewModel(application: Application,
 
     private val mApplication = application
 
-    private lateinit var visualizer: Visualizer
+    private var visualizer: Visualizer? = null
     private lateinit var audioService: AudioForegroundService
 
     var previousRecyclerViewPosition = -1
@@ -176,10 +176,11 @@ class ChosenSongViewModel(application: Application,
     private fun setUpVisualizer(audioSessionId: Int) {
         //YOU NEED android.permission.RECORD_AUDIO for that in AndroidManifest.xml
         if (audioSessionId == 0) return
+        visualizer?.release()
         visualizer = Visualizer(audioSessionId)
-        visualizer.enabled = false
-        visualizer.captureSize = Visualizer.getCaptureSizeRange()[1]
-        visualizer.setDataCaptureListener(object : Visualizer.OnDataCaptureListener {
+        visualizer?.enabled = false
+        visualizer?.captureSize = Visualizer.getCaptureSizeRange()[1]
+        visualizer?.setDataCaptureListener(object : Visualizer.OnDataCaptureListener {
             override fun onWaveFormDataCapture(p0: Visualizer?, p1: ByteArray?, p2: Int) {
                 _visualizerAnimationEnabled.value = p1
 
@@ -190,7 +191,7 @@ class ChosenSongViewModel(application: Application,
 
         }, Visualizer.getMaxCaptureRate() / 2, true, false)
 
-        visualizer.enabled = true
+        visualizer?.enabled = true
     }
 
     fun setFavouriteAudio(chosenSongIndex: Int) {
@@ -241,8 +242,7 @@ class ChosenSongViewModel(application: Application,
 
     override fun onCleared() {
         super.onCleared()
-        if (::visualizer.isInitialized)
-            visualizer.release()
+        visualizer?.release()
         //un Bind fragment from service
         audioService.removeObserver(this)
         mApplication.unbindService(connection)

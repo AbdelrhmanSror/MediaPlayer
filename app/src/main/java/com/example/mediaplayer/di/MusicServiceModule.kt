@@ -5,7 +5,6 @@ import android.content.Context
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.lifecycle.Lifecycle
 import com.example.mediaplayer.audioPlayer.AudioPlayer
-import com.example.mediaplayer.audioPlayer.MediaSessionCallback
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.model.SongModel
 import com.google.android.exoplayer2.ExoPlayerFactory
@@ -35,8 +34,8 @@ abstract class MusicServiceModule {
     @Binds
     internal abstract fun provideService(instance: AudioForegroundService): Service
 
-    @Binds
-    internal abstract fun provideMediaSessionCallback(instance: MediaSessionCallback): MediaSessionCompat.Callback
+    /* @Binds
+     internal abstract fun provideMediaSessionCallback(instance: MediaSessionCallback): MediaSessionCompat.Callback*/
 
 
     @Module
@@ -57,8 +56,8 @@ abstract class MusicServiceModule {
         @Provides
         @JvmStatic
         @PerService
-        internal fun providePlayer(service: AudioForegroundService, mediaSessionCompat: MediaSessionCompat, mediaSessionCallback: MediaSessionCallback): AudioPlayer<SongModel> {
-            return AudioPlayer(service, mediaSessionCompat, mediaSessionCallback, ExoPlayerFactory.newSimpleInstance(service))
+        internal fun providePlayer(service: AudioForegroundService, mediaSessionCompat: MediaSessionCompat): AudioPlayer<SongModel> {
+            return AudioPlayer(service, mediaSessionCompat, ExoPlayerFactory.newSimpleInstance(service))
         }
 
 

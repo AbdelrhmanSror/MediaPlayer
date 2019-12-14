@@ -5,7 +5,6 @@ import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
-import android.util.Log
 import androidx.lifecycle.LifecycleService
 import com.example.mediaplayer.audioPlayer.AudioPlayer
 import com.example.mediaplayer.audioPlayer.IPlayerState
@@ -88,16 +87,6 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
 
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.v("audioManagerNotificati", "ondestoryservice")
-
-    }
-
-    override fun onStop() {
-        Log.v("audioManagerNotificati", "onstop")
-        audioPlayer.release { stopSelf() }
-    }
 
     internal inner class SongBinder : Binder() {
         val service: AudioForegroundService
@@ -155,6 +144,12 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
 
     }
 
+    override fun onStop() {
+        //if immediate realese happened we stop the service
+        audioPlayer.release {
+            stopSelf()
+        }
+    }
 
     override fun onAudioListCompleted() {
         audioPlayer.pause()
