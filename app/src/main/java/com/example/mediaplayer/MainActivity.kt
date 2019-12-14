@@ -5,10 +5,12 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.navigation.ui.setupWithNavController
 import com.example.mediaplayer.databinding.ActivityMainBinding
 import com.example.mediaplayer.shared.disableActionBarTitle
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -42,8 +44,10 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         //to disable the action bar title and use my own custom title.
         this.disableActionBarTitle()
-        // binding.motionYoutube.bottomNav.setupWithNavController(navController)
+        binding.bottomNavView.setupWithNavController(navController)
         setUpPlayListBottomSheet()
+        //to control the appearanve of bottom nav
+        setUpBottomNavAppearance()
 
     }
 
@@ -56,7 +60,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun checkPermission(savedInstanceState: Bundle?) {
+    private fun checkPermission(savedInstanceState: Bundle?) {
         if (savedInstanceState != null) {
             isPermissionRequested = savedInstanceState.getBoolean(PERMISSION_HAS_REQUESTED, false)
         }
@@ -68,6 +72,26 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
+    //preventing bottom navigation  from showing anywhere other than the main destinations
+    private fun setUpBottomNavAppearance() {
+        navController.addOnDestinationChangedListener { _, nd: NavDestination, _ ->
+            if (nd.id == R.id.playListFragment || nd.id == R.id.favouriteFragment) {
+                with(binding.bottomNavView)
+                {
+                    visibility = View.VISIBLE
+                    animate()
+                            .alpha(1f)
+                }
+            } else {
+                with(binding.bottomNavView)
+                {
+                    visibility = View.GONE
+                    animate()
+                            .alpha(1f)
+                }
+            }
+        }
+    }
 
     private fun navigateToStartDestination() {
         val inflater = navController.navInflater
@@ -86,6 +110,9 @@ class MainActivity : AppCompatActivity() {
         audioPermission.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
+    /**
+     * for case when user rotate the phone and permissions was requested to avoid request it again
+     */
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean(PERMISSION_HAS_REQUESTED, true)

@@ -41,6 +41,17 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:defaultNavHost="true" />
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottom_nav_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="@color/white"
+            android:elevation="8dp"
+            app:itemIconTint="@drawable/bottom_nav_state"
+            app:itemTextColor="@drawable/bottom_nav_state"
+            app:menu="@menu/nav_menu" />
         <include
             android:visibility="gone"
             android:layout_marginBottom="?actionBarSize"
