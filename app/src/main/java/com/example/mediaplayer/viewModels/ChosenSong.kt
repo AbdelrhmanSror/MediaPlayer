@@ -137,28 +137,28 @@ class ChosenSongViewModel(application: Application,
 
     override fun onAttached(audioPlayerModel: AudioPlayerModel?) {
         audioPlayerModel?.let {
-            _playPauseStateInitial.postValue(it.isPlaying)
-            _chosenSongIndex.postValue(Event(it.currentIndex))
+            _playPauseStateInitial.value = (it.isPlaying)
+            _chosenSongIndex.value = (Event(it.currentIndex))
             _shuffleMode.value = it.shuffleModeEnabled
             _repeatMode.value = it.repeatMode
-            _duration.postValue(it.duration)
+            _duration.value = (it.duration)
 
         }
     }
 
     override fun onAudioChanged(index: Int, isPlaying: Boolean, currentInstance: Any?) {
-        _playPauseStateInitial.postValue(isPlaying)
-        _chosenSongIndex.postValue(Event(index))
+        _playPauseStateInitial.value = (isPlaying)
+        _chosenSongIndex.value = (Event(index))
     }
 
 
     override fun onPlay() {
-        _playPauseState.postValue(Event(true))
+        _playPauseState.value = (Event(true))
 
     }
 
     override fun onPause() {
-        _playPauseState.postValue(Event(false))
+        _playPauseState.value = (Event(false))
     }
 
     override fun onShuffleModeChanged(enable: Boolean) {
@@ -170,11 +170,11 @@ class ChosenSongViewModel(application: Application,
     }
 
     override fun onDurationChange(duration: Long) {
-        _duration.postValue(duration)
+        _duration.value = (duration)
     }
 
     override fun onProgressChangedLiveData(progress: MutableLiveData<Long>) {
-        _audioPlayerProgress.postValue(progress)
+        _audioPlayerProgress.value = (progress)
     }
 
     override fun onAudioSessionId(audioSessionId: Int) {

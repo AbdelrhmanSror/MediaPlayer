@@ -17,25 +17,16 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mediaplayer.databinding.PlayerImageLibraryBinding
-import com.example.mediaplayer.shared.CustomScope
 import com.example.mediaplayer.viewModels.ChosenSongViewModel
 import kotlinx.android.synthetic.main.player_image_library.view.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 
 
-class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter<String, ImageListAdapter.ViewHolder>(DiffCallBack),
-        CoroutineScope by CustomScope(Dispatchers.Main) {
+class ImageListAdapter(private val viewmodel: ChosenSongViewModel) :
+        MediaAdapter<ImageListAdapter.ViewHolder, String>(DiffCallBack) {
 
-    private lateinit var recyclerView: RecyclerView
     private var currentSelectedItemPosition: Int = -1
-
-    private val scroller: LinearScrolling by lazy {
-        LinearScrolling(recyclerView, itemCount)
-    }
 
 
     /**
@@ -91,17 +82,14 @@ class ImageListAdapter(private val viewmodel: ChosenSongViewModel) : ListAdapter
 
     }
 
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        super.onAttachedToRecyclerView(recyclerView)
-        this.recyclerView = recyclerView
-    }
 
-    fun setCurrentSelectedPosition(position: Int, scrollEnabled: Boolean) {
+    override fun setCurrentSelectedPosition(position: Int, scrollEnabled: Boolean) {
         if (currentSelectedItemPosition != position) {
             currentSelectedItemPosition = position
             //scroll to the current focused position
-            if (scrollEnabled)
-                scroller.scrollTo(position)
+            if (scrollEnabled) {
+                scrollToPosition(position)
+            }
         }
 
 

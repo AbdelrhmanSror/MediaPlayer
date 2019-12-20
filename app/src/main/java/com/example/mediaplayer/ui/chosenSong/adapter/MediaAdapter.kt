@@ -1,26 +1,55 @@
 package com.example.mediaplayer.ui.chosenSong.adapter
 
 import android.util.DisplayMetrics
-import androidx.recyclerview.widget.LinearSmoothScroller
-import androidx.recyclerview.widget.LinearSnapHelper
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
+import androidx.recyclerview.widget.*
 import com.example.mediaplayer.shared.CustomScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
-
-open class LinearScrolling(private val recyclerView: RecyclerView, private val itemCount: Int) : CoroutineScope by CustomScope((Dispatchers.Main)) {
+abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(diffUtil: DiffUtil.ItemCallback<T>) :
+        ListAdapter<T, VH>(diffUtil), CoroutineScope by CustomScope(Dispatchers.Main) {
+    protected lateinit var recyclerView: RecyclerView
+    private var distance: Int = -1
     private var isSnapAttached = false
     private val snapHelper = LinearSnapHelper()
     private var isFirstTime = true
     private var selectedPosition = 0
     private var isListenerRegistered = false
+
+    abstract fun setCurrentSelectedPosition(position: Int, scrollEnabled: Boolean)
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        this.recyclerView = recyclerView
+        snapHelper.attachToRecyclerView(recyclerView)
+        isSnapAttached = true
+
+
+    }
+
+    private suspend fun getDistance(): Int {
+        return if (distance == -1) {
+            delay(100)
+            val firstPosition = (recyclerView.layoutManager as CenterZoomLayoutManager).findFirstVisibleItemPosition()
+            val lastPosition = (recyclerView.layoutManager as CenterZoomLayoutManager).findLastVisibleItemPosition()
+            distance = abs((lastPosition - firstPosition) / 2)
+            distance
+        } else {
+            distance
+        }
+    }
+
+
+    companion object {
+        private const val MILLISECONDS_PER_INCH = 8f //default is 25f (bigger = slower)
+    }
+
     private val listener = object : RecyclerView.OnScrollListener() {
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-            if (newState == SCROLL_STATE_IDLE) {
+            if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                 val firstPosition = (recyclerView.layoutManager as CenterZoomLayoutManager).findFirstCompletelyVisibleItemPosition()
                 val lastPosition = (recyclerView.layoutManager as CenterZoomLayoutManager).findLastCompletelyVisibleItemPosition()
                 /**
@@ -53,16 +82,6 @@ open class LinearScrolling(private val recyclerView: RecyclerView, private val i
         }
     }
 
-    companion object {
-        private const val MILLISECONDS_PER_INCH = 8f //default is 25f (bigger = slower)
-    }
-
-    init {
-        snapHelper.attachToRecyclerView(recyclerView)
-        isSnapAttached = true
-
-    }
-
 
     private fun normalScrolling(position: Int) {
         //if position was the first or last then just scroll
@@ -87,7 +106,7 @@ open class LinearScrolling(private val recyclerView: RecyclerView, private val i
         (recyclerView.layoutManager as CenterZoomLayoutManager).startSmoothScroll(smoothScroller)
     }
 
-    fun scrollTo(position: Int) {
+    private fun scrollTo(position: Int) {
         selectedPosition = position
         if (isFirstTime) {
             launch {
@@ -96,6 +115,7 @@ open class LinearScrolling(private val recyclerView: RecyclerView, private val i
                     isListenerRegistered = true
                     recyclerView.addOnScrollListener(listener)
                 }
+
                 normalScrolling(position)
             }
         } else {
@@ -104,4 +124,9 @@ open class LinearScrolling(private val recyclerView: RecyclerView, private val i
 
     }
 
+    protected fun scrollToPosition(position: Int) {
+        launch {
+            scrollTo(position + getDistance())
+        }
+    }
 }

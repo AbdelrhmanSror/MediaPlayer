@@ -17,7 +17,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mediaplayer.databinding.ChosenSongListLayoutBinding
 import com.example.mediaplayer.extensions.startFavouriteAnimation
@@ -40,17 +39,13 @@ import kotlinx.android.synthetic.main.chosen_song_list_layout.view.*
  */
 
 class SongListAdapter(private val viewmodel: ChosenSongViewModel) :
-        ListAdapter<SongModel, SongListAdapter.ViewHolder>(DiffCallBack) {
+        MediaAdapter<SongListAdapter.ViewHolder, SongModel>(DiffCallBack) {
 
-    private lateinit var recyclerView: RecyclerView
     private var lastSelectedItemPosition: Int = 0
     private var currentSelectedItemPosition: Int = 0
     private var equalizerEnabled: Boolean = true
     private var visualizerEnabled: Boolean = true
 
-    private val scroller: LinearScrolling by lazy {
-        LinearScrolling(recyclerView, itemCount)
-    }
 
     /**
      *diff util class to calculate the difference between two list if the the old list has changed
@@ -67,6 +62,7 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) :
         }
 
     }
+
 
     class ViewHolder(val binding: ChosenSongListLayoutBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: SongModel, viewModel: ChosenSongViewModel) {
@@ -96,18 +92,12 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) :
 
     }
 
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        super.onAttachedToRecyclerView(recyclerView)
-        this.recyclerView = recyclerView
-
-
-    }
-
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
 
         return ViewHolder.from(parent)
     }
+
 
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -119,7 +109,7 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) :
     }
 
 
-    fun setCurrentSelectedPosition(position: Int, scrollEnabled: Boolean) {
+    override fun setCurrentSelectedPosition(position: Int, scrollEnabled: Boolean) {
         //update the current focused position
         if (currentSelectedItemPosition != position) {
             currentSelectedItemPosition = position
@@ -127,12 +117,12 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) :
                 return
             notifyItemChanged(lastSelectedItemPosition)
             notifyItemChanged(currentSelectedItemPosition)
-            scroller.scrollTo(position + 1)
-
+            scrollToPosition(position)
         }
 
 
     }
+
 
     // update the current view and remove any state was existed before recycling
     private fun updateCurrentSelectedView(item: View, position: Int) {

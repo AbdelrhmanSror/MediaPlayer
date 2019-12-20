@@ -106,9 +106,9 @@ open class PlayerControlDelegate(private val context: Context,
                     launch {
                         focusLock = true
                         delay(1000)
-                        Log.v("focusgained", " fgained $prevPlayerState  $isFocusLost")
+                        //Log.v("focusgained", " fgained $prevPlayerState  $isFocusLost")
                         if (prevPlayerState && !isFocusLost) {
-                            Log.v("focusgained", "true")
+                            // Log.v("focusgained", "true")
                             play()
                             prevPlayerState = false
                         }
