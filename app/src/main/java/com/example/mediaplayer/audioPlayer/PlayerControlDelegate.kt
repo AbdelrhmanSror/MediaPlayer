@@ -4,7 +4,8 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.example.mediaplayer.audioPlayer.audioFocus.AudioFocusCallBacks
-import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompatFactory
+import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompat
+import com.example.mediaplayer.data.MediaPreferences
 import com.example.mediaplayer.shared.CustomScope
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
@@ -20,12 +21,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
-open class PlayerControlDelegate<T>(private val context: Context,
-                                    private var player: SimpleExoPlayer?
-) : IPlayerControl<T>, CoroutineScope by CustomScope(Dispatchers.Main) {
+open class PlayerControlDelegate(private val context: Context,
+                                 private var player: SimpleExoPlayer?, private val mediaAudioFocusCompat: MediaAudioFocusCompat,
+                                 private val mediaPreferences: MediaPreferences
+) : IPlayerControl, CoroutineScope by CustomScope(Dispatchers.Main) {
 
 
-    private var songList: ArrayList<T>? = null
+    private var songList: List<Any>? = null
     private var songListUris: List<Uri> = emptyList()
     private var repeatModeActivated: Boolean = false
         set(value) {
@@ -45,9 +47,10 @@ open class PlayerControlDelegate<T>(private val context: Context,
             field = value
         }
 
-    private val mMediaAudioFocus = MediaAudioFocusCompatFactory.create(context)
 
     private lateinit var mediaSource: MediaSource
+    private var focusLock = false
+
 
     /**
      * variable to indicate to the last state of player if audio focus happened
@@ -55,13 +58,8 @@ open class PlayerControlDelegate<T>(private val context: Context,
      * because user himself paused the player so it makes no sense to continue playing as it was already paused
      */
     private var prevPlayerState = false
-    private var isFocusLost = false
+    private var isFocusLost = true
 
-
-    companion object {
-        var currentWindow = 0
-        var playbackPosition: Long = 0
-    }
 
     //var indicates if the focus is permanently lost so we can request focus again
     private var isFocusPermanentLost = true
@@ -81,15 +79,14 @@ open class PlayerControlDelegate<T>(private val context: Context,
         return concatenatingMediaSource
     }
 
-    override fun setUpPlayer(audioList: ArrayList<T>?, Uris: List<Uri>, index: Int) {
+    override fun setUpPlayer(audioList: List<Any>?, audioUris: List<Uri>, index: Int) {
         //only re setup the player when the playlist changes
         if (audioList != songList) {
             songList = audioList
-            songListUris = Uris
+            songListUris = audioUris
             player?.apply {
                 mediaSource = buildMediaSource()
                 player?.prepare(mediaSource)
-                requestFocus()
 
             }
         }
@@ -101,14 +98,21 @@ open class PlayerControlDelegate<T>(private val context: Context,
      * request focus for audio player to start
      */
     override fun requestFocus() {
-        mMediaAudioFocus.requestAudioFocus(object : AudioFocusCallBacks {
+        mediaAudioFocusCompat.requestAudioFocus(object : AudioFocusCallBacks {
             //when the focus gained we start playing audio if it was previously running
             override fun onAudioFocusGained() {
                 isFocusLost = false
-                launch {
-                    delay(1000)
-                    if (prevPlayerState && !isFocusLost) {
-                        play()
+                if (!focusLock) {
+                    launch {
+                        focusLock = true
+                        delay(1000)
+                        Log.v("focusgained", " fgained $prevPlayerState  $isFocusLost")
+                        if (prevPlayerState && !isFocusLost) {
+                            Log.v("focusgained", "true")
+                            play()
+                            prevPlayerState = false
+                        }
+                        focusLock = false
                     }
                 }
 
@@ -117,6 +121,10 @@ open class PlayerControlDelegate<T>(private val context: Context,
             //when the focus lost we pause the player and set prevPlayerState to the current state of player
             override fun onAudioFocusLost(Permanent: Boolean) {
                 isFocusLost = true
+                if (isPlaying()/*&&!prevPlayerState*/) {
+                    Log.v("focusgained", " lost $prevPlayerState  $isFocusLost")
+                    prevPlayerState = true
+                }
                 pause()
                 isFocusPermanentLost = Permanent
             }
@@ -141,7 +149,7 @@ open class PlayerControlDelegate<T>(private val context: Context,
      * seek to different track
      */
     override fun seekTo(index: Int) {
-        if (!retryIfStopped(index, 0)) {
+        if (!retryIfStopped()) {
             player?.seekTo(index, 0)
             play()
         }
@@ -156,10 +164,9 @@ open class PlayerControlDelegate<T>(private val context: Context,
     }
 
 
-    private fun retryIfStopped(index: Int, playbackPosition: Long): Boolean {
-        Log.v("stoopinghandling", "$playbackPosition   $currentWindow")
+    private fun retryIfStopped(): Boolean {
         if (player!!.playbackState == ExoPlayer.STATE_IDLE) {
-            player!!.seekTo(index, playbackPosition)
+            player!!.seekTo(mediaPreferences.getCurrentTrack(), mediaPreferences.getCurrentPosition())
             player!!.playWhenReady = true
             player!!.prepare(mediaSource, false, false)
             return true
@@ -168,26 +175,27 @@ open class PlayerControlDelegate<T>(private val context: Context,
     }
 
     /**
-     * play audio and reset runnable callback of Audio progress if it was initialized before
+     * play audio
      */
     override fun play() {
         if (isFocusPermanentLost) {
+            prevPlayerState = true
             requestFocus()
             isFocusPermanentLost = false
+        } else if (!isPlaying()) {
+            player?.playWhenReady = true
         }
-        prevPlayerState = false
-        player?.playWhenReady = true
 
     }
 
+    private fun isPlaying() = player!!.playWhenReady
     /**
-     * pause audio and remove runnable callback of Audio progress if it is initialized
+     * pause audio
      */
     override fun pause() {
-        prevPlayerState = true
-        player?.playWhenReady = false
-        currentWindow = player!!.currentWindowIndex
-        playbackPosition = player!!.currentPosition
+        if (isPlaying()) {
+            player?.playWhenReady = false
+        }
     }
 
     /**
@@ -217,8 +225,8 @@ open class PlayerControlDelegate<T>(private val context: Context,
      * change the audio state from playing to pausing and vice verse
      */
     override fun changeAudioState() {
-        if (!retryIfStopped(currentWindow, playbackPosition)) {
-            if (player!!.playWhenReady) {
+        if (!retryIfStopped()) {
+            if (isPlaying()) {
                 pause()
             } else {
                 play()

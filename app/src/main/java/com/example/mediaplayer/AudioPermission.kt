@@ -37,18 +37,21 @@ class AudioPermission(private val activityCompat: AppCompatActivity
         return ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.READ_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
         ) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.BLUETOOTH
-        ) == PackageManager.PERMISSION_GRANTED&& ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.BLUETOOTH
+                ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.RECORD_AUDIO
         ) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestPermission() = ActivityCompat.requestPermissions(activityCompat,
-            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH,Manifest.permission.RECORD_AUDIO),
+            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH, Manifest.permission.RECORD_AUDIO),
             MY_PERMISSIONS_REQUEST
     )
 
@@ -88,7 +91,7 @@ class AudioPermission(private val activityCompat: AppCompatActivity
         //else if the use did not enable it then go to default location
         if (requestCode == MY_PERMISSIONS_REQUEST) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
-                    && grantResults[1] == PackageManager.PERMISSION_GRANTED&&grantResults[2] == PackageManager.PERMISSION_GRANTED) {
+                    && grantResults[1] == PackageManager.PERMISSION_GRANTED && grantResults[2] == PackageManager.PERMISSION_GRANTED && grantResults[3] == PackageManager.PERMISSION_GRANTED) {
                 onPermissionGranted()
             } else {
                 // permission was not granted
@@ -96,7 +99,7 @@ class AudioPermission(private val activityCompat: AppCompatActivity
                 // shouldShowRequestPermissionRationale will return true
                 if (ActivityCompat.shouldShowRequestPermissionRationale(activityCompat, Manifest.permission.READ_EXTERNAL_STORAGE)
                         || ActivityCompat.shouldShowRequestPermissionRationale(activityCompat, Manifest.permission.BLUETOOTH)
-                        ||ActivityCompat.shouldShowRequestPermissionRationale(activityCompat, Manifest.permission.RECORD_AUDIO)) {
+                        || ActivityCompat.shouldShowRequestPermissionRationale(activityCompat, Manifest.permission.RECORD_AUDIO) || ActivityCompat.shouldShowRequestPermissionRationale(activityCompat, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                     showPermissionAlertDialog()
 
                 } //permission is denied (and never ask again is  checked)

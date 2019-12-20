@@ -15,7 +15,6 @@ class NotificationIntentReceiver : BroadcastReceiver() {
         }
         val event: KeyEvent = intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT)!!
         Log.v("registeringAudioSession", " event :$event ")
-
         EventDispatcher(context).dispatchMediaKeyEvent(event.keyCode)
     }
 }

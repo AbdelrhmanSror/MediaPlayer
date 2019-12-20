@@ -3,6 +3,8 @@ package com.example.mediaplayer.audioPlayer
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
+import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompat
+import com.example.mediaplayer.data.MediaPreferences
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
@@ -18,22 +20,22 @@ data class AudioPlayerModel(val currentIndex: Int,
                             val duration: Long)
 
 
-class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundService,
-                                         private val mediaSessionCompat: MediaSessionCompat,
-                                         var player: SimpleExoPlayer?)
-    : PlayerListenerDelegate<T>(service, player!!),
-        IPlayerControl<T> by PlayerControlDelegate<T>(service, player),
-        AudioPlayerObservable<T> {
+class AudioPlayer @Inject constructor(private val service: AudioForegroundService,
+                                      private val mediaSessionCompat: MediaSessionCompat,
+                                      var player: SimpleExoPlayer?, private val mediaAudioFocusCompat: MediaAudioFocusCompat,
+                                      private val mediaPreferences: MediaPreferences)
+    : PlayerListenerDelegate(service, player!!, mediaPreferences),
+        IPlayerControl by PlayerControlDelegate(service, player, mediaAudioFocusCompat, mediaPreferences),
+        AudioPlayerObservable {
 
 
     /**
      * store observers and their corresponding listeners into hash map so it could be easily to notify or remove listener when registered observer
      */
-    private val observers: HashMap<IPlayerState<T>, ArrayList<IPlayerListener<T>>> = HashMap()
+    private val observers: HashMap<IPlayerState, ArrayList<IPlayerListener>> = HashMap()
 
 
-    private val mainObservers: HashSet<IPlayerState<T>> = HashSet()
-
+    private val mainObservers: HashSet<IPlayerState> = HashSet()
 
     private var isNoisyModeEnabled = false
 
@@ -53,7 +55,7 @@ class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundSer
     /**
      * to register observer we need to give it the class that implement the interface of observer
      */
-    override fun registerObserver(iPlayerState: IPlayerState<T>, audioSessionIdCallbackEnable: Boolean
+    override fun registerObserver(iPlayerState: IPlayerState, audioSessionIdCallbackEnable: Boolean
                                   , audioNoisyControlEnable: Boolean
                                   , progressCallBackEnabled: Boolean
                                   , isMainObserver: Boolean) {
@@ -78,9 +80,9 @@ class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundSer
      * get list of listeners that is registered to be triggered
      */
     private fun getListOfListeners(audioSessionIdCallbackEnable: Boolean,
-                                   iPlayerState: IPlayerState<T>, audioNoisyControlEnable: Boolean,
-                                   progressCallBackEnabled: Boolean): ArrayList<IPlayerListener<T>> {
-        val listOfListeners = arrayListOf<IPlayerListener<T>>()
+                                   iPlayerState: IPlayerState, audioNoisyControlEnable: Boolean,
+                                   progressCallBackEnabled: Boolean): ArrayList<IPlayerListener> {
+        val listOfListeners = arrayListOf<IPlayerListener>()
         if (audioSessionIdCallbackEnable) listOfListeners.add(setAudioSessionChangeListener(iPlayerState))
         if (audioNoisyControlEnable) listOfListeners.add(setNoisyListener())
         if (progressCallBackEnabled) listOfListeners.add(setOnProgressChangedListener(iPlayerState))
@@ -97,7 +99,7 @@ class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundSer
      *
      * NOTE: this will act as [release] if there is only one observer so no need to call both together just one of them
      */
-    override fun removeObserver(iPlayerState: IPlayerState<T>) {
+    override fun removeObserver(iPlayerState: IPlayerState) {
         //calling onDatch fun of every listenr first
         observers[iPlayerState]?.forEach {
             it.onObserverDetach(iPlayerState)
@@ -121,7 +123,7 @@ class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundSer
     }
 
 
-    override fun notifyObserver(iPlayerState: IPlayerState<T>) {
+    override fun notifyObserver(iPlayerState: IPlayerState) {
         //only notify observer if the player at state ready
         if (player!!.isPlayerStateReady()) {
             iPlayerState.onAttached(AudioPlayerModel(
@@ -145,9 +147,9 @@ class AudioPlayer<T> @Inject constructor(private val service: AudioForegroundSer
     /**
      * to control the player through headset or google assistant
      */
-    fun setCommandControl(mediaDescriptionCompat: (Int) -> MediaDescriptionCompat) {
+    fun setCommandControl(mediaSessionCallback: MediaSessionCompat.Callback, mediaDescriptionCompat: (Int) -> MediaDescriptionCompat) {
         mediaSessionConnector.setPlayer(player)
-        //mediaSessionConnector.mediaSession.setCallback(mediaSessionCallback)
+        // mediaSessionConnector.mediaSession.setCallback(mediaSessionCallback)
         mediaSessionCompat.isActive = true
         val queueNavigator: TimelineQueueNavigator = object : TimelineQueueNavigator(mediaSessionCompat) {
             override fun getMediaDescription(player: Player?, windowIndex: Int): MediaDescriptionCompat {

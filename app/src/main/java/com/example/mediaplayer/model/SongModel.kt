@@ -5,7 +5,7 @@ import android.os.Parcelable
 import android.support.v4.media.MediaDescriptionCompat
 import com.example.mediaplayer.database.FavouriteSongEntity
 import com.example.mediaplayer.database.SongEntity
-import com.example.mediaplayer.shared.toUri
+import com.example.mediaplayer.extensions.toUri
 import kotlinx.android.parcel.Parcelize
 
 

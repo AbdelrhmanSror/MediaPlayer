@@ -12,7 +12,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.mediaplayer.databinding.ActivityMainBinding
-import com.example.mediaplayer.shared.disableActionBarTitle
+import com.example.mediaplayer.extensions.disableActionBarTitle
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 

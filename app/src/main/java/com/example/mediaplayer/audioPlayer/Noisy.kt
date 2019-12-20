@@ -5,28 +5,27 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
-import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 
 @Suppress("UNCHECKED_CAST")
-class Noisy<T> private constructor(private val service: AudioForegroundService,
-                                   eventDispatcher: EventDispatcher
+class Noisy private constructor(private val service: AudioForegroundService,
+                                eventDispatcher: EventDispatcher
 
-) : IPlayerListener<T>, DefaultLifecycleObserver {
+) : IPlayerListener, DefaultLifecycleObserver {
 
     companion object {
-        private lateinit var noisy: Noisy<*>
+        private lateinit var noisy: Noisy
 
         /**
          * will create singleton noisy listener only one time
          */
-        fun <T> create(service: AudioForegroundService, eventDispatcher: EventDispatcher): Noisy<T> {
+        fun create(service: AudioForegroundService, eventDispatcher: EventDispatcher): Noisy {
             if (!::noisy.isInitialized) {
-                noisy = Noisy<T>(service, eventDispatcher)
+                noisy = Noisy(service, eventDispatcher)
             }
-            return noisy as Noisy<T>
+            return noisy
         }
 
     }
@@ -43,28 +42,19 @@ class Noisy<T> private constructor(private val service: AudioForegroundService,
         unregister()
     }
 
+
     override fun onActivePlayer() {
-        Log.w("hiFromNoisy", "trying to re-register")
         register()
     }
 
-    override fun onInActivePlayer() {
-        Log.w("hiFromNoisy", "trying to unregister")
+    override fun onPlayerStop() {
         unregister()
     }
 
-
-    /**
-     * BAD: do not do it otherwise will unregister the noisy every time observer is removed
-     * and will lead to cancel the noisy and we do not want this
-     * we want to unregister the noisy every time player is being playing or pausing
-     * so the best place to do this is @[onInActivePlayer] and @[onActivePlayer]
-     * @[onInActivePlayer] is also called when the player is stopped which mean player is completely destroyed
-
-     */
-    /*override fun onDetach(iPlayerState: IPlayerState) {
+    override fun onInActivePlayer() {
         unregister()
-    }*/
+    }
+
 
     private fun register() {
         if (registered) {

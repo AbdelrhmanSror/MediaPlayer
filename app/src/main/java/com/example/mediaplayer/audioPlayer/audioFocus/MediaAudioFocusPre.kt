@@ -15,14 +15,15 @@ package com.example.mediaplayer.audioPlayer.audioFocus
 
 import android.content.Context
 import android.media.AudioManager
+import javax.inject.Inject
 
 /**
  * worked on devices pre api 26 (oreo)
  */
 @Suppress("DEPRECATION")
-class MediaAudioFocusPre(context: Context) : MediaAudioFocusCompat() {
+class MediaAudioFocusPre @Inject constructor(context: Context) : MediaAudioFocusCompat() {
 
-    private lateinit var audioFocusCallBacks: AudioFocusCallBacks
+    private var audioFocusCallBacks: AudioFocusCallBacks? = null
 
     private var audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
@@ -39,12 +40,12 @@ class MediaAudioFocusPre(context: Context) : MediaAudioFocusCompat() {
     }
 
 
-    override fun requestAudioFocus(audioFocusCallBacks: AudioFocusCallBacks) {
+    override fun requestAudioFocus(audioFocusCallBacks: AudioFocusCallBacks?) {
         this.audioFocusCallBacks = audioFocusCallBacks
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            audioFocusCallBacks.onAudioFocusGained()
+            audioFocusCallBacks?.onAudioFocusGained()
         } else if (result == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
-            audioFocusCallBacks.onAudioFocusLost(true)
+            audioFocusCallBacks?.onAudioFocusLost(true)
         }
     }
 
@@ -59,15 +60,15 @@ class MediaAudioFocusPre(context: Context) : MediaAudioFocusCompat() {
                 // Permanent loss of audio focus
                 // Pause playback immediately
                 abandonAudioFocus()
-                audioFocusCallBacks.onAudioFocusLost(true)
+                audioFocusCallBacks?.onAudioFocusLost(true)
             }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-                audioFocusCallBacks.onAudioFocusLost(false)
+                audioFocusCallBacks?.onAudioFocusLost(false)
 
             }
             AudioManager.AUDIOFOCUS_GAIN -> {
                 // Your app has been granted audio focus again
-                audioFocusCallBacks.onAudioFocusGained()
+                audioFocusCallBacks?.onAudioFocusGained()
 
             }
         }

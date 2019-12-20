@@ -29,12 +29,12 @@ import androidx.navigation.Navigation
 import com.example.mediaplayer.R
 import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.databinding.FragmentFavouriteBinding
+import com.example.mediaplayer.extensions.startForeground
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.shared.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.shared.LIST_SONG
 import com.example.mediaplayer.shared.PlayerActions
-import com.example.mediaplayer.shared.startForeground
 import com.example.mediaplayer.ui.OnItemClickListener
 import com.example.mediaplayer.viewModels.FavouriteSongViewModel
 import dagger.android.support.DaggerFragment

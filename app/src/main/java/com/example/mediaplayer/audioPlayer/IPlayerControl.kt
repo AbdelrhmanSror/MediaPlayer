@@ -2,9 +2,9 @@ package com.example.mediaplayer.audioPlayer
 
 import android.net.Uri
 
-interface IPlayerControl<T> {
+interface IPlayerControl {
 
-    fun setUpPlayer(audioList: ArrayList<T>? = null, Uris: List<Uri>, index: Int)
+    fun setUpPlayer(audioList: List<Any>? = emptyList(), audioUris: List<Uri>, index: Int)
 
     /**
      * enable repeat mode

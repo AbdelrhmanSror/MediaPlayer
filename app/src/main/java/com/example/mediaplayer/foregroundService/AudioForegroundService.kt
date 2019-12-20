@@ -5,6 +5,8 @@ import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import androidx.lifecycle.LifecycleService
 import com.example.mediaplayer.audioPlayer.AudioPlayer
 import com.example.mediaplayer.audioPlayer.IPlayerState
@@ -21,12 +23,12 @@ import javax.inject.Inject
 
 
 class AudioForegroundService @Inject constructor() : LifecycleService(),
-        IPlayerState<SongModel>,
+        IPlayerState,
         CoroutineScope by CustomScope() {
     @Inject
     lateinit var mediaSession: MediaSessionCompat
     @Inject
-    lateinit var audioPlayer: AudioPlayer<SongModel>
+    lateinit var audioPlayer: AudioPlayer
     // indicates how to behave if the service is killed.
     private var mStartMode = START_STICKY
     // interface for clients that bind.
@@ -34,6 +36,9 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
     //responsible for creating media player notification;
     @Inject
     lateinit var notificationManager: AudioForegroundNotificationManager
+
+    @Inject
+    lateinit var mediaSessionCallback: MediaSessionCompat.Callback
 
 
     override fun onCreate() {
@@ -45,13 +50,14 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
     }
 
 
-    fun registerObserver(iPlayerState: IPlayerState<SongModel>) {
-        audioPlayer.registerObserver(iPlayerState, audioSessionIdCallbackEnable = true
+    fun registerObserver(iPlayerState: IPlayerState) {
+        audioPlayer.registerObserver(iPlayerState
+                , audioSessionIdCallbackEnable = true
                 , progressCallBackEnabled = true
                 , isMainObserver = true)
     }
 
-    fun removeObserver(IPlayerState: IPlayerState<SongModel>) {
+    fun removeObserver(IPlayerState: IPlayerState) {
         audioPlayer.removeObserver(IPlayerState)
     }
 
@@ -115,6 +121,19 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
                 ACTION_FOREGROUND -> {
                     setUpPlayerForeground(intent)
                 }
+                PlaybackStateCompat.ACTION_PLAY_PAUSE.toString() -> {
+                    audioPlayer.changeAudioState()
+                }
+                PlaybackStateCompat.ACTION_SKIP_TO_NEXT.toString() -> {
+                    audioPlayer.next()
+                }
+                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS.toString() -> {
+                    audioPlayer.previous()
+                }
+                PlaybackStateCompat.ACTION_STOP.toString() -> {
+                    audioPlayer.release { stopSelf() }
+                }
+
             }
         }
     }
@@ -135,8 +154,9 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
             for (item in first) {
                 songListUris.add(item.audioUri)
             }
+
             audioPlayer.setUpPlayer(first, songListUris, second)
-            audioPlayer.setCommandControl { index ->
+            audioPlayer.setCommandControl(mediaSessionCallback) { index ->
                 first[index].getMediaDescription()
             }
 
@@ -144,12 +164,12 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
 
     }
 
-    override fun onStop() {
-        //if immediate realese happened we stop the service
-        audioPlayer.release {
-            stopSelf()
-        }
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.v("serviceDestroyed", "done now")
+
     }
+
 
     override fun onAudioListCompleted() {
         audioPlayer.pause()

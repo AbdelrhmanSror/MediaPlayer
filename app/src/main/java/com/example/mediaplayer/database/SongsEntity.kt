@@ -30,11 +30,11 @@ data class SongEntity(
 
 @Dao
 interface SongsDao {
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insertAll(Songs: List<SongEntity>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(Songs: List<SongEntity>)
 
     @Query("DELETE FROM songs WHERE name=:name")
-    fun deleteSong(name: String)
+    suspend fun deleteSong(name: String)
 
     @Query("SELECT * FROM songs")
     fun getAllSongsLiveData(): LiveData<List<SongEntity>>

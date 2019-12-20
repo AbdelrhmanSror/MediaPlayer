@@ -15,13 +15,13 @@
 package com.example.mediaplayer.di
 
 import android.app.Application
-import android.content.Context
 import com.example.mediaplayer.MediaApplication
 import dagger.BindsInstance
 import dagger.Component
 import dagger.android.AndroidInjector
 import dagger.android.support.AndroidSupportInjectionModule
 import javax.inject.Singleton
+
 
 @Singleton
 @Component(modules = [

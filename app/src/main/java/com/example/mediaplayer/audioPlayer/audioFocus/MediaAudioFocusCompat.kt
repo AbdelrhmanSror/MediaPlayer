@@ -13,12 +13,12 @@
 
 package com.example.mediaplayer.audioPlayer.audioFocus
 
-import android.content.Context
 import android.media.AudioManager
-import android.os.Build
+import com.example.mediaplayer.audioPlayer.IPlayerState
 
-abstract class MediaAudioFocusCompat : AudioManager.OnAudioFocusChangeListener {
-    abstract fun requestAudioFocus(audioFocusCallBacks: AudioFocusCallBacks)
+abstract class MediaAudioFocusCompat : AudioManager.OnAudioFocusChangeListener, IPlayerState {
+    abstract fun requestAudioFocus(audioFocusCallBacks: AudioFocusCallBacks? = null)
+
 
 }
 
@@ -27,13 +27,14 @@ interface AudioFocusCallBacks {
     fun onAudioFocusLost(Permanent: Boolean)
 
 }
+/*
 
 object MediaAudioFocusCompatFactory {
-    fun create(context: Context): MediaAudioFocusCompat {
+    fun init(context: Context): MediaAudioFocusCompat {
         return when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> MediaAudioFocus.create(context)
             else -> MediaAudioFocusPre.create(context)
         }
 
     }
-}
+}*/

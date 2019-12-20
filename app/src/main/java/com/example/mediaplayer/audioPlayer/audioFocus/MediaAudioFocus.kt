@@ -19,19 +19,21 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 import androidx.annotation.RequiresApi
+import javax.inject.Inject
 
 /**
  *worked on devices with api 26 (oreo) and later
 
  */
 @RequiresApi(api = Build.VERSION_CODES.O)
-class MediaAudioFocus private constructor(context: Context) : MediaAudioFocusCompat() {
+class MediaAudioFocus @Inject constructor(context: Context) : MediaAudioFocusCompat() {
 
     private val focusLock = Any()
-    private lateinit var audioFocusCallBacks: AudioFocusCallBacks
+    private var audioFocusCallBacks: AudioFocusCallBacks? = null
     private var playbackDelayed = false
     private var playbackNowAuthorized = false
     private var resumeOnFocusGain = false
+    private var isFocusLost: Boolean = true
 
 
     private val audioManager: AudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -61,7 +63,7 @@ class MediaAudioFocus private constructor(context: Context) : MediaAudioFocusCom
                         playbackDelayed = false
                         resumeOnFocusGain = false
                     }
-                    audioFocusCallBacks.onAudioFocusGained()
+                    audioFocusCallBacks?.onAudioFocusGained()
 
                 }
             }
@@ -69,8 +71,9 @@ class MediaAudioFocus private constructor(context: Context) : MediaAudioFocusCom
                 synchronized(focusLock) {
                     resumeOnFocusGain = false
                     playbackDelayed = false
+                    isFocusLost = true
                 }
-                audioFocusCallBacks.onAudioFocusLost(true)
+                audioFocusCallBacks?.onAudioFocusLost(true)
 
 
             }
@@ -80,7 +83,7 @@ class MediaAudioFocus private constructor(context: Context) : MediaAudioFocusCom
                     playbackDelayed = false
 
                 }
-                audioFocusCallBacks.onAudioFocusLost(false)
+                audioFocusCallBacks?.onAudioFocusLost(false)
             }
 
         }
@@ -88,27 +91,30 @@ class MediaAudioFocus private constructor(context: Context) : MediaAudioFocusCom
 
     }
 
-    override fun requestAudioFocus(audioFocusCallBacks: AudioFocusCallBacks) {
-        this.audioFocusCallBacks = audioFocusCallBacks
-        val res = audioManager.requestAudioFocus(focusRequest)
-        synchronized(focusLock) {
-            playbackNowAuthorized = when (res) {
-                AudioManager.AUDIOFOCUS_REQUEST_FAILED -> {
-                    false
+    override fun requestAudioFocus(audioFocusCallBacks: AudioFocusCallBacks?) {
+        if (isFocusLost) {
+            isFocusLost = false
+            this.audioFocusCallBacks = audioFocusCallBacks
+            val res = audioManager.requestAudioFocus(focusRequest)
+            synchronized(focusLock) {
+                playbackNowAuthorized = when (res) {
+                    AudioManager.AUDIOFOCUS_REQUEST_FAILED -> {
+                        false
+                    }
+                    AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
+                        audioFocusCallBacks?.onAudioFocusGained()
+                        true
+                    }
+                    AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> {
+                        playbackDelayed = true
+                        false
+                    }
+                    else -> false
                 }
-                AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
-                    audioFocusCallBacks.onAudioFocusGained()
-                    true
-                }
-                AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> {
-                    playbackDelayed = true
-                    false
-                }
-                else -> false
             }
+
+
         }
-
-
     }
 
 

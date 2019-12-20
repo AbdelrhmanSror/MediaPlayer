@@ -1,6 +1,5 @@
 package com.example.mediaplayer.ui.chosenSong
 
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,7 +8,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.transition.TransitionInflater
 import com.example.mediaplayer.databinding.ChosenSongFragmentBinding
 import com.example.mediaplayer.shared.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.shared.PlayerDestinations
@@ -39,12 +37,6 @@ class ChosenSongFragment : DaggerFragment() {
     private lateinit var songListAdapter: SongListAdapter
     private lateinit var imageListAdapter: ImageListAdapter
     private lateinit var binding: ChosenSongFragmentBinding
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
-        }
-    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -56,10 +48,6 @@ class ChosenSongFragment : DaggerFragment() {
         setUpSongRecyclerView()
         setUpImageRecyclerView()
         setUpObserver()
-
-
-
-
         return binding.root
     }
 

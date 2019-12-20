@@ -1,7 +1,6 @@
 package com.example.mediaplayer.audioPlayer.notification
 
 import android.app.Notification
-import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.example.mediaplayer.audioPlayer.AudioPlayer
@@ -23,37 +22,54 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
 class AudioForegroundNotificationManager @Inject constructor(private val service: AudioForegroundService,
-                                                             player: AudioPlayer<SongModel>,
+                                                             private val player: AudioPlayer,
                                                              private val notificationImp: INotification) :
-        DefaultLifecycleObserver, IPlayerState<SongModel>, CoroutineScope by CustomScope() {
+        DefaultLifecycleObserver, CoroutineScope by CustomScope() {
 
     private var isForeground: Boolean = false
 
     private var notificationJob: Job? = null
     private val publisher = Channel<Event>(Channel.UNLIMITED)
     private val currentState = MusicNotificationModel()
+    private var isReceiverRegistered = false
 
-    private val playerListener = object : IPlayerState<SongModel> {
+
+    private val playerListener = object : IPlayerState {
 
         override fun onPlay() {
             onNextState(true)
         }
 
         override fun onPause() {
-
             onNextState(false)
         }
 
-        override fun onAudioChanged(index: Int, isPlaying: Boolean, currentInstance: SongModel?) {
+        override fun onAudioChanged(index: Int, isPlaying: Boolean, currentInstance: Any?) {
             currentInstance?.let {
-                onNextMetadata(currentInstance)
+                onNextMetadata(currentInstance as SongModel)
 
             }
         }
 
     }
+
+    /* fun registerReceiver() {
+         if (!isReceiverRegistered) {
+             Log.v("registeringAudioSession", " done reg ")
+
+             isReceiverRegistered = true
+             val intentFilter = IntentFilter(NOTIFICATION_EVENT)
+             intentFilter.priority=100
+             service.registerReceiver(NotificationIntentReceiver(), intentFilter)
+         }
+     }
+
+     fun unregisterReciever() {
+         isReceiverRegistered = false
+         service.unregisterReceiver(NotificationIntentReceiver())
+
+     }*/
 
     companion object {
         private const val METADATA_PUBLISH_DELAY = 350L
@@ -114,8 +130,8 @@ class AudioForegroundNotificationManager @Inject constructor(private val service
         }
     }
 
+
     override fun onDestroy(owner: LifecycleOwner) {
-        Log.v("audioManagerNotificati", "ondestroy")
         stopForeground()
         notificationJob?.cancel()
     }
@@ -129,26 +145,18 @@ class AudioForegroundNotificationManager @Inject constructor(private val service
     }
 
     private fun stopForeground() {
-        Log.v("audioManagerNotificati", "stopforground1")
-
         if (!isForeground) {
             return
         }
-        Log.v("audioManagerNotificati", "stopforground")
-
         service.stopForeground(true)
         notificationImp.cancel()
         isForeground = false
     }
 
     private fun pauseForeground() {
-        Log.v("audioManagerNotificati", "pausefore1")
-
         if (!isForeground) {
             return
         }
-        Log.v("audioManagerNotificati", "pausefore")
-
         // state paused
         service.stopForeground(false)
 
@@ -156,13 +164,9 @@ class AudioForegroundNotificationManager @Inject constructor(private val service
     }
 
     private fun startForeground(notification: Notification) {
-        Log.v("audioManagerNotificati", "start1")
-
         if (isForeground) {
             return
         }
-        Log.v("audioManagerNotificati", "start")
-
         service.startForeground(NOTIFICATION_ID, notification)
 
         isForeground = true

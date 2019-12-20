@@ -1,4 +1,3 @@
-/*
 package com.example.mediaplayer.audioPlayer
 
 import android.content.Intent
@@ -12,6 +11,7 @@ import javax.inject.Inject
 
 class MediaSessionCallback @Inject constructor(
         private val service: AudioForegroundService,
+        private val player: AudioPlayer,
         private val mediaButton: MediaButton
 
 ) : MediaSessionCompat.Callback(), CoroutineScope by CustomScope() {
@@ -20,37 +20,28 @@ class MediaSessionCallback @Inject constructor(
         val event = mediaButtonIntent.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT)!!
         if (event.action == KeyEvent.ACTION_DOWN) {
             when (event.keyCode) {
-                KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
-                    Log.v("nothandlingexception","${event.keyCode}")
-                    service.changeAudioState()
-                }
-                KeyEvent.KEYCODE_MEDIA_PAUSE -> {
-                    Log.v("nothandlingexception","${event.keyCode}")
-
-                    service.changeAudioState()
-                }
-                KeyEvent.KEYCODE_MEDIA_PLAY -> {
-                    Log.v("nothandlingexception","${event.keyCode}")
-
-                    service.changeAudioState()
+                KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY -> {
+                    Log.v("nothandlingexception", "${event.keyCode}")
+                    player.changeAudioState()
                 }
                 KeyEvent.KEYCODE_MEDIA_NEXT -> {
-                    Log.v("nothandlingexception","${event.keyCode}")
-
-                    service.goToNext()
+                    Log.v("nothandlingexception", "${event.keyCode}")
+                    player.next()
                 }
                 KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
-                    Log.v("nothandlingexception","${event.keyCode}")
+                    Log.v("nothandlingexception", "${event.keyCode}")
 
-                    service.goToPrevious()
+                    player.previous()
                 }
                 KeyEvent.KEYCODE_MEDIA_STOP -> {
-                    Log.v("nothandlingexception","${event.keyCode}")
+                    Log.v("nothandlingexception", "${event.keyCode}")
 
-                   // service.releasePlayer()
+                    player.release {
+                        service.stopSelf()
+                    }
                 }
                 KeyEvent.KEYCODE_HEADSETHOOK -> mediaButton.onHeatSetHookClick()
-                else -> Log.v("nothandlingexception","${event.keyCode}")
+                else -> Log.v("nothandlingexception", "${event.keyCode}")
             }
         }
 
@@ -59,4 +50,3 @@ class MediaSessionCallback @Inject constructor(
 
 
 }
-*/

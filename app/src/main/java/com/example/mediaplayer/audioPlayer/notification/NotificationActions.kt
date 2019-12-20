@@ -1,20 +1,19 @@
 package com.example.mediaplayer.audioPlayer.notification
 
 import android.app.PendingIntent
-import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
-import androidx.media.session.MediaButtonReceiver
 import androidx.navigation.NavDeepLinkBuilder
 import com.example.mediaplayer.R
+import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.shared.CHOSEN_SONG_INDEX
+import com.example.mediaplayer.shared.NOTIFICATION_ID
 import com.example.mediaplayer.shared.PlayerDestinations
 
 object NotificationActions {
-
-
     fun playPause(context: Context, isPlaying: Boolean): NotificationCompat.Action {
         val icon = if (isPlaying) R.drawable.vd_pause_big else R.drawable.vd_play_big
         return NotificationCompat.Action.Builder(
@@ -62,12 +61,18 @@ object NotificationActions {
                 .createPendingIntent()
     }
 
+    /*  private fun buildMediaPendingIntent(context: Context, action: Long): PendingIntent {
+          return MediaButtonReceiver.buildMediaButtonPendingIntent(
+                  context,
+                  ComponentName(context, NotificationIntentReceiver::class.java),
+                  action
+          )
+      }*/
     private fun buildMediaPendingIntent(context: Context, action: Long): PendingIntent {
-        return MediaButtonReceiver.buildMediaButtonPendingIntent(
-                context,
-                ComponentName(context, NotificationIntentReceiver::class.java),
-                action
-        )
+        val intent = Intent(context, AudioForegroundService::class.java)
+        intent.action = action.toString()
+        return PendingIntent.getService(context,
+                NOTIFICATION_ID, intent, 0)
     }
 
 }

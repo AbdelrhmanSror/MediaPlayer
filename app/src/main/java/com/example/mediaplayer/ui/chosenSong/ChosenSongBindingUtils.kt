@@ -25,9 +25,9 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
 import com.example.mediaplayer.R
+import com.example.mediaplayer.extensions.twoDigitNumber
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.shared.Event
-import com.example.mediaplayer.shared.twoDigitNumber
 import com.example.mediaplayer.ui.chosenSong.adapter.ImageListAdapter
 import com.example.mediaplayer.ui.chosenSong.adapter.SongListAdapter
 import com.google.android.exoplayer2.Player
@@ -40,8 +40,7 @@ import com.google.android.exoplayer2.Player
 @BindingAdapter("imageUri")
 fun setImageUri(imageView: ImageView, imageUri: String?) {
     Glide.with(imageView.context)
-            .load(imageUri
-                    ?: R.drawable.default_image).transform(RoundedCorners(40).apply { RequestOptions.centerCropTransform() }
+            .load(imageUri).error(R.drawable.default_image).transform(RoundedCorners(40).apply { RequestOptions.centerCropTransform() }
             ).into(imageView)
 }
 
@@ -152,9 +151,9 @@ fun setInitialFavourite(imageButton: ImageButton, isFavourite: Boolean) {
 
 
 @BindingAdapter("Progress")
-fun setProgress(textView: TextView, progresss: Long) {
-    val min = (progresss / 60).toInt().twoDigitNumber()
-    val sec = (progresss % 60).toInt().twoDigitNumber()
+fun setProgress(textView: TextView, progress: Long) {
+    val min = (progress / 60).toInt().twoDigitNumber()
+    val sec = (progress % 60).toInt().twoDigitNumber()
     textView.text = textView.context.getString(R.string.duration_format, min, sec)
 }
 

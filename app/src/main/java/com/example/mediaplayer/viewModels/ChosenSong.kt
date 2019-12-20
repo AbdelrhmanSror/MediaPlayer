@@ -11,10 +11,15 @@ import androidx.lifecycle.*
 import com.example.mediaplayer.audioPlayer.AudioPlayerModel
 import com.example.mediaplayer.audioPlayer.IPlayerState
 import com.example.mediaplayer.database.toSongModel
+import com.example.mediaplayer.extensions.startForeground
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.model.SongModel
+import com.example.mediaplayer.model.toSongEntity
 import com.example.mediaplayer.repositry.Repository
-import com.example.mediaplayer.shared.*
+import com.example.mediaplayer.shared.CHOSEN_SONG_INDEX
+import com.example.mediaplayer.shared.Event
+import com.example.mediaplayer.shared.LIST_SONG
+import com.example.mediaplayer.shared.PlayerActions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -24,7 +29,7 @@ class ChosenSongViewModel(application: Application,
                           private val repository: Repository,
                           private val songIndex: Int,
                           private val fromNotification: Boolean)
-    : AndroidViewModel(application), IPlayerState<SongModel> {
+    : AndroidViewModel(application), IPlayerState {
 
 
     private val mApplication = application
@@ -33,6 +38,7 @@ class ChosenSongViewModel(application: Application,
     private lateinit var audioService: AudioForegroundService
 
     var previousRecyclerViewPosition = -1
+
 
     val listOfSong = repository.observeSongs().map {
         it.toSongModel()
@@ -47,7 +53,8 @@ class ChosenSongViewModel(application: Application,
         }
         imageUris
     }
-
+    private var msonglist: List<SongModel>? = null
+    private var favouriteSongList: ArrayList<SongModel> = ArrayList()
     //to observe when the current song track is changed
     private val _chosenSongIndex = MutableLiveData<Event<Int>>()
     val chosenSongIndex: LiveData<Event<Int>> = _chosenSongIndex
@@ -107,9 +114,10 @@ class ChosenSongViewModel(application: Application,
 
     private fun startService() {
         viewModelScope.launch {
-            val songlist = withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
+            val songlist: List<SongModel> = withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
                 repository.getSongs().toSongModel()
             }
+            msonglist = songlist
             if (!fromNotification) {
                 startForeground(songlist as ArrayList<SongModel>, songIndex)
             }
@@ -138,7 +146,7 @@ class ChosenSongViewModel(application: Application,
         }
     }
 
-    override fun onAudioChanged(index: Int, isPlaying: Boolean, currentInstance: SongModel?) {
+    override fun onAudioChanged(index: Int, isPlaying: Boolean, currentInstance: Any?) {
         _playPauseStateInitial.postValue(isPlaying)
         _chosenSongIndex.postValue(Event(index))
     }
@@ -194,17 +202,34 @@ class ChosenSongViewModel(application: Application,
         visualizer?.enabled = true
     }
 
-    fun setFavouriteAudio(chosenSongIndex: Int) {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO)
-            {
-                if (listOfSong.value!![chosenSongIndex].isFavourite) {
-                    repository.removeFromFavouriteSongs(listOfSong.value!![chosenSongIndex].title)
-                } else {
-                    repository.addFavouriteSong(listOfSong.value!![chosenSongIndex])
-                }
 
-            }
+    /*  fun setFavouriteAudio(chosenSongIndex: Int) {
+           viewModelScope.launch {
+               withContext(Dispatchers.IO)
+               {
+                   if (listOfSong.value!![chosenSongIndex].isFavourite) {
+                       repository.removeFromFavouriteSongs(listOfSong.value!![chosenSongIndex].title)
+                   } else {
+                       repository.addFavouriteSong(listOfSong.value!![chosenSongIndex])
+                   }
+
+               }
+           }
+       }*/
+    fun setFavouriteAudio(chosenSongIndex: Int) {
+        msonglist?.let {
+            it[chosenSongIndex].isFavourite = !it[chosenSongIndex].isFavourite
+            updateFavouriteSongs(it[chosenSongIndex].isFavourite, it[chosenSongIndex])
+
+        }
+    }
+
+    //if true then add else remove
+    private fun updateFavouriteSongs(addOrRemove: Boolean, songModel: SongModel) {
+        if (!addOrRemove) {
+            repository.removeFromFavouriteSongs(songModel.title)
+        } else {
+            repository.addFavouriteSong(songModel)
         }
     }
 
@@ -243,6 +268,7 @@ class ChosenSongViewModel(application: Application,
     override fun onCleared() {
         super.onCleared()
         visualizer?.release()
+        repository.insertSongs(favouriteSongList.toSongEntity())
         //un Bind fragment from service
         audioService.removeObserver(this)
         mApplication.unbindService(connection)

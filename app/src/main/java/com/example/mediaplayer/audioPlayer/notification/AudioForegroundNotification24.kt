@@ -5,7 +5,7 @@ import android.os.Build
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.annotation.RequiresApi
 import com.example.mediaplayer.R
-import com.example.mediaplayer.shared.twoDigitNumber
+import com.example.mediaplayer.extensions.twoDigitNumber
 import javax.inject.Inject
 
 @RequiresApi(Build.VERSION_CODES.N)

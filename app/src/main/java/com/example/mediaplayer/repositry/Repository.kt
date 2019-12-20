@@ -1,6 +1,7 @@
 package com.example.mediaplayer.repositry
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.LiveData
 import com.example.mediaplayer.DeviceAudioFile
 import com.example.mediaplayer.database.PlayerDatabase
@@ -8,33 +9,39 @@ import com.example.mediaplayer.database.SongEntity
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.model.toFavouriteSongEntity
 import com.example.mediaplayer.model.toSongEntity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-class Repository @Inject constructor(private val application: Application, private val database: PlayerDatabase) {
+class Repository @Inject constructor(private val application: Application, private val database: PlayerDatabase) : CoroutineScope by CoroutineScope(Dispatchers.IO) {
 
     fun getFavouriteSongs(): LiveData<List<SongEntity>> {
         return database.favouriteSongsDao().getAllFavouriteSong()
     }
 
     fun addFavouriteSong(songModel: SongModel) {
-        database.runInTransaction {
-            database.songDao().updateFavourite(songModel.title, true)
+        launch {
             database.favouriteSongsDao().insertFavouriteSong(songModel.toFavouriteSongEntity())
 
         }
     }
 
     fun removeFromFavouriteSongs(title: String) {
-        database.runInTransaction {
+        launch {
             database.favouriteSongsDao().deleteFavouriteSong(title)
-            database.songDao().updateFavourite(title, false)
 
         }
     }
 
-    private fun insertSongs(songs: List<SongEntity>) {
-        database.songDao().insertAll(songs)
+    fun insertSongs(songs: List<SongEntity>) {
+        launch {
+            Log.v("updatingPlaylist", "updating......")
+            database.songDao().insertAll(songs)
+            Log.v("updatingPlaylist", "done......")
+
+        }
     }
 
     fun observeSongs(): LiveData<List<SongEntity>> {

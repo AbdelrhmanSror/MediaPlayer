@@ -20,8 +20,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mediaplayer.databinding.ChosenSongListLayoutBinding
+import com.example.mediaplayer.extensions.startFavouriteAnimation
 import com.example.mediaplayer.model.SongModel
-import com.example.mediaplayer.shared.startFavouriteAnimation
 import com.example.mediaplayer.viewModels.ChosenSongViewModel
 import kotlinx.android.synthetic.main.chosen_song_list_layout.view.*
 
