@@ -14,11 +14,8 @@
 package com.example.mediaplayer.di
 
 import android.app.Application
-import android.content.Context
 import androidx.room.Room
 import com.example.mediaplayer.database.PlayerDatabase
-import com.example.mediaplayer.repositry.Repository
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton

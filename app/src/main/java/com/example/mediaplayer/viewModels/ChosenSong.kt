@@ -14,22 +14,19 @@ import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.extensions.startForeground
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.model.SongModel
-import com.example.mediaplayer.model.toSongEntity
-import com.example.mediaplayer.repositry.Repository
-import com.example.mediaplayer.shared.CHOSEN_SONG_INDEX
-import com.example.mediaplayer.shared.Event
-import com.example.mediaplayer.shared.LIST_SONG
-import com.example.mediaplayer.shared.PlayerActions
+import com.example.mediaplayer.repositry.TracksRepository
+import com.example.mediaplayer.shared.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class ChosenSongViewModel(application: Application,
-                          private val repository: Repository,
+                          private val tracksRepository: TracksRepository,
                           private val songIndex: Int,
                           private val fromNotification: Boolean)
-    : AndroidViewModel(application), IPlayerState {
+    : AndroidViewModel(application), IPlayerState, CoroutineScope by CustomScope(Dispatchers.Main) {
 
 
     private val mApplication = application
@@ -40,9 +37,9 @@ class ChosenSongViewModel(application: Application,
     var previousRecyclerViewPosition = -1
 
 
-    val listOfSong = repository.observeSongs().map {
-        it.toSongModel()
-    }
+    private val _listOfSong = MutableLiveData<List<SongModel>>()
+    val listOfSong: LiveData<List<SongModel>>
+        get() = _listOfSong
 
 
     //get the list album art uris
@@ -53,8 +50,6 @@ class ChosenSongViewModel(application: Application,
         }
         imageUris
     }
-    private var msonglist: List<SongModel>? = null
-    private var favouriteSongList: ArrayList<SongModel> = ArrayList()
     //to observe when the current song track is changed
     private val _chosenSongIndex = MutableLiveData<Event<Int>>()
     val chosenSongIndex: LiveData<Event<Int>> = _chosenSongIndex
@@ -106,24 +101,27 @@ class ChosenSongViewModel(application: Application,
     }
 
     init {
-        startService()
-        //binding this fragment to service
-        mApplication.bindService(Intent(mApplication, AudioForegroundService::class.java), connection, Context.BIND_AUTO_CREATE)
+        viewModelScope.launch {
+            initListSong()
+            startService()
+            //binding this fragment to service
+            mApplication.bindService(Intent(mApplication, AudioForegroundService::class.java), connection, Context.BIND_AUTO_CREATE)
+        }
     }
 
 
-    private fun startService() {
-        viewModelScope.launch {
-            val songlist: List<SongModel> = withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
-                repository.getSongs().toSongModel()
-            }
-            msonglist = songlist
-            if (!fromNotification) {
-                startForeground(songlist as ArrayList<SongModel>, songIndex)
-            }
+    private suspend fun initListSong() {
+        val songlist: List<SongModel> = withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
+            tracksRepository.getSongs().toSongModel()
         }
+        _listOfSong.value = songlist
 
+    }
 
+    private fun startService() {
+        if (!fromNotification) {
+            startForeground(_listOfSong.value as ArrayList<SongModel>, songIndex)
+        }
     }
 
     private fun startForeground(song: ArrayList<SongModel>, chosenSongIndex: Int) {
@@ -149,6 +147,8 @@ class ChosenSongViewModel(application: Application,
     override fun onAudioChanged(index: Int, isPlaying: Boolean, currentInstance: Any?) {
         _playPauseStateInitial.value = (isPlaying)
         _chosenSongIndex.value = (Event(index))
+        _duration.value = (currentInstance as SongModel).duration
+
     }
 
 
@@ -167,10 +167,6 @@ class ChosenSongViewModel(application: Application,
 
     override fun onRepeatModeChanged(repeatMode: Int) {
         _repeatMode.value = repeatMode
-    }
-
-    override fun onDurationChange(duration: Long) {
-        _duration.value = (duration)
     }
 
     override fun onProgressChangedLiveData(progress: MutableLiveData<Long>) {
@@ -217,7 +213,7 @@ class ChosenSongViewModel(application: Application,
            }
        }*/
     fun setFavouriteAudio(chosenSongIndex: Int) {
-        msonglist?.let {
+        _listOfSong.value?.let {
             it[chosenSongIndex].isFavourite = !it[chosenSongIndex].isFavourite
             updateFavouriteSongs(it[chosenSongIndex].isFavourite, it[chosenSongIndex])
 
@@ -227,9 +223,9 @@ class ChosenSongViewModel(application: Application,
     //if true then add else remove
     private fun updateFavouriteSongs(addOrRemove: Boolean, songModel: SongModel) {
         if (!addOrRemove) {
-            repository.removeFromFavouriteSongs(songModel.title)
+            tracksRepository.removeFromFavouriteSongs(songModel.id)
         } else {
-            repository.addFavouriteSong(songModel)
+            tracksRepository.addFavouriteSong(songModel)
         }
     }
 
@@ -268,7 +264,6 @@ class ChosenSongViewModel(application: Application,
     override fun onCleared() {
         super.onCleared()
         visualizer?.release()
-        repository.insertSongs(favouriteSongList.toSongEntity())
         //un Bind fragment from service
         audioService.removeObserver(this)
         mApplication.unbindService(connection)
@@ -276,7 +271,7 @@ class ChosenSongViewModel(application: Application,
 }
 
 class ChosenSongViewModelFactory @Inject constructor(private val application: Application,
-                                                     private val repository: Repository)
+                                                     private val tracksRepository: TracksRepository)
     : ViewModelProvider.Factory {
 
     private var chosenSongIndex: Int? = null
@@ -291,7 +286,7 @@ class ChosenSongViewModelFactory @Inject constructor(private val application: Ap
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
 
         if (modelClass.isAssignableFrom(ChosenSongViewModel::class.java)) {
-            return ChosenSongViewModel(application, repository, chosenSongIndex!!, fromNotification!!) as T
+            return ChosenSongViewModel(application, tracksRepository, chosenSongIndex!!, fromNotification!!) as T
 
         }
         throw IllegalArgumentException("unknown class")

@@ -41,7 +41,7 @@ data class MusicNotificationModel
 
     fun updateMetadata(metadata: SongModel): Boolean {
         this.title = metadata.title
-        this.artist = metadata.actor
+        this.artist = metadata.artist
         this.album = metadata.albumCoverUri.toString()
         this.duration = metadata.duration ?: 1
         return isValidState()
@@ -54,7 +54,7 @@ data class MusicNotificationModel
 
     fun isDifferentMetadata(metadata: SongModel): Boolean {
         return this.title != metadata.title ||
-                this.artist != metadata.actor ||
+                this.artist != metadata.artist ||
                 this.album != metadata.albumCoverUri
     }
 

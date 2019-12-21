@@ -4,7 +4,7 @@ import android.util.Log
 import com.example.mediaplayer.data.MediaPreferences
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.shared.CustomScope
-import com.example.mediaplayer.shared.updateList
+import com.example.mediaplayer.shared.update
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
@@ -63,13 +63,12 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 
     //handle the player when actions happen in notification
     protected fun setOnPlayerStateChangedListener(observers: HashMap<IPlayerState, ArrayList<IPlayerListener>>) {
-        onPlayerStateListListeners.updateList(observers)
+        onPlayerStateListListeners.update(observers)
         player!!.run {
             if (!::onPlayerStateChanged.isInitialized) {
                 onPlayerStateChanged = object : Player.EventListener {
                     override fun onPositionDiscontinuity(reason: Int) {
                         if (player.isTrackChanging(reason)) {
-                            Log.v("registeringAudioSession", " tracking  $currentWindowIndex $playWhenReady ")
                             durationSet = false
                             if (isReleased) {
                                 isReleased = false
@@ -81,6 +80,8 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                                 currentAudioIndex = currentWindowIndex
                                 onPlayerStateListListeners.forEach {
                                     it.key.onAudioChanged(currentAudioIndex, playWhenReady, player.currentTag)
+                                    Log.v("registeringAudioSession", " tracking  $currentWindowIndex $playWhenReady ")
+
                                 }
 
                             }
@@ -95,7 +96,6 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                                 launch {
                                     //give time for player to prepare duration value
                                     delay(DELAY)
-                                    Log.v("registeringAudioSession", " duration ${player.duration}  ")
                                     onPlayerStateListListeners.forEach {
                                         it.key.onDurationChange(player.duration)
                                     }

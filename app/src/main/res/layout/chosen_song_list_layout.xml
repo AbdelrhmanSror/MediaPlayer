@@ -74,7 +74,7 @@
 
                     <TextView
                         android:id="@+id/actor"
-                        android:text="@{playlistModel.actor}"
+                        android:text="@{playlistModel.artist}"
                         tools:text="Calvin Harris"
                         style="@style/media_subtitle_style" />
 

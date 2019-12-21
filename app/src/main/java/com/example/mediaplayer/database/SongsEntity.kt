@@ -19,9 +19,10 @@ import androidx.room.*
 import com.example.mediaplayer.model.SongModel
 
 
-@Entity(tableName = "songs", indices = [Index(value = ["name"], unique = true)])
+@Entity(tableName = "songs", indices = [Index(value = ["id"], unique = true)])
 data class SongEntity(
-        @PrimaryKey var name: String,
+        @PrimaryKey val id: Long,
+        var name: String,
         var actor: String,
         var audioUri: String,
         var albumCoverUri: String?,
@@ -33,25 +34,28 @@ interface SongsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(Songs: List<SongEntity>)
 
-    @Query("DELETE FROM songs WHERE name=:name")
-    suspend fun deleteSong(name: String)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(Songs: SongEntity)
+
+    @Query("DELETE FROM songs WHERE id=:id")
+    suspend fun deleteSong(id: Long)
 
     @Query("SELECT * FROM songs")
     fun getAllSongsLiveData(): LiveData<List<SongEntity>>
 
     @Query("SELECT * FROM songs")
-    fun getAllSongs(): List<SongEntity>
+    suspend fun getAllSongs(): List<SongEntity>
 
-    @Query("UPDATE songs SET isFavourite=:isFavourite WHERE name=:name")
-    fun updateFavourite(name: String, isFavourite: Boolean)
+    @Query("UPDATE songs SET isFavourite=:isFavourite WHERE id=:id")
+    suspend fun updateFavourite(id: Long, isFavourite: Boolean)
 
     @Query("DELETE FROM songs")
-    fun clear()
+    suspend fun clear()
 }
 
 fun List<SongEntity>.toSongModel(): List<SongModel> {
     return map {
-        SongModel(title = it.name, actor = it.actor, audioUri = Uri.parse(it.audioUri), albumCoverUri = it.albumCoverUri, duration = it.duration, isFavourite = it.isFavourite)
+        SongModel(id = it.id, title = it.name, artist = it.actor, audioUri = Uri.parse(it.audioUri), albumCoverUri = it.albumCoverUri, duration = it.duration, isFavourite = it.isFavourite)
     }
 
 }

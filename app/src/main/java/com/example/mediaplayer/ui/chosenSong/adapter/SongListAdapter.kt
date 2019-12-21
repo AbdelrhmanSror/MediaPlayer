@@ -38,7 +38,7 @@ import kotlinx.android.synthetic.main.chosen_song_list_layout.view.*
  * limitations under the License.
  */
 
-class SongListAdapter(private val viewmodel: ChosenSongViewModel) :
+class SongListAdapter(private val viewModel: ChosenSongViewModel) :
         MediaAdapter<SongListAdapter.ViewHolder, SongModel>(DiffCallBack) {
 
     private var lastSelectedItemPosition: Int = 0
@@ -103,7 +103,7 @@ class SongListAdapter(private val viewmodel: ChosenSongViewModel) :
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
         updateCurrentSelectedView(holder.itemView, position)
-        holder.bind(getItem(position), viewmodel)
+        holder.bind(getItem(position), viewModel)
 
 
     }

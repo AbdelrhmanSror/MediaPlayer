@@ -55,9 +55,9 @@ class PlayListFragment : DaggerFragment() {
                 // binding.bottomSheetLayout.visibility = View.GONE
             } else {
                 binding.noAudioText.visibility = View.GONE
-                (binding.listSong.adapter as PlaylistAdapter).submitList(it.toSongModel())
 
             }
+            (binding.listSong.adapter as PlaylistAdapter).submitList(it.toSongModel())
 
         })
 

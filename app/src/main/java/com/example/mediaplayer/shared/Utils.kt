@@ -16,7 +16,7 @@ fun isQ(): Boolean {
 
 }
 
-fun <K, V> HashMap<K, V>.updateList(updatedPlayerState: HashMap<K, V>) {
+fun <K, V> HashMap<K, V>.update(updatedPlayerState: HashMap<K, V>) {
     val deletedItems = arrayListOf<K>()
     when {
         updatedPlayerState.size > this.size -> {

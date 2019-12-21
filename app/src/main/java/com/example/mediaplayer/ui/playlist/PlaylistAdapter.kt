@@ -28,7 +28,7 @@ class PlaylistAdapter(private val itemListener: OnItemClickListener) : ListAdapt
         }
 
         override fun areContentsTheSame(oldItem: SongModel, newItem: SongModel): Boolean {
-            return oldItem.title == newItem.title
+            return oldItem.id == newItem.id
         }
 
     }

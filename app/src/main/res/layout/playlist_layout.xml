@@ -55,7 +55,7 @@
                         android:id="@+id/actor"
 
                         style="@style/media_subtitle_style"
-                        android:text="@{playlistModel.actor}"
+                        android:text="@{playlistModel.artist}"
                         tools:text="Calvin Harris" />
 
                 </LinearLayout>

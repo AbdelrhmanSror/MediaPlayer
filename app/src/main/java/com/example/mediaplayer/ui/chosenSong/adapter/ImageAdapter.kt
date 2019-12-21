@@ -23,7 +23,7 @@ import com.example.mediaplayer.viewModels.ChosenSongViewModel
 import kotlinx.android.synthetic.main.player_image_library.view.*
 
 
-class ImageListAdapter(private val viewmodel: ChosenSongViewModel) :
+class ImageListAdapter(private val viewModel: ChosenSongViewModel) :
         MediaAdapter<ImageListAdapter.ViewHolder, String>(DiffCallBack) {
 
     private var currentSelectedItemPosition: Int = -1
@@ -47,8 +47,8 @@ class ImageListAdapter(private val viewmodel: ChosenSongViewModel) :
 
 
     class ViewHolder(val binding: PlayerImageLibraryBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(viewmodel: ChosenSongViewModel) {
-            binding.viewmodel = viewmodel
+        fun bind(viewModel: ChosenSongViewModel) {
+            binding.viewmodel = viewModel
             binding.itemPosition = adapterPosition
             binding.executePendingBindings()
 
@@ -77,7 +77,7 @@ class ImageListAdapter(private val viewmodel: ChosenSongViewModel) :
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         ViewCompat.setTransitionName(holder.itemView.artwork, "Test_$position")
-        holder.bind(viewmodel)
+        holder.bind(viewModel)
 
 
     }

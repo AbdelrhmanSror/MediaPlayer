@@ -78,7 +78,7 @@ class MainActivity : AppCompatActivity() {
             if (nd.id == R.id.playListFragment || nd.id == R.id.favouriteFragment) {
                 with(binding.bottomNavView)
                 {
-                    visibility = View.VISIBLE
+                    //visibility = View.VISIBLE
                     animate()
                             .alpha(1f)
                 }

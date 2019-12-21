@@ -12,16 +12,17 @@
  */
 
 package com.example.mediaplayer.database
+
 import androidx.lifecycle.LiveData
 import androidx.room.*
 import androidx.room.ForeignKey.CASCADE
 
 
-@Entity(tableName = "favouriteSongs", indices = [Index(value = ["name"], unique = true)], foreignKeys = [ForeignKey(onDelete = CASCADE,
+@Entity(tableName = "favouriteSongs", indices = [Index(value = ["id"], unique = true)], foreignKeys = [ForeignKey(onDelete = CASCADE,
         entity = SongEntity::class,
-        parentColumns = arrayOf("name"),
-        childColumns = arrayOf("name"))])
-data class FavouriteSongEntity(@PrimaryKey(autoGenerate = true) val id: Int = 0,
+        parentColumns = arrayOf("id"),
+        childColumns = arrayOf("id"))])
+data class FavouriteSongEntity(@PrimaryKey val id: Long,
                                var name: String)
 
 @Dao
@@ -29,10 +30,10 @@ interface FavouriteSongsDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertFavouriteSong(favouriteSong: FavouriteSongEntity)
 
-    @Query("DELETE FROM favouriteSongs WHERE name=:name")
-    fun deleteFavouriteSong(name: String)
+    @Query("DELETE FROM favouriteSongs WHERE id=:id")
+    fun deleteFavouriteSong(id: Long)
 
-    @Query("SELECT * FROM songs INNER JOIN favouriteSongs ON songs.name=favouriteSongs.name")
+    @Query("SELECT * FROM songs INNER JOIN favouriteSongs ON songs.id=favouriteSongs.id")
     fun getAllFavouriteSong(): LiveData<List<SongEntity>>
 
     @Query("DELETE FROM favouriteSongs")

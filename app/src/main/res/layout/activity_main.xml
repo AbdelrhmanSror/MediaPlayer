@@ -47,6 +47,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
+            android:visibility="gone"
             android:background="@color/white"
             android:elevation="8dp"
             app:itemIconTint="@drawable/bottom_nav_state"

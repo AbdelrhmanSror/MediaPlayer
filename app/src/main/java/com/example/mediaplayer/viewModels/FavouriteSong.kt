@@ -15,14 +15,12 @@ package com.example.mediaplayer.viewModels
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import com.example.mediaplayer.repositry.Repository
+import com.example.mediaplayer.repositry.TracksRepository
 import javax.inject.Inject
 
 
-class FavouriteSongViewModel @Inject constructor(application: Application, repository: Repository) : AndroidViewModel(application) {
-    val playLists = repository.getFavouriteSongs()
+class FavouriteSongViewModel @Inject constructor(application: Application, tracksRepository: TracksRepository) : AndroidViewModel(application) {
+    val playLists = tracksRepository.getFavouriteSongs()
 
 }
 
