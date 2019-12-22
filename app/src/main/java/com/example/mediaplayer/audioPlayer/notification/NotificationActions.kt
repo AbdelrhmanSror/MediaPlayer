@@ -4,14 +4,15 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
 import androidx.navigation.NavDeepLinkBuilder
 import com.example.mediaplayer.R
 import com.example.mediaplayer.foregroundService.AudioForegroundService
-import com.example.mediaplayer.shared.CHOSEN_SONG_INDEX
-import com.example.mediaplayer.shared.NOTIFICATION_ID
-import com.example.mediaplayer.shared.PlayerDestinations
+import com.example.mediaplayer.intent.CHOSEN_SONG_INDEX
+import com.example.mediaplayer.intent.NOTIFICATION_ID
+import com.example.mediaplayer.intent.NotificationAction
+import com.example.mediaplayer.intent.NotificationAction.NOTIFICATION
+
 
 object NotificationActions {
     fun playPause(context: Context, isPlaying: Boolean): NotificationCompat.Action {
@@ -19,7 +20,7 @@ object NotificationActions {
         return NotificationCompat.Action.Builder(
                 icon,
                 "Toggle play pause",
-                buildMediaPendingIntent(context, PlaybackStateCompat.ACTION_PLAY_PAUSE)
+                buildMediaPendingIntent(context, NotificationAction.PLAY_PAUSE)
         ).build()
     }
 
@@ -28,7 +29,7 @@ object NotificationActions {
         return NotificationCompat.Action.Builder(
                 R.drawable.vd_skip_previous,
                 "Skip to previous",
-                buildMediaPendingIntent(context, PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)
+                buildMediaPendingIntent(context, NotificationAction.PREVIOUS)
         ).build()
     }
 
@@ -37,14 +38,14 @@ object NotificationActions {
         return NotificationCompat.Action.Builder(
                 R.drawable.vd_skip_next,
                 "Skip to next",
-                buildMediaPendingIntent(context, PlaybackStateCompat.ACTION_SKIP_TO_NEXT)
+                buildMediaPendingIntent(context, NotificationAction.NEXT)
         ).build()
     }
 
     fun stop(context: Context): PendingIntent {
         return buildMediaPendingIntent(
                 context,
-                PlaybackStateCompat.ACTION_STOP
+                NotificationAction.STOP
         )
     }
 
@@ -52,7 +53,7 @@ object NotificationActions {
         val bundle = Bundle()
         //bundle.putParcelableArrayList(LIST_SONG, songModels)
         bundle.putInt(CHOSEN_SONG_INDEX, index)
-        bundle.putBoolean(PlayerDestinations.NOTIFICATION, true)
+        bundle.putBoolean(NOTIFICATION, true)
         //using deep links to navigate to chosen song fragment
         return NavDeepLinkBuilder(context)
                 .setGraph(R.navigation.navigaion)
@@ -68,9 +69,9 @@ object NotificationActions {
                   action
           )
       }*/
-    private fun buildMediaPendingIntent(context: Context, action: Long): PendingIntent {
+    private fun buildMediaPendingIntent(context: Context, action: String): PendingIntent {
         val intent = Intent(context, AudioForegroundService::class.java)
-        intent.action = action.toString()
+        intent.action = action
         return PendingIntent.getService(context,
                 NOTIFICATION_ID, intent, 0)
     }

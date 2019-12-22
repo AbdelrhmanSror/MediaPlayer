@@ -13,9 +13,13 @@ import com.example.mediaplayer.audioPlayer.IPlayerState
 import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.extensions.startForeground
 import com.example.mediaplayer.foregroundService.AudioForegroundService
+import com.example.mediaplayer.intent.CHOSEN_SONG_INDEX
+import com.example.mediaplayer.intent.LIST_SONG
+import com.example.mediaplayer.intent.PlayerActions.ACTION_FOREGROUND
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.repositry.TracksRepository
-import com.example.mediaplayer.shared.*
+import com.example.mediaplayer.shared.CustomScope
+import com.example.mediaplayer.shared.Event
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -128,7 +132,7 @@ class ChosenSongViewModel(application: Application,
         _chosenSongIndex.value = (Event(chosenSongIndex))
         _duration.value = song[chosenSongIndex].duration
         val foregroundIntent = Intent(mApplication, AudioForegroundService::class.java)
-        foregroundIntent.action = PlayerActions.ACTION_FOREGROUND
+        foregroundIntent.action = ACTION_FOREGROUND
         foregroundIntent.putExtra(CHOSEN_SONG_INDEX, chosenSongIndex)
         foregroundIntent.putParcelableArrayListExtra(LIST_SONG, song)
         mApplication.startForeground(foregroundIntent)

@@ -1,4 +1,4 @@
-package com.example.mediaplayer
+package com.example.mediaplayer.permissions
 
 import android.Manifest
 import android.app.Application
@@ -9,6 +9,8 @@ import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.mediaplayer.BuildConfig
+import com.example.mediaplayer.R
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 

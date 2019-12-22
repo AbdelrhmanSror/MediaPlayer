@@ -12,10 +12,10 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.mediaplayer.R
 import com.example.mediaplayer.extensions.toUri
+import com.example.mediaplayer.intent.CHANNEL_ID
+import com.example.mediaplayer.intent.NOTIFICATION_ID
 import com.example.mediaplayer.model.MusicNotificationModel
-import com.example.mediaplayer.shared.CHANNEL_ID
 import com.example.mediaplayer.shared.ImageLoader
-import com.example.mediaplayer.shared.NOTIFICATION_ID
 import kotlinx.coroutines.yield
 import javax.inject.Inject
 

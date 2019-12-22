@@ -5,18 +5,18 @@ import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
-import android.support.v4.media.session.PlaybackStateCompat
 import androidx.lifecycle.LifecycleService
 import com.example.mediaplayer.audioPlayer.AudioPlayer
 import com.example.mediaplayer.audioPlayer.IPlayerState
 import com.example.mediaplayer.audioPlayer.notification.AudioForegroundNotificationManager
 import com.example.mediaplayer.di.inject
+import com.example.mediaplayer.intent.CHOSEN_SONG_INDEX
+import com.example.mediaplayer.intent.LIST_SONG
+import com.example.mediaplayer.intent.NotificationAction
+import com.example.mediaplayer.intent.PlayerActions.ACTION_FOREGROUND
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.model.getMediaDescription
-import com.example.mediaplayer.shared.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.shared.CustomScope
-import com.example.mediaplayer.shared.LIST_SONG
-import com.example.mediaplayer.shared.PlayerActions.ACTION_FOREGROUND
 import kotlinx.coroutines.CoroutineScope
 import javax.inject.Inject
 
@@ -116,16 +116,16 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
                 ACTION_FOREGROUND -> {
                     setUpPlayerForeground(intent)
                 }
-                PlaybackStateCompat.ACTION_PLAY_PAUSE.toString() -> {
+                NotificationAction.PLAY_PAUSE -> {
                     audioPlayer.changeAudioState()
                 }
-                PlaybackStateCompat.ACTION_SKIP_TO_NEXT.toString() -> {
+                NotificationAction.NEXT -> {
                     audioPlayer.next()
                 }
-                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS.toString() -> {
+                NotificationAction.PREVIOUS -> {
                     audioPlayer.previous()
                 }
-                PlaybackStateCompat.ACTION_STOP.toString() -> {
+                NotificationAction.STOP -> {
                     audioPlayer.releaseIfPossible()
                 }
 

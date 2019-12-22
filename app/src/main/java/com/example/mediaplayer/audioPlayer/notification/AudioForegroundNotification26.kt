@@ -8,7 +8,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.example.mediaplayer.shared.CHANNEL_ID
+import com.example.mediaplayer.intent.CHANNEL_ID
 import javax.inject.Inject
 
 @RequiresApi(Build.VERSION_CODES.O)

@@ -31,10 +31,10 @@ import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.databinding.FragmentFavouriteBinding
 import com.example.mediaplayer.extensions.startForeground
 import com.example.mediaplayer.foregroundService.AudioForegroundService
+import com.example.mediaplayer.intent.CHOSEN_SONG_INDEX
+import com.example.mediaplayer.intent.LIST_SONG
+import com.example.mediaplayer.intent.PlayerActions.ACTION_FOREGROUND
 import com.example.mediaplayer.model.SongModel
-import com.example.mediaplayer.shared.CHOSEN_SONG_INDEX
-import com.example.mediaplayer.shared.LIST_SONG
-import com.example.mediaplayer.shared.PlayerActions
 import com.example.mediaplayer.ui.OnItemClickListener
 import com.example.mediaplayer.viewModels.FavouriteSongViewModel
 import dagger.android.support.DaggerFragment
@@ -93,7 +93,7 @@ class FavouriteFragment : DaggerFragment() {
 
     private fun startForeground(songModels: List<SongModel>, itemClickedIndex: Int) {
         val foregroundIntent = Intent(activity, AudioForegroundService::class.java)
-        foregroundIntent.action = PlayerActions.ACTION_FOREGROUND
+        foregroundIntent.action = ACTION_FOREGROUND
         foregroundIntent.putExtra(CHOSEN_SONG_INDEX, itemClickedIndex)
         foregroundIntent.putParcelableArrayListExtra(LIST_SONG, songModels as ArrayList)
         activity?.startForeground(foregroundIntent)

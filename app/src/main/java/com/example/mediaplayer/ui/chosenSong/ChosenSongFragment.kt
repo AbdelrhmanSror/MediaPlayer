@@ -9,8 +9,8 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mediaplayer.databinding.ChosenSongFragmentBinding
-import com.example.mediaplayer.shared.CHOSEN_SONG_INDEX
-import com.example.mediaplayer.shared.PlayerDestinations
+import com.example.mediaplayer.intent.CHOSEN_SONG_INDEX
+import com.example.mediaplayer.intent.NotificationAction.NOTIFICATION
 import com.example.mediaplayer.ui.chosenSong.adapter.CenterZoomLayoutManager
 import com.example.mediaplayer.ui.chosenSong.adapter.ImageListAdapter
 import com.example.mediaplayer.ui.chosenSong.adapter.SongListAdapter
@@ -29,7 +29,7 @@ class ChosenSongFragment : DaggerFragment() {
     lateinit var viewModelFactory: ChosenSongViewModelFactory
     private val viewModel by viewModels<ChosenSongViewModel> {
         val index: Int? = arguments?.getInt(CHOSEN_SONG_INDEX)
-        val fromNotification = arguments?.getBoolean(PlayerDestinations.NOTIFICATION, false)
+        val fromNotification = arguments?.getBoolean(NOTIFICATION, false)
         viewModelFactory.apply {
             setData(index!!, fromNotification!!)
         }
