@@ -32,7 +32,7 @@ class ChosenSongViewModel(application: Application,
     private val mApplication = application
 
     private var visualizer: Visualizer? = null
-    private lateinit var audioService: AudioForegroundService
+    private var audioService: AudioForegroundService? = null
 
     var previousRecyclerViewPosition = -1
 
@@ -91,7 +91,7 @@ class ChosenSongViewModel(application: Application,
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             val binder = service as AudioForegroundService.SongBinder
             audioService = binder.service
-            audioService.registerObserver(this@ChosenSongViewModel)
+            audioService?.registerObserver(this@ChosenSongViewModel)
 
         }
 
@@ -125,6 +125,8 @@ class ChosenSongViewModel(application: Application,
     }
 
     private fun startForeground(song: ArrayList<SongModel>, chosenSongIndex: Int) {
+        _chosenSongIndex.value = (Event(chosenSongIndex))
+        _duration.value = song[chosenSongIndex].duration
         val foregroundIntent = Intent(mApplication, AudioForegroundService::class.java)
         foregroundIntent.action = PlayerActions.ACTION_FOREGROUND
         foregroundIntent.putExtra(CHOSEN_SONG_INDEX, chosenSongIndex)
@@ -139,7 +141,8 @@ class ChosenSongViewModel(application: Application,
             _chosenSongIndex.value = (Event(it.currentIndex))
             _shuffleMode.value = it.shuffleModeEnabled
             _repeatMode.value = it.repeatMode
-            _duration.value = (it.duration)
+            it.duration?.let { duration -> _duration.value = (duration) }
+
 
         }
     }
@@ -231,33 +234,33 @@ class ChosenSongViewModel(application: Application,
 
     fun seekTo(index: Int) {
 
-        audioService.seekTo(index)
+        audioService?.seekTo(index)
     }
 
     fun seekToSecond(second: Int) {
-        audioService.seekToSecond(second)
+        audioService?.seekToSecond(second)
     }
 
     //for when user clicks on repeat and shuffle button
     fun onRepeatModeListener() {
-        audioService.changeRepeatMode()
+        audioService?.changeRepeatMode()
     }
 
     fun onShuffleModeListener() {
-        audioService.changeShuffleMode()
+        audioService?.changeShuffleMode()
     }
 
     fun onPlayPauseListener() {
-        audioService.changeAudioState()
+        audioService?.changeAudioState()
     }
 
     fun onPreviousListener() {
-        audioService.goToPrevious()
+        audioService?.goToPrevious()
     }
 
     fun onNextListener() {
 
-        audioService.goToNext()
+        audioService?.goToNext()
     }
 
 
@@ -265,7 +268,7 @@ class ChosenSongViewModel(application: Application,
         super.onCleared()
         visualizer?.release()
         //un Bind fragment from service
-        audioService.removeObserver(this)
+        audioService?.removeObserver(this)
         mApplication.unbindService(connection)
     }
 }

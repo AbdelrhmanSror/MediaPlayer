@@ -6,7 +6,6 @@ import android.os.Binder
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import androidx.lifecycle.LifecycleService
 import com.example.mediaplayer.audioPlayer.AudioPlayer
 import com.example.mediaplayer.audioPlayer.IPlayerState
@@ -36,9 +35,6 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
     //responsible for creating media player notification;
     @Inject
     lateinit var notificationManager: AudioForegroundNotificationManager
-
-    @Inject
-    lateinit var mediaSessionCallback: MediaSessionCompat.Callback
 
 
     override fun onCreate() {
@@ -103,10 +99,9 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
 
     override fun onStartCommand(intent: Intent?,
                                 flags: Int, startId: Int): Int {
+        // The service is starting, due to a call to startService().
         super.onStartCommand(intent, flags, startId)
         handleIntent(intent)
-
-        // The service is starting, due to a call to startService().
         return mStartMode
     }
 
@@ -131,7 +126,7 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
                     audioPlayer.previous()
                 }
                 PlaybackStateCompat.ACTION_STOP.toString() -> {
-                    audioPlayer.release { stopSelf() }
+                    audioPlayer.releaseIfPossible()
                 }
 
             }
@@ -156,7 +151,7 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
             }
 
             audioPlayer.setUpPlayer(first, songListUris, second)
-            audioPlayer.setCommandControl(mediaSessionCallback) { index ->
+            audioPlayer.setCommandControl { index ->
                 first[index].getMediaDescription()
             }
 
@@ -164,17 +159,6 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
 
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.v("serviceDestroyed", "done now")
 
-    }
-
-
-    override fun onAudioListCompleted() {
-        audioPlayer.pause()
-        seekTo(0)
-
-    }
 }
 

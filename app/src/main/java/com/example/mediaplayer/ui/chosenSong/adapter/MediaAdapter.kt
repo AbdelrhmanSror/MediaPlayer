@@ -9,61 +9,52 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(diffUtil: DiffUtil.ItemCallback<T>) :
+abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recyclerView: RecyclerView, private val layoutManager: LinearLayoutManager, diffUtil: DiffUtil.ItemCallback<T>) :
         ListAdapter<T, VH>(diffUtil), CoroutineScope by CustomScope(Dispatchers.Main) {
-    protected lateinit var recyclerView: RecyclerView
     private var distance: Int = -1
     private var isSnapAttached = false
     private val snapHelper = LinearSnapHelper()
     private var isFirstTime = true
+    private var isLocked = false
     private var selectedPosition = 0
     private var isListenerRegistered = false
-
+    var speed: Float = 8f//default is 25f (bigger = slower)
     abstract fun setCurrentSelectedPosition(position: Int, scrollEnabled: Boolean)
 
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        super.onAttachedToRecyclerView(recyclerView)
-        this.recyclerView = recyclerView
+    private fun firstVisibleItemPosition() = layoutManager.findFirstVisibleItemPosition()
+    private fun lastVisibleItemPosition() = layoutManager.findLastVisibleItemPosition()
+
+    init {
         snapHelper.attachToRecyclerView(recyclerView)
         isSnapAttached = true
-
-
-    }
-
-    private suspend fun getDistance(): Int {
-        return if (distance == -1) {
-            delay(100)
-            val firstPosition = (recyclerView.layoutManager as CenterZoomLayoutManager).findFirstVisibleItemPosition()
-            val lastPosition = (recyclerView.layoutManager as CenterZoomLayoutManager).findLastVisibleItemPosition()
-            distance = abs((lastPosition - firstPosition) / 2)
-            distance
-        } else {
-            distance
-        }
-    }
-
-
-    companion object {
-        private const val MILLISECONDS_PER_INCH = 8f //default is 25f (bigger = slower)
     }
 
     private val listener = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            if (!isLocked) {
+                launch {
+                    isLocked = true
+                    delay(500)
+                    if (selectedPosition.coerceIn(firstVisibleItemPosition(), lastVisibleItemPosition()) != selectedPosition) {
+                        scrollTo(selectedPosition)
+                    }
+                    isLocked = false
+                }
+            }
+
+        }
+
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+
             if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                val firstPosition = (recyclerView.layoutManager as CenterZoomLayoutManager).findFirstCompletelyVisibleItemPosition()
-                val lastPosition = (recyclerView.layoutManager as CenterZoomLayoutManager).findLastCompletelyVisibleItemPosition()
                 /**
                  * if the scroller did not scroll to the selected position we scroll again until we get it right
                  */
-                if (selectedPosition.coerceIn(firstPosition, lastPosition) != selectedPosition) {
+                if (selectedPosition.coerceIn(firstVisibleItemPosition(), lastVisibleItemPosition()) != selectedPosition) {
                     scrollTo(selectedPosition)
                 } else {
-                    if (isFirstTime) {
+                    if (isFirstTime)
                         isFirstTime = false
-                    }
-                    launch {
-                        delay(100)
-                    }
                     isListenerRegistered = false
                     recyclerView.removeOnScrollListener(this)
                 }
@@ -72,20 +63,21 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(diffUtil: DiffUtil.
     }
     private val smoothScroller: LinearSmoothScroller by lazy {
         object : LinearSmoothScroller(recyclerView.context) {
+
             override fun getVerticalSnapPreference(): Int {
                 return SNAP_TO_END
             }
 
             override fun calculateSpeedPerPixel(displayMetrics: DisplayMetrics): Float {
-                return MILLISECONDS_PER_INCH / displayMetrics.densityDpi
+                return speed / displayMetrics.densityDpi
             }
         }
     }
 
 
     private fun normalScrolling(position: Int) {
-        //if position was the first or last then just scroll
-        if (position == 0 || position == itemCount) {
+        //if position was the first or last then just scroll and disable snaphelper
+        if (position <= 1 || position == itemCount - 1) {
             if (isSnapAttached) {
                 snapHelper.attachToRecyclerView(null)
                 isSnapAttached = false
@@ -103,11 +95,24 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(diffUtil: DiffUtil.
 
     private fun startSmoothScrolling(position: Int) {
         smoothScroller.targetPosition = position
-        (recyclerView.layoutManager as CenterZoomLayoutManager).startSmoothScroll(smoothScroller)
+        layoutManager.startSmoothScroll(smoothScroller)
+
+
+    }
+
+    /**
+     *will make sure that number is in range of minNum to excluding maxNum
+     */
+    private fun Int.approximate(minNum: Int, maxNum: Int): Int {
+        return when {
+            this < minNum -> minNum
+            this == maxNum -> maxNum - 1
+            else -> this
+        }
     }
 
     private fun scrollTo(position: Int) {
-        selectedPosition = position
+        selectedPosition = position.approximate(0, itemCount)
         if (isFirstTime) {
             launch {
                 if (!isListenerRegistered) {
@@ -116,17 +121,30 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(diffUtil: DiffUtil.
                     recyclerView.addOnScrollListener(listener)
                 }
 
-                normalScrolling(position)
+                normalScrolling(selectedPosition)
             }
         } else {
-            normalScrolling(position)
+            normalScrolling(selectedPosition)
         }
 
     }
 
+
+    private suspend fun getDistance(): Int {
+        return if (distance == -1) {
+            delay(100)
+            val firstPosition = firstVisibleItemPosition()
+            val lastPosition = lastVisibleItemPosition()
+            distance = abs((lastPosition - firstPosition) / 2)
+            distance
+        } else {
+            distance
+        }
+    }
+
     protected fun scrollToPosition(position: Int) {
         launch {
-            scrollTo(position + getDistance())
+            scrollTo(abs(position + getDistance()))
         }
     }
 }

@@ -52,7 +52,6 @@ class ChosenSongFragment : DaggerFragment() {
     }
 
 
-
     private fun setUpObserver() {
         with(viewModel)
         {
@@ -84,15 +83,16 @@ class ChosenSongFragment : DaggerFragment() {
     }
 
     private fun setUpSongRecyclerView() {
-        songListAdapter = SongListAdapter(viewModel)
         binding.playerLayout.listSong.layoutManager = CenterZoomLayoutManager(context!!)
+        songListAdapter = SongListAdapter(viewModel, binding.playerLayout.listSong, binding.playerLayout.listSong.layoutManager as CenterZoomLayoutManager)
         binding.playerLayout.listSong.adapter = songListAdapter
+
 
     }
 
     private fun setUpImageRecyclerView() {
-        imageListAdapter = ImageListAdapter(viewModel)
         binding.playerLayout.listImage.layoutManager = CenterZoomLayoutManager(context!!, LinearLayoutManager.HORIZONTAL, false)
+        imageListAdapter = ImageListAdapter(viewModel, binding.playerLayout.listImage, binding.playerLayout.listImage.layoutManager as CenterZoomLayoutManager)
         binding.playerLayout.listImage.adapter = imageListAdapter
 
     }

@@ -60,7 +60,7 @@ open class PlayerControlDelegate(private val context: Context,
     private var prevPlayerState = false
     private var isFocusLost = true
 
-
+    private var currentIndex = 0
     //var indicates if the focus is permanently lost so we can request focus again
     private var isFocusPermanentLost = true
 
@@ -106,7 +106,6 @@ open class PlayerControlDelegate(private val context: Context,
                     launch {
                         focusLock = true
                         delay(1000)
-                        //Log.v("focusgained", " fgained $prevPlayerState  $isFocusLost")
                         if (prevPlayerState && !isFocusLost) {
                             // Log.v("focusgained", "true")
                             play()
@@ -120,9 +119,10 @@ open class PlayerControlDelegate(private val context: Context,
 
             //when the focus lost we pause the player and set prevPlayerState to the current state of player
             override fun onAudioFocusLost(Permanent: Boolean) {
+                Log.v("serviceDestoyes", "focus lost temp $Permanent")
+
                 isFocusLost = true
                 if (isPlaying()/*&&!prevPlayerState*/) {
-                    Log.v("focusgained", " lost $prevPlayerState  $isFocusLost")
                     prevPlayerState = true
                 }
                 pause()
@@ -150,6 +150,7 @@ open class PlayerControlDelegate(private val context: Context,
      */
     override fun seekTo(index: Int) {
         if (!retryIfStopped()) {
+            currentIndex = index
             player?.seekTo(index, 0)
             play()
         }
@@ -166,6 +167,8 @@ open class PlayerControlDelegate(private val context: Context,
 
     private fun retryIfStopped(): Boolean {
         if (player!!.playbackState == ExoPlayer.STATE_IDLE) {
+            Log.v("registeringAudioSession", " control retry if stopped")
+
             player!!.seekTo(mediaPreferences.getCurrentTrack(), mediaPreferences.getCurrentPosition())
             player!!.playWhenReady = true
             player!!.prepare(mediaSource, false, false)
@@ -183,6 +186,10 @@ open class PlayerControlDelegate(private val context: Context,
             requestFocus()
             isFocusPermanentLost = false
         } else if (!isPlaying()) {
+            if (player!!.playbackState == ExoPlayer.STATE_ENDED)
+                player!!.seekTo(currentIndex, 0)
+            Log.v("registeringAudioSession", " control playing")
+
             player?.playWhenReady = true
         }
 
@@ -194,6 +201,8 @@ open class PlayerControlDelegate(private val context: Context,
      */
     override fun pause() {
         if (isPlaying()) {
+            Log.v("registeringAudioSession", " control pausing")
+
             player?.playWhenReady = false
         }
     }

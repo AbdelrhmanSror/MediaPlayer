@@ -3,6 +3,8 @@ package com.example.mediaplayer.audioPlayer
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompat
 import com.example.mediaplayer.data.MediaPreferences
 import com.example.mediaplayer.foregroundService.AudioForegroundService
@@ -11,20 +13,22 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class AudioPlayerModel(val currentIndex: Int,
                             val isPlaying: Boolean,
                             val shuffleModeEnabled: Boolean,
                             val repeatMode: Int,
-                            val duration: Long)
+                            val duration: Long? = null)
 
 
 class AudioPlayer @Inject constructor(private val service: AudioForegroundService,
                                       private val mediaSessionCompat: MediaSessionCompat,
-                                      var player: SimpleExoPlayer?, private val mediaAudioFocusCompat: MediaAudioFocusCompat,
+                                      private var player: SimpleExoPlayer?,
+                                      private val mediaAudioFocusCompat: MediaAudioFocusCompat,
                                       private val mediaPreferences: MediaPreferences)
-    : PlayerListenerDelegate(service, player!!, mediaPreferences),
+    : PlayerListenerDelegate(service, player!!, mediaPreferences), DefaultLifecycleObserver,
         IPlayerControl by PlayerControlDelegate(service, player, mediaAudioFocusCompat, mediaPreferences),
         AudioPlayerObservable {
 
@@ -39,17 +43,17 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
 
     private var isNoisyModeEnabled = false
 
-    //to give flexibility if i want to do extra work while releasing the player like stopping service
-    private var extraRelease: (() -> Unit)? = null
-
-
     private val mediaSessionConnector: MediaSessionConnector by lazy {
         MediaSessionConnector(mediaSessionCompat)
     }
 
     init {
-        Log.v("audioManagerNotificati", "audioplayer")
+        service.lifecycle.addObserver(this)
+    }
 
+    override fun onDestroy(owner: LifecycleOwner) {
+        Log.v("serviceDestoyes", "done from service")
+        releasePlayerPermanently()
     }
 
     /**
@@ -93,11 +97,11 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
      *
      * call this if u just want to un register your observer,this will not release the player
      *
-     * if u want to release every thing use [release]
+     * if u want to release every thing use [releaseIfPossible]
      *
      * if you have registered to listen to progress this [removeObserver] will stop the progress
      *
-     * NOTE: this will act as [release] if there is only one observer so no need to call both together just one of them
+     * NOTE: this will act as [releaseIfPossible] if there is only one observer so no need to call both together just one of them
      */
     override fun removeObserver(iPlayerState: IPlayerState) {
         //calling onDatch fun of every listenr first
@@ -126,12 +130,14 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
     override fun notifyObserver(iPlayerState: IPlayerState) {
         //only notify observer if the player at state ready
         if (player!!.isPlayerStateReady()) {
-            iPlayerState.onAttached(AudioPlayerModel(
-                    player!!.currentWindowIndex
-                    , player!!.playWhenReady,
-                    player!!.shuffleModeEnabled,
-                    player!!.repeatMode,
-                    player!!.duration))
+            with(player!!) {
+                iPlayerState.onAttached(AudioPlayerModel(
+                        this.currentWindowIndex,
+                        this.playWhenReady,
+                        this.shuffleModeEnabled,
+                        this.repeatMode,
+                        if (this.duration < 0) null else this.duration))
+            }
         } else {
             iPlayerState.onAttached(null)
         }
@@ -147,9 +153,8 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
     /**
      * to control the player through headset or google assistant
      */
-    fun setCommandControl(mediaSessionCallback: MediaSessionCompat.Callback, mediaDescriptionCompat: (Int) -> MediaDescriptionCompat) {
+    fun setCommandControl(mediaDescriptionCompat: (Int) -> MediaDescriptionCompat) {
         mediaSessionConnector.setPlayer(player)
-        // mediaSessionConnector.mediaSession.setCallback(mediaSessionCallback)
         mediaSessionCompat.isActive = true
         val queueNavigator: TimelineQueueNavigator = object : TimelineQueueNavigator(mediaSessionCompat) {
             override fun getMediaDescription(player: Player?, windowIndex: Int): MediaDescriptionCompat {
@@ -169,34 +174,33 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
      */
     override fun invalidate() {
         if (isReleased && getCountOfMainObservers() == 0) {
-            releasePlayerPermanently()
+            service.stopSelf()
         }
     }
 
     private fun releasePlayerPermanently() {
-        removeAllObservers()
-        player?.release()
-        player = null
-        mediaSessionCompat.release()
-        mediaSessionConnector.setPlayer(null)
-        extraRelease?.invoke()
-
+        launch {
+            removeAllObservers()
+            mediaSessionCompat.release()
+            mediaSessionConnector.setPlayer(null)
+            player?.release()
+            player = null
+        }
     }
 
 
     /**
-     * if u want to release every thing use [release]
+     * if u want to release every thing use [releaseIfPossible]
      *
-     * this has no effect if number of observer larger than 1
+     * this has no effect if number of main observer larger than 1
      *
-     * this will delay the releasing of player until the observers are not attached unless user resume the player again then nothing wil happen
+     * this will delay the releasing of player until the main observers are not attached unless user resume the player again then nothing wil happen
      *
      * this best for avoiding releasing player when ui is visible also to avoid preparing player again after that
      *
-     * if u want to release player immediately call [removeAllObservers] then [invalidate]
+     * if u want to release player immediately call [removeAllObservers] then [releaseIfPossible]
      */
-    fun release(extra: (() -> Unit)?) {
-        extraRelease = extra
+    fun releaseIfPossible() {
         player.let {
             isReleased = true
             invalidate()

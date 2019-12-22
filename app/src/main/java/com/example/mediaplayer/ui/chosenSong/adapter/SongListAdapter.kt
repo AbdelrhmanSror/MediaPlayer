@@ -17,6 +17,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mediaplayer.databinding.ChosenSongListLayoutBinding
 import com.example.mediaplayer.extensions.startFavouriteAnimation
@@ -38,8 +39,8 @@ import kotlinx.android.synthetic.main.chosen_song_list_layout.view.*
  * limitations under the License.
  */
 
-class SongListAdapter(private val viewModel: ChosenSongViewModel) :
-        MediaAdapter<SongListAdapter.ViewHolder, SongModel>(DiffCallBack) {
+class SongListAdapter(private val viewModel: ChosenSongViewModel, private val recyclerView: RecyclerView, layoutManager: LinearLayoutManager) :
+        MediaAdapter<SongListAdapter.ViewHolder, SongModel>(recyclerView, layoutManager, DiffCallBack) {
 
     private var lastSelectedItemPosition: Int = 0
     private var currentSelectedItemPosition: Int = 0
@@ -117,6 +118,7 @@ class SongListAdapter(private val viewModel: ChosenSongViewModel) :
                 return
             notifyItemChanged(lastSelectedItemPosition)
             notifyItemChanged(currentSelectedItemPosition)
+            speed = 5f
             scrollToPosition(position)
         }
 

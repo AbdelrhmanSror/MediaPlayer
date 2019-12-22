@@ -17,14 +17,15 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mediaplayer.databinding.PlayerImageLibraryBinding
 import com.example.mediaplayer.viewModels.ChosenSongViewModel
 import kotlinx.android.synthetic.main.player_image_library.view.*
 
 
-class ImageListAdapter(private val viewModel: ChosenSongViewModel) :
-        MediaAdapter<ImageListAdapter.ViewHolder, String>(DiffCallBack) {
+class ImageListAdapter(private val viewModel: ChosenSongViewModel, recyclerView: RecyclerView, layoutManager: LinearLayoutManager) :
+        MediaAdapter<ImageListAdapter.ViewHolder, String>(recyclerView, layoutManager, DiffCallBack) {
 
     private var currentSelectedItemPosition: Int = -1
 
@@ -88,6 +89,7 @@ class ImageListAdapter(private val viewModel: ChosenSongViewModel) :
             currentSelectedItemPosition = position
             //scroll to the current focused position
             if (scrollEnabled) {
+                speed = 1f
                 scrollToPosition(position)
             }
         }

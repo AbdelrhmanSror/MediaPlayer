@@ -17,7 +17,6 @@ import androidx.lifecycle.MutableLiveData
 
 
 interface IPlayerState {
-
     /**
      * this will be called when the player complete playing all the the audio file in the list and no other files to play
      */

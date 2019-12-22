@@ -1,3 +1,4 @@
+/*
 package com.example.mediaplayer.audioPlayer
 
 import android.content.Intent
@@ -36,7 +37,7 @@ class MediaSessionCallback @Inject constructor(
                 KeyEvent.KEYCODE_MEDIA_STOP -> {
                     Log.v("nothandlingexception", "${event.keyCode}")
 
-                    player.release {
+                    player.releaseIfPossible {
                         service.stopSelf()
                     }
                 }
@@ -50,3 +51,4 @@ class MediaSessionCallback @Inject constructor(
 
 
 }
+*/

@@ -5,7 +5,6 @@ import android.content.Context
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.lifecycle.Lifecycle
 import com.example.mediaplayer.audioPlayer.AudioPlayer
-import com.example.mediaplayer.audioPlayer.MediaSessionCallback
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocus
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompat
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusPre
@@ -40,8 +39,6 @@ abstract class MusicServiceModule {
     @Binds
     internal abstract fun provideService(instance: AudioForegroundService): Service
 
-    @Binds
-    internal abstract fun provideMediaSessionCallback(instance: MediaSessionCallback): MediaSessionCompat.Callback
 
     /* @Binds
      internal abstract fun provideMediaSessionCallback(instance: MediaSessionCallback): MediaSessionCompat.Callback*/

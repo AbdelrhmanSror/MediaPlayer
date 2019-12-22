@@ -1,6 +1,7 @@
 package com.example.mediaplayer.audioPlayer.notification
 
 import android.app.Notification
+import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.example.mediaplayer.audioPlayer.AudioPlayer
@@ -32,7 +33,6 @@ class AudioForegroundNotificationManager @Inject constructor(private val service
     private var notificationJob: Job? = null
     private val publisher = Channel<Event>(Channel.UNLIMITED)
     private val currentState = MusicNotificationModel()
-    private var isReceiverRegistered = false
 
 
     private val playerListener = object : IPlayerState {
@@ -42,6 +42,7 @@ class AudioForegroundNotificationManager @Inject constructor(private val service
         }
 
         override fun onPause() {
+            Log.v("registeringAudioSession", " noti pause")
             onNextState(false)
         }
 
@@ -52,24 +53,11 @@ class AudioForegroundNotificationManager @Inject constructor(private val service
             }
         }
 
+        override fun onStop() {
+            Log.v("registeringAudioSession", "stop")
+        }
     }
 
-    /* fun registerReceiver() {
-         if (!isReceiverRegistered) {
-             Log.v("registeringAudioSession", " done reg ")
-
-             isReceiverRegistered = true
-             val intentFilter = IntentFilter(NOTIFICATION_EVENT)
-             intentFilter.priority=100
-             service.registerReceiver(NotificationIntentReceiver(), intentFilter)
-         }
-     }
-
-     fun unregisterReciever() {
-         isReceiverRegistered = false
-         service.unregisterReceiver(NotificationIntentReceiver())
-
-     }*/
 
     companion object {
         private const val METADATA_PUBLISH_DELAY = 350L
@@ -148,8 +136,10 @@ class AudioForegroundNotificationManager @Inject constructor(private val service
         if (!isForeground) {
             return
         }
-        service.stopForeground(true)
+        Log.v("serviceDestoyes", "canceling notification ")
+
         notificationImp.cancel()
+        service.stopForeground(true)
         isForeground = false
     }
 
