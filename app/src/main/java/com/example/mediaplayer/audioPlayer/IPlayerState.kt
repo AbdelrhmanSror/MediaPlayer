@@ -34,7 +34,7 @@ interface IPlayerState {
     fun onPlay() {}
 
     /**
-     * this triggers whenever the audio stop playing
+     * this triggers whenever the audio pausing
      */
     fun onPause() {}
 
@@ -44,13 +44,12 @@ interface IPlayerState {
 
     /**
      * this triggers whenever the audio track changes
-     * also will trigger when the current audio track changes automatically without interference from user
+     * also will trigger when the current audio track changes
      */
     fun onAudioChanged(index: Int, currentInstance: Any?) {}
 
     /**
      * this triggers whenever the audio shuffle and repeat mode changes changes
-     * also it triggers at initialization time
      */
     fun onShuffleModeChanged(enable: Boolean) {}
 

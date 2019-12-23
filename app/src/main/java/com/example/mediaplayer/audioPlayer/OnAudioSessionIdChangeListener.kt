@@ -1,5 +1,6 @@
 package com.example.mediaplayer.audioPlayer
 
+import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.example.mediaplayer.foregroundService.AudioForegroundService
@@ -50,7 +51,9 @@ class OnAudioSessionIdChangeListener private constructor(service: AudioForegroun
      * when player become active we check if we reset everything or not if yes we add audio listener again
      */
     override fun onActivePlayer() {
+        Log.v("registeringAudioSession", "on active player1")
         if (isReset) {
+            Log.v("registeringAudioSession", "on active player2")
             isReset = false
             player.addAudioListener(onAudioSessionIdChangeListener)
         }

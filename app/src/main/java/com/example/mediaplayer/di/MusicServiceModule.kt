@@ -77,8 +77,8 @@ abstract class MusicServiceModule {
         @Provides
         @JvmStatic
         @PerService
-        internal fun providePlayer(service: AudioForegroundService, mediaSessionCompat: MediaSessionCompat, mediaAudioFocusCompat: MediaAudioFocusCompat, mediaPreferences: MediaPreferences): AudioPlayer {
-            return AudioPlayer(service, mediaSessionCompat, ExoPlayerFactory.newSimpleInstance(service), mediaAudioFocusCompat, mediaPreferences)
+        internal fun providePlayer(service: AudioForegroundService, mediaSessionCompat: MediaSessionCompat, mediaPreferences: MediaPreferences): AudioPlayer {
+            return AudioPlayer(service, mediaSessionCompat, ExoPlayerFactory.newSimpleInstance(service), mediaPreferences)
         }
 
 

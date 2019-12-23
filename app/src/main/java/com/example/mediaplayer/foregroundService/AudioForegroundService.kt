@@ -9,6 +9,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import androidx.lifecycle.LifecycleService
 import com.example.mediaplayer.audioPlayer.AudioPlayer
 import com.example.mediaplayer.audioPlayer.IPlayerState
+import com.example.mediaplayer.audioPlayer.audioFocus.FocusRequestImp
 import com.example.mediaplayer.audioPlayer.notification.AudioForegroundNotificationManager
 import com.example.mediaplayer.di.inject
 import com.example.mediaplayer.intent.CHOSEN_SONG_INDEX
@@ -32,6 +33,8 @@ class AudioForegroundService @Inject constructor() : LifecycleService() {
     //responsible for creating media player notification;
     @Inject
     lateinit var notificationManager: AudioForegroundNotificationManager
+    @Inject
+    lateinit var focusRequestImp: FocusRequestImp
 
 
     override fun onCreate() {

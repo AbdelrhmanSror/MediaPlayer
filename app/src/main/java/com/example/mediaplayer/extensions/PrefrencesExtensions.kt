@@ -30,5 +30,5 @@ inline fun <reified T> SharedPreferences.putItem(key: String, value: T) {
             is MutableSet<*> -> putStringSet(key, value as MutableSet<String>)
             else -> throw IllegalArgumentException("generic type not handle ${T::class.java.name}")
         }
-    }
+    }.apply()
 }

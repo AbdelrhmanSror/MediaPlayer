@@ -142,8 +142,9 @@ class ChosenSongViewModel(application: Application,
 
     override fun onAudioChanged(index: Int, currentInstance: Any?) {
         _chosenSongIndex.value = (Event(index))
-        _duration.value = (currentInstance as SongModel).duration
-
+        currentInstance?.let {
+            _duration.value = (it as SongModel).duration
+        }
     }
 
     override fun onAttached(audioPlayerModel: AudioPlayerModel) {

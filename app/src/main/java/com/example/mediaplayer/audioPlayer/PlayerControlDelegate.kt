@@ -2,8 +2,6 @@ package com.example.mediaplayer.audioPlayer
 
 import android.content.Context
 import android.net.Uri
-import com.example.mediaplayer.audioPlayer.audioFocus.AudioFocusCallBacks
-import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompat
 import com.example.mediaplayer.data.MediaPreferences
 import com.example.mediaplayer.extensions.isPlayerStateEnded
 import com.example.mediaplayer.extensions.isPlayerStateIdle
@@ -18,12 +16,10 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 
 open class PlayerControlDelegate(private val context: Context,
-                                 private var player: SimpleExoPlayer?, private val mediaAudioFocusCompat: MediaAudioFocusCompat,
+                                 private var player: SimpleExoPlayer?,
                                  private val mediaPreferences: MediaPreferences
 ) : IPlayerControl, CoroutineScope by CustomScope(Dispatchers.Main) {
 
@@ -51,18 +47,6 @@ open class PlayerControlDelegate(private val context: Context,
 
 
     private lateinit var mediaSource: MediaSource
-    private var focusLock = false
-
-
-    /**
-     * variable to indicate to the last state of player if audio focus happened
-     * so if the last state of player was true then continue playing the audio after the focus gained otherwise do nothing
-     * because user himself paused the player so it makes no sense to continue playing as it was already paused
-     */
-    private var prevPlayerState = false
-    private var isFocusLost = true
-    //var indicates if the focus is permanently lost so we can request focus again
-    private var isFocusPermanentLost = true
 
 
     //creating concatenating media source for media player to play_notification
@@ -94,46 +78,6 @@ open class PlayerControlDelegate(private val context: Context,
     }
 
 
-    /**
-     * request focus for audio player to start
-     */
-    override fun requestFocus(): Boolean {
-        if (isFocusPermanentLost) {
-            prevPlayerState = true
-            isFocusPermanentLost = false
-            mediaAudioFocusCompat.requestAudioFocus(object : AudioFocusCallBacks {
-                //when the focus gained we start playing audio if it was previously running
-                override fun onAudioFocusGained() {
-                    isFocusLost = false
-                    if (!focusLock) {
-                        launch {
-                            focusLock = true
-                            delay(1000)
-                            if (prevPlayerState && !isFocusLost) {
-                                play()
-                                prevPlayerState = false
-                            }
-                            focusLock = false
-                        }
-                    }
-
-                }
-
-                //when the focus lost we pause the player and set prevPlayerState to the current state of player
-                override fun onAudioFocusLost(Permanent: Boolean) {
-                    isFocusLost = true
-                    if (player!!.isPlaying()/*&&!prevPlayerState*/) {
-                        prevPlayerState = true
-                    }
-                    pause()
-                    isFocusPermanentLost = Permanent
-                }
-            })
-            return true
-        }
-        return false
-    }
-
     override fun repeatModeEnable() {
         repeatModeActivated = !repeatModeActivated
 
@@ -152,11 +96,11 @@ open class PlayerControlDelegate(private val context: Context,
      * seek to different track
      */
     override fun seekTo(index: Int) {
-        if (!retryIfStopped()) {
-            currentIndex = index
-            player?.seekTo(index, 0)
-            play()
-        }
+        currentIndex = index
+        player?.seekTo(index, 0)
+        player!!.playWhenReady = true
+        retryIfStopped()
+
     }
 
 
@@ -164,14 +108,14 @@ open class PlayerControlDelegate(private val context: Context,
      * seek to different position
      */
     override fun seekToSecond(second: Int) {
-        player?.seekTo(second * 1000.toLong())
+        player?.seekTo(currentIndex, second * 1000.toLong())
+        retryIfStopped()
     }
 
 
-    private fun retryIfStopped(): Boolean {
+    private fun retryIfStopped(action: (() -> Unit)? = null): Boolean {
         if (player!!.isPlayerStateIdle()) {
-            player!!.seekTo(mediaPreferences.getCurrentTrack(), mediaPreferences.getCurrentPosition())
-            player!!.playWhenReady = true
+            action?.invoke()
             player!!.prepare(mediaSource, false, false)
             return true
         }
@@ -193,13 +137,12 @@ open class PlayerControlDelegate(private val context: Context,
      * play audio
      */
     override fun play() {
-        if (!player!!.isPlaying() && !requestFocus()) {
+        if (!player!!.isPlaying()) {
             //for when player finish playing all tracks then the state will be ended so if user clicked play we repeat the same song again
             if (player!!.isPlayerStateEnded())
                 player!!.seekTo(currentIndex, 0)
             player?.playWhenReady = true
         }
-
     }
 
     /**
@@ -215,7 +158,15 @@ open class PlayerControlDelegate(private val context: Context,
      * go to next audio
      */
     override fun next() {
-        player?.next()
+        val stopped = retryIfStopped {
+            player!!.seekTo(++currentIndex, 0)
+            player!!.playWhenReady = true
+        }
+        if (!stopped) {
+            player?.next()
+
+        }
+
     }
 
     /**
@@ -224,10 +175,16 @@ open class PlayerControlDelegate(private val context: Context,
      * and user pressed on previous button then we reset the player to the beginning
      */
     override fun previous() {
-        player?.apply {
-            when {
-                currentPosition > 3000 -> seekTo(0)
-                else -> previous()
+        val stopped = retryIfStopped {
+            player!!.seekTo(--currentIndex, 0)
+            player!!.playWhenReady = true
+        }
+        if (!stopped) {
+            player?.apply {
+                when {
+                    currentPosition > 3000 -> seekTo(0)
+                    else -> previous()
+                }
             }
         }
 
@@ -236,9 +193,14 @@ open class PlayerControlDelegate(private val context: Context,
 
     /**
      * change the audio state from playing to pausing and vice verse
+     * to change the current state always use this method, if u tried to use play or pause method will cause unwanted behaviour
      */
     override fun changeAudioState() {
-        if (!retryIfStopped()) {
+        val stopped = retryIfStopped {
+            player!!.seekTo(mediaPreferences.getCurrentTrack(), mediaPreferences.getCurrentPosition())
+            player!!.playWhenReady = true
+        }
+        if (!stopped) {
             if (player!!.isPlaying()) {
                 pause()
             } else {

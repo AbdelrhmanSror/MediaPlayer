@@ -4,7 +4,6 @@ import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompat
 import com.example.mediaplayer.data.MediaPreferences
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.google.android.exoplayer2.Player
@@ -23,10 +22,9 @@ data class AudioPlayerModel(val currentIndex: Int,
 class AudioPlayer @Inject constructor(private val service: AudioForegroundService,
                                       private val mediaSessionCompat: MediaSessionCompat,
                                       private var player: SimpleExoPlayer?,
-                                      private val mediaAudioFocusCompat: MediaAudioFocusCompat,
                                       private val mediaPreferences: MediaPreferences)
     : PlayerListenerDelegate(service, player!!, mediaPreferences), DefaultLifecycleObserver,
-        IPlayerControl by PlayerControlDelegate(service, player, mediaAudioFocusCompat, mediaPreferences),
+        IPlayerControl by PlayerControlDelegate(service, player, mediaPreferences),
         AudioPlayerObservable {
 
 
@@ -43,6 +41,7 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
     private val mediaSessionConnector: MediaSessionConnector by lazy {
         MediaSessionConnector(mediaSessionCompat)
     }
+
 
     init {
         service.lifecycle.addObserver(this)

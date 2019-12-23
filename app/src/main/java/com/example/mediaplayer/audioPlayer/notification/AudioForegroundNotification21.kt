@@ -8,7 +8,6 @@ import android.graphics.Typeface
 import android.support.v4.media.session.MediaSessionCompat
 import android.text.SpannableString
 import android.text.style.StyleSpan
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.mediaplayer.R
 import com.example.mediaplayer.extensions.toUri
@@ -106,7 +105,6 @@ open class AudioForegroundNotification21 @Inject constructor(val service: Servic
     ) {
         builder.mActions[0] = NotificationActions.skipPrevious(service)
         builder.mActions[2] = NotificationActions.skipNext(service)
-        Log.v("serviceDestroyed", "album uri ${album.toUri()}")
 
         builder.setLargeIcon(ImageLoader.getImageBitmap(service, album.toUri()))
                 .setContentTitle(title)

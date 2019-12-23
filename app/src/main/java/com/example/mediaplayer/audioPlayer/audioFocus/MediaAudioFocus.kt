@@ -19,7 +19,6 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.lifecycle.DefaultLifecycleObserver
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import javax.inject.Inject
 
@@ -28,18 +27,19 @@ import javax.inject.Inject
 
  */
 @RequiresApi(api = Build.VERSION_CODES.O)
-class MediaAudioFocus @Inject constructor(context: Context, service: AudioForegroundService) : MediaAudioFocusCompat(service)
-        , DefaultLifecycleObserver {
+class MediaAudioFocus @Inject constructor(service: AudioForegroundService) : MediaAudioFocusCompat(service) {
 
     private val focusLock = Any()
     private var audioFocusCallBacks: AudioFocusCallBacks? = null
     private var playbackDelayed = false
     private var playbackNowAuthorized = false
     private var resumeOnFocusGain = false
-    private var isFocusLost: Boolean = true
+    private var isFocusLost = true
 
 
-    private val audioManager: AudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    private val audioManager: AudioManager by lazy {
+        service.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    }
     private val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).run {
         setAudioAttributes(AudioAttributes.Builder().run {
             setUsage(AudioAttributes.USAGE_MEDIA)
@@ -54,6 +54,7 @@ class MediaAudioFocus @Inject constructor(context: Context, service: AudioForegr
 
 
     override fun abandonAudioFocus() {
+        isFocusLost = true
         audioManager.abandonAudioFocusRequest(focusRequest)
 
     }
@@ -66,7 +67,9 @@ class MediaAudioFocus @Inject constructor(context: Context, service: AudioForegr
                     synchronized(focusLock) {
                         playbackDelayed = false
                         resumeOnFocusGain = false
+
                     }
+                    isFocusLost = false
                     audioFocusCallBacks?.onAudioFocusGained()
 
                 }
@@ -75,8 +78,8 @@ class MediaAudioFocus @Inject constructor(context: Context, service: AudioForegr
                 synchronized(focusLock) {
                     resumeOnFocusGain = false
                     playbackDelayed = false
-                    isFocusLost = true
                 }
+                isFocusLost = true
                 audioFocusCallBacks?.onAudioFocusLost(true)
 
 
@@ -87,6 +90,7 @@ class MediaAudioFocus @Inject constructor(context: Context, service: AudioForegr
                     playbackDelayed = false
 
                 }
+                isFocusLost = false
                 audioFocusCallBacks?.onAudioFocusLost(false)
             }
 
@@ -95,21 +99,23 @@ class MediaAudioFocus @Inject constructor(context: Context, service: AudioForegr
 
     }
 
-    override fun requestAudioFocus(audioFocusCallBacks: AudioFocusCallBacks?) {
+    override fun requestAudioFocus(audioFocusCallBacks: AudioFocusCallBacks) {
         if (isFocusLost) {
-            isFocusLost = false
             this.audioFocusCallBacks = audioFocusCallBacks
             val res = audioManager.requestAudioFocus(focusRequest)
             synchronized(focusLock) {
                 playbackNowAuthorized = when (res) {
                     AudioManager.AUDIOFOCUS_REQUEST_FAILED -> {
+                        isFocusLost = true
                         false
                     }
                     AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
-                        audioFocusCallBacks?.onAudioFocusGained()
+                        isFocusLost = false
+                        audioFocusCallBacks.onAudioFocusGained()
                         true
                     }
                     AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> {
+                        isFocusLost = false
                         playbackDelayed = true
                         false
                     }

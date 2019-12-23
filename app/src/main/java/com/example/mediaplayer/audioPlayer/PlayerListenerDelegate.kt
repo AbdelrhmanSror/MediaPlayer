@@ -37,7 +37,8 @@ interface IPlayerListener {
 
 @Suppress("UNCHECKED_CAST")
 open class PlayerListenerDelegate(private val service: AudioForegroundService,
-                                  private val player: SimpleExoPlayer?, private val mediaPreferences: MediaPreferences
+                                  private val player: SimpleExoPlayer?,
+                                  private val mediaPreferences: MediaPreferences
 ) : CoroutineScope by CustomScope(Dispatchers.Main) {
     private lateinit var onPlayerStateChanged: Player.EventListener
 
@@ -51,6 +52,8 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
     private var trackEndHandled = false
     //this is to prevent calling playing call backs at first time player is being played
     private var isFirstTime: Boolean = true
+
+    private var isStopped = false
 
     /**
      * to indicate if the player is released or not so when the ui is not visible we release the player
@@ -85,6 +88,10 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                                 currentInstance = player.currentTag
                                 Log.v("registeringAudioSession", " tracking  $currentWindowIndex $playWhenReady ")
                                 triggerTrackChangedCallbacks()
+                                if (isStopped) {
+                                    isStopped = false
+                                    triggerPlayingCallbacks()
+                                }
 
                             }
 
@@ -130,6 +137,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                                 }
                             }
                             isPlayerStateIdle() -> {
+                                isStopped = true
                                 // Not playing because playback ended, the player is buffering, stopped or
                                 // failed. Check playbackState and player.getPlaybackError for details.
                                 mediaPreferences.apply {
@@ -246,6 +254,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
         return onProgressChanged
 
     }
+
 
 }
 

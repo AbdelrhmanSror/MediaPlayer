@@ -28,6 +28,7 @@ class MediaAudioFocusPre @Inject constructor(context: Context, service: AudioFor
 
     private var audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
+    private var isFocusLost = true
     private var result = audioManager.requestAudioFocus(this,
             // Use the music stream.
             AudioManager.STREAM_MUSIC,
@@ -35,18 +36,22 @@ class MediaAudioFocusPre @Inject constructor(context: Context, service: AudioFor
             AudioManager.AUDIOFOCUS_GAIN)
 
 
-
-    override fun requestAudioFocus(audioFocusCallBacks: AudioFocusCallBacks?) {
-        this.audioFocusCallBacks = audioFocusCallBacks
-        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            audioFocusCallBacks?.onAudioFocusGained()
-        } else if (result == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
-            audioFocusCallBacks?.onAudioFocusLost(true)
+    override fun requestAudioFocus(audioFocusCallBacks: AudioFocusCallBacks) {
+        if (isFocusLost) {
+            this.audioFocusCallBacks = audioFocusCallBacks
+            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                isFocusLost = false
+                audioFocusCallBacks.onAudioFocusGained()
+            } else if (result == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
+                isFocusLost = true
+                audioFocusCallBacks.onAudioFocusLost(true)
+            }
         }
     }
 
 
     override fun abandonAudioFocus() {
+        isFocusLost = true
         audioManager.abandonAudioFocus(this)
 
     }
@@ -56,14 +61,18 @@ class MediaAudioFocusPre @Inject constructor(context: Context, service: AudioFor
             AudioManager.AUDIOFOCUS_LOSS -> {
                 // Permanent loss of audio focus
                 // Pause playback immediately
-                abandonAudioFocus()
+                isFocusLost = true
                 audioFocusCallBacks?.onAudioFocusLost(true)
             }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                isFocusLost = false
+
                 audioFocusCallBacks?.onAudioFocusLost(false)
 
             }
             AudioManager.AUDIOFOCUS_GAIN -> {
+                isFocusLost = false
+
                 // Your app has been granted audio focus again
                 audioFocusCallBacks?.onAudioFocusGained()
 
