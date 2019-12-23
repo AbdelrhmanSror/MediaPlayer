@@ -8,19 +8,17 @@ import androidx.lifecycle.LifecycleOwner
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompat
 import com.example.mediaplayer.data.MediaPreferences
 import com.example.mediaplayer.foregroundService.AudioForegroundService
-import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class AudioPlayerModel(val currentIndex: Int,
                             val isPlaying: Boolean,
                             val shuffleModeEnabled: Boolean,
                             val repeatMode: Int,
-                            val duration: Long? = null)
+                            val currentInstance: Any? = null)
 
 
 class AudioPlayer @Inject constructor(private val service: AudioForegroundService,
@@ -52,7 +50,6 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
-        Log.v("serviceDestoyes", "done from service")
         releasePlayerPermanently()
     }
 
@@ -128,25 +125,19 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
 
 
     override fun notifyObserver(iPlayerState: IPlayerState) {
-        //only notify observer if the player at state ready
-        if (player!!.isPlayerStateReady()) {
-            with(player!!) {
-                iPlayerState.onAttached(AudioPlayerModel(
-                        this.currentWindowIndex,
-                        this.playWhenReady,
-                        this.shuffleModeEnabled,
-                        this.repeatMode,
-                        if (this.duration < 0) null else this.duration))
-            }
-        } else {
-            iPlayerState.onAttached(null)
+        //only notify observer if the player at state ready or ended so we guarantee that data is ready
+        Log.v("registeringAudioSession", " notify observer ${currentTag()} ")
+
+        with(player!!) {
+            iPlayerState.onAttached(AudioPlayerModel(
+                    currentIndex(),
+                    isPlaying,
+                    this.shuffleModeEnabled,
+                    this.repeatMode,
+                    currentTag()))
         }
 
-    }
 
-
-    private fun Player.isPlayerStateReady(): Boolean {
-        return this.playbackState == ExoPlayer.STATE_READY
     }
 
 
@@ -179,13 +170,11 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
     }
 
     private fun releasePlayerPermanently() {
-        launch {
-            removeAllObservers()
-            mediaSessionCompat.release()
-            mediaSessionConnector.setPlayer(null)
-            player?.release()
-            player = null
-        }
+        removeAllObservers()
+        mediaSessionCompat.release()
+        mediaSessionConnector.setPlayer(null)
+        player?.release()
+        player = null
     }
 
 

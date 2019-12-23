@@ -71,8 +71,8 @@ class ChosenSongViewModel(application: Application,
     private val _playPauseState = MutableLiveData<Event<Boolean>>()
     val playPauseState: LiveData<Event<Boolean>> = _playPauseState
 
-    private val _playPauseStateInitial = MutableLiveData<Boolean?>()
-    val playPauseStateInitial: LiveData<Boolean?> = _playPauseStateInitial
+    private val _playPauseDrawable = MutableLiveData<Boolean?>()
+    val playPauseDrawable: LiveData<Boolean?> = _playPauseDrawable
 
     private val _audioPlayerProgress = MutableLiveData<MutableLiveData<Long>>()
     var audioPlayerProgress: LiveData<Int> = _audioPlayerProgress.switchMap {
@@ -123,14 +123,14 @@ class ChosenSongViewModel(application: Application,
     }
 
     private fun startService() {
+        //when starting the foreground we set initial value so the views will be ready as soon as possible
         if (!fromNotification) {
-            startForeground(_listOfSong.value as ArrayList<SongModel>, songIndex)
+            val songList = _listOfSong.value as ArrayList<SongModel>
+            startForeground(songList, songIndex)
         }
     }
 
     private fun startForeground(song: ArrayList<SongModel>, chosenSongIndex: Int) {
-        _chosenSongIndex.value = (Event(chosenSongIndex))
-        _duration.value = song[chosenSongIndex].duration
         val foregroundIntent = Intent(mApplication, AudioForegroundService::class.java)
         foregroundIntent.action = ACTION_FOREGROUND
         foregroundIntent.putExtra(CHOSEN_SONG_INDEX, chosenSongIndex)
@@ -139,29 +139,25 @@ class ChosenSongViewModel(application: Application,
 
     }
 
-    override fun onAttached(audioPlayerModel: AudioPlayerModel?) {
-        audioPlayerModel?.let {
-            _playPauseStateInitial.value = (it.isPlaying)
-            _chosenSongIndex.value = (Event(it.currentIndex))
-            _shuffleMode.value = it.shuffleModeEnabled
-            _repeatMode.value = it.repeatMode
-            it.duration?.let { duration -> _duration.value = (duration) }
 
-
-        }
-    }
-
-    override fun onAudioChanged(index: Int, isPlaying: Boolean, currentInstance: Any?) {
-        _playPauseStateInitial.value = (isPlaying)
+    override fun onAudioChanged(index: Int, currentInstance: Any?) {
         _chosenSongIndex.value = (Event(index))
         _duration.value = (currentInstance as SongModel).duration
 
     }
 
+    override fun onAttached(audioPlayerModel: AudioPlayerModel) {
+        with(audioPlayerModel) {
+            _playPauseDrawable.value = (isPlaying)
+            _chosenSongIndex.value = (Event(currentIndex))
+            _shuffleMode.value = shuffleModeEnabled
+            _repeatMode.value = repeatMode
+            currentInstance?.let { instance -> _duration.value = (instance as SongModel).duration }
+        }
+    }
 
     override fun onPlay() {
         _playPauseState.value = (Event(true))
-
     }
 
     override fun onPause() {

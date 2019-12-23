@@ -22,13 +22,14 @@ interface IPlayerState {
      */
     fun onAudioListCompleted() {}
 
-    /**this is called when observer is being registered and there is data to deliver otherwise return null
-     *best use is when entering the activity or fragment from notification this will always trigger returned the the state of player
+    /**this is called when observer is being registered
      */
-    fun onAttached(audioPlayerModel: AudioPlayerModel?) {}
+    fun onAttached(audioPlayerModel: AudioPlayerModel) {}
 
     /**
      * this triggers whenever the audio start  playing
+     *
+     * will not trigger at first time the player is being played,you can use [onAttached] instead at first time as indicator of playing
      */
     fun onPlay() {}
 
@@ -45,7 +46,7 @@ interface IPlayerState {
      * this triggers whenever the audio track changes
      * also will trigger when the current audio track changes automatically without interference from user
      */
-    fun onAudioChanged(index: Int, isPlaying: Boolean, currentInstance: Any?) {}
+    fun onAudioChanged(index: Int, currentInstance: Any?) {}
 
     /**
      * this triggers whenever the audio shuffle and repeat mode changes changes

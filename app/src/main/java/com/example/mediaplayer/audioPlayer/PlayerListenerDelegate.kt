@@ -2,10 +2,10 @@ package com.example.mediaplayer.audioPlayer
 
 import android.util.Log
 import com.example.mediaplayer.data.MediaPreferences
+import com.example.mediaplayer.extensions.*
 import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.shared.CustomScope
 import com.example.mediaplayer.shared.update
-import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import kotlinx.coroutines.CoroutineScope
@@ -43,11 +43,14 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 
     private val onPlayerStateListListeners: HashMap<IPlayerState, ArrayList<IPlayerListener>> = HashMap()
     private var currentAudioIndex = -1
-    private var isPlaying = true
+    var isPlaying = true
+        private set
     private var currentInstance: Any? = null
     private var playbackPosition = 0L
     private var durationSet: Boolean = false
     private var trackEndHandled = false
+    //this is to prevent calling playing call backs at first time player is being played
+    private var isFirstTime: Boolean = true
 
     /**
      * to indicate if the player is released or not so when the ui is not visible we release the player
@@ -69,7 +72,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
             if (!::onPlayerStateChanged.isInitialized) {
                 onPlayerStateChanged = object : Player.EventListener {
                     override fun onPositionDiscontinuity(reason: Int) {
-                        if (player.isTrackChanging(reason)) {
+                        if (isTrackChanged(currentAudioIndex, reason)) {
                             durationSet = false
                             if (isReleased) {
                                 isReleased = false
@@ -90,7 +93,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 
                     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
                         when {
-                            player.isNewDurationReady() -> {
+                            isNewDurationReady(durationSet) -> {
                                 launch {
                                     //give time for player to prepare duration value
                                     delay(DELAY)
@@ -98,8 +101,9 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                                 }
                                 durationSet = true
                             }
-                            player.isPlayerPlaying() -> {
+                            isPlayerPlaying() -> {
                                 if (playWhenReady != isPlaying) {
+                                    triggerPlayingCallbacks()
                                     Log.v("registeringAudioSession", " playing  ")
                                     trackEndHandled = false
                                     isPlaying = playWhenReady
@@ -108,24 +112,24 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                                     if (isReleased) {
                                         isReleased = false
                                     }
-                                    triggerPlayingCallbacks()
                                 }
 
                             }
-                            player.isPlayerPausing() -> {
+                            isPlayerPausing() -> {
                                 playbackPosition = currentPosition
                                 if (playWhenReady != isPlaying) {
+                                    isFirstTime = false
+                                    triggerPausingCallbacks()
                                     Log.v("registeringAudioSession", " pausing")
                                     isPlaying = playWhenReady
                                     // Paused by app.
                                     if (isReleased) {
                                         isReleased = false
                                     }
-                                    triggerPausingCallbacks()
 
                                 }
                             }
-                            ExoPlayer.STATE_IDLE == playbackState -> {
+                            isPlayerStateIdle() -> {
                                 // Not playing because playback ended, the player is buffering, stopped or
                                 // failed. Check playbackState and player.getPlaybackError for details.
                                 mediaPreferences.apply {
@@ -134,16 +138,19 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                                 }
                                 triggerStoppingCallbacks()
                             }
-                            player.isTracksEnded() -> {
-                                trackEndHandled = true
-                                isPlaying = false
-                                player.playWhenReady = false
+                            isTracksEnded(trackEndHandled) -> {
                                 triggerPausingCallbacks()
                                 triggerTracksEndedCallbacks()
+                                trackEndHandled = true
+                                isFirstTime = false
+                                isPlaying = false
+                                player.playWhenReady = false
+
 
                             }
                         }
                     }
+
 
                     override fun onRepeatModeChanged(repeatMode: Int) {
                         triggerRepeatModeChangedCallbacks(repeatMode)
@@ -179,7 +186,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 
     private fun triggerTrackChangedCallbacks() {
         onPlayerStateListListeners.forEach {
-            it.key.onAudioChanged(currentAudioIndex, isPlaying, currentInstance)
+            it.key.onAudioChanged(currentAudioIndex, currentInstance)
 
         }
     }
@@ -211,7 +218,9 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 
     private fun triggerPlayingCallbacks() {
         onPlayerStateListListeners.forEach { entry ->
-            entry.key.onPlay()
+            if (!isFirstTime) {
+                entry.key.onPlay()
+            }
             entry.value.forEach {
                 it.onActivePlayer()
             }
@@ -238,26 +247,6 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 
     }
 
-    private fun Player.isNewDurationReady(): Boolean {
-        return playbackState == ExoPlayer.STATE_READY && !durationSet
-    }
-
-    private fun Player.isPlayerPausing(): Boolean {
-        return !playWhenReady && playbackState == Player.STATE_READY
-    }
-
-    private fun Player.isPlayerPlaying(): Boolean {
-        return playWhenReady && playbackState == Player.STATE_READY
-
-    }
-
-    private fun Player.isTracksEnded(): Boolean {
-        return playbackState == ExoPlayer.STATE_ENDED && !trackEndHandled
-    }
-
-    private fun Player.isTrackChanging(reason: Int): Boolean {
-        return reason == Player.DISCONTINUITY_REASON_PERIOD_TRANSITION || reason == Player.DISCONTINUITY_REASON_SEEK && currentWindowIndex != currentAudioIndex
-    }
 }
 
 

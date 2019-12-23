@@ -19,15 +19,21 @@ class AudioPermission(private val activityCompat: AppCompatActivity
 
 
     companion object {
+        /**
+         * for case when user rotate the phone and permissions was requested to avoid request it again
+         */
+        private var isPermissionRequested = false
         const val MY_PERMISSIONS_REQUEST = 5
     }
 
+
     fun checkPermission() {
-        // Here, thisActivity is the current activity
-        if (!activityCompat.application.isPermissionGranted()) {
-            requestPermission()
-        } else {
-            onPermissionGranted()
+        if (!isPermissionRequested) {
+            if (!activityCompat.application.isPermissionGranted()) {
+                requestPermission()
+            } else {
+                onPermissionGranted()
+            }
         }
 
     }
@@ -52,10 +58,14 @@ class AudioPermission(private val activityCompat: AppCompatActivity
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    private fun requestPermission() = ActivityCompat.requestPermissions(activityCompat,
-            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH, Manifest.permission.RECORD_AUDIO),
-            MY_PERMISSIONS_REQUEST
-    )
+    private fun requestPermission() {
+        isPermissionRequested = true
+        ActivityCompat.requestPermissions(activityCompat,
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH, Manifest.permission.RECORD_AUDIO),
+                MY_PERMISSIONS_REQUEST
+        )
+
+    }
 
     //show snack bar to tell user to direct user to settings to enable permission
     private fun showPermissionEnableSnackBar() {
@@ -94,6 +104,7 @@ class AudioPermission(private val activityCompat: AppCompatActivity
         if (requestCode == MY_PERMISSIONS_REQUEST) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
                     && grantResults[1] == PackageManager.PERMISSION_GRANTED && grantResults[2] == PackageManager.PERMISSION_GRANTED && grantResults[3] == PackageManager.PERMISSION_GRANTED) {
+                isPermissionRequested = false
                 onPermissionGranted()
             } else {
                 // permission was not granted

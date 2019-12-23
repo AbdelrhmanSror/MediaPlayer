@@ -13,6 +13,7 @@
 
 package com.example.mediaplayer.ui.chosenSong
 
+import android.util.Log
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.SeekBar
@@ -103,12 +104,7 @@ fun adjustShuffle(imageButton: ImageButton, enable: Boolean) {
     }
 }
 
-/**
- * binding adapter for changing the play pause button shape when user clicks on it
- * first parameter of pair indicate the current state of player if it is playing or paused
- * second parameter indicate if its initial state or not so if it was we will not start animation
- */
-@BindingAdapter("playPauseAnimation")
+/*@BindingAdapter("playPauseAnimation")
 fun playPauseAnimation(imageButton: ImageButton, state: Event<Boolean>?) {
     imageButton.apply {
         state?.getContentIfNotHandled()?.let {
@@ -123,10 +119,10 @@ fun playPauseAnimation(imageButton: ImageButton, state: Event<Boolean>?) {
 
     }
 
-}
+}*/
 
-@BindingAdapter("playPauseInitial")
-fun playPauseInitial(imageButton: ImageButton, state: Boolean?) {
+@BindingAdapter("playPauseDrawable")
+fun playPauseDrawable(imageButton: ImageButton, state: Boolean?) {
     imageButton.apply {
         state?.let {
             if (state) {
@@ -138,6 +134,42 @@ fun playPauseInitial(imageButton: ImageButton, state: Boolean?) {
         }
     }
 }
+
+/**
+ * binding adapter for changing the play pause button shape when user clicks on it
+ * first parameter of pair indicate the current state of player if it is playing or paused
+ * second parameter indicate if its initial state or not so if it was we will not start animation
+ */
+@BindingAdapter("playPauseAnimation")
+fun playPauseAnimation(imageButton: ImageButton, state: Event<Boolean>?) {
+    imageButton.apply {
+        Log.v("buttonTag", "$tag")
+        state?.let { event ->
+            when (event.hasBeenHandled) {
+                false -> {
+                    val animatedVector = if (event.peekContent()) {
+                        AnimatedVectorDrawableCompat.create(context, R.drawable.play_pause_media)
+                    } else {
+                        AnimatedVectorDrawableCompat.create(context, R.drawable.pause_play_media)
+                    }
+                    setImageDrawable(animatedVector)
+                    animatedVector?.start()
+                }
+                else -> {
+                    if (event.peekContent()) {
+                        setImageDrawable(ContextCompat.getDrawable(context, R.drawable.pause_play_media))
+                    } else {
+                        setImageDrawable(ContextCompat.getDrawable(context, R.drawable.play_pause_media))
+                    }
+                }
+            }
+
+        }
+
+    }
+
+}
+
 
 
 @BindingAdapter("setInitialFavourite")

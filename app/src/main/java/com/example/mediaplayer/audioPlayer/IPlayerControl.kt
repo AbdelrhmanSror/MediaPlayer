@@ -4,6 +4,10 @@ import android.net.Uri
 
 interface IPlayerControl {
 
+    fun currentIndex(): Int
+
+    fun currentTag(): Any?
+
     fun setUpPlayer(audioList: List<Any>? = emptyList(), audioUris: List<Uri>, index: Int)
 
     /**

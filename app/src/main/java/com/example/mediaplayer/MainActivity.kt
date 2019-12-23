@@ -22,33 +22,32 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
-    private val audioPermission: AudioPermission by lazy {
-        AudioPermission(this) { navigateToStartDestination() }
-    }
-    private var isPermissionRequested = false
+    private lateinit var audioPermission: AudioPermission
 
-    companion object {
-        const val PERMISSION_HAS_REQUESTED = "permission requested"
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        ////reference to nav controller
-        navController = findNavController(R.id.nav_host_fragment)
-        checkPermission(savedInstanceState)
-        appBarConfiguration = AppBarConfiguration.Builder(setOf(R.id.playListFragment, R.id.favouriteFragment)).build()
-        //reference to toolBar
-        val toolbar = binding.toolbar
-        //set toolbar as default action bar
-        setSupportActionBar(toolbar)
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        //to disable the action bar title and use my own custom title.
-        this.disableActionBarTitle()
-        binding.bottomNavView.setupWithNavController(navController)
-        setUpPlayListBottomSheet()
-        //to control the appearanve of bottom nav
-        setUpBottomNavAppearance()
+        audioPermission = AudioPermission(this) {
+            navController = findNavController(R.id.nav_host_fragment)
+            //reference to nav controller
+            appBarConfiguration = AppBarConfiguration.Builder(setOf(R.id.playListFragment, R.id.favouriteFragment)).build()
+            //reference to toolBar
+            val toolbar = binding.toolbar
+            //set toolbar as default action bar
+            setSupportActionBar(toolbar)
+            setupActionBarWithNavController(navController, appBarConfiguration)
+            //to disable the action bar title and use my own custom title.
+            this.disableActionBarTitle()
+            binding.bottomNavView.setupWithNavController(navController)
+            setUpPlayListBottomSheet()
+            //to control the appearanve of bottom nav
+            setUpBottomNavAppearance()
+
+            navigateToStartDestination()
+        }
+        audioPermission.checkPermission()
+
 
     }
 
@@ -61,13 +60,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun checkPermission(savedInstanceState: Bundle?) {
-        if (savedInstanceState != null) {
-            isPermissionRequested = savedInstanceState.getBoolean(PERMISSION_HAS_REQUESTED, false)
-        }
-        if (!isPermissionRequested)
-            audioPermission.checkPermission()
-    }
 
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
@@ -111,13 +103,6 @@ class MainActivity : AppCompatActivity() {
         audioPermission.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
-    /**
-     * for case when user rotate the phone and permissions was requested to avoid request it again
-     */
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putBoolean(PERMISSION_HAS_REQUESTED, true)
-    }
 
 }
 

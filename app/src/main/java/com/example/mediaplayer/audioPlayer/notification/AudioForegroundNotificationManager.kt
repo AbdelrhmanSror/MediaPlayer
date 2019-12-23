@@ -3,7 +3,6 @@ package com.example.mediaplayer.audioPlayer.notification
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -56,10 +55,11 @@ class AudioForegroundNotificationManager @Inject constructor(private val service
         }
 
         override fun onPause() {
-            Log.v("registeringAudioSession", " noti pause")
             onNextState(false)
         }
-        override fun onAudioChanged(index: Int, isPlaying: Boolean, currentInstance: Any?) {
+
+
+        override fun onAudioChanged(index: Int, currentInstance: Any?) {
             currentInstance?.let {
                 onNextMetadata(currentInstance as SongModel)
 

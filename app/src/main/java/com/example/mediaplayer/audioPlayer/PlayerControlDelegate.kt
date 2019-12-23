@@ -2,12 +2,13 @@ package com.example.mediaplayer.audioPlayer
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import com.example.mediaplayer.audioPlayer.audioFocus.AudioFocusCallBacks
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompat
 import com.example.mediaplayer.data.MediaPreferences
+import com.example.mediaplayer.extensions.isPlayerStateEnded
+import com.example.mediaplayer.extensions.isPlayerStateIdle
+import com.example.mediaplayer.extensions.isPlaying
 import com.example.mediaplayer.shared.CustomScope
-import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
@@ -29,6 +30,7 @@ open class PlayerControlDelegate(private val context: Context,
 
     private var songList: List<Any>? = null
     private var songListUris: List<Uri> = emptyList()
+    private var currentIndex = 0
     private var repeatModeActivated: Boolean = false
         set(value) {
             if (value) {
@@ -59,8 +61,6 @@ open class PlayerControlDelegate(private val context: Context,
      */
     private var prevPlayerState = false
     private var isFocusLost = true
-
-    private var currentIndex = 0
     //var indicates if the focus is permanently lost so we can request focus again
     private var isFocusPermanentLost = true
 
@@ -119,10 +119,8 @@ open class PlayerControlDelegate(private val context: Context,
 
             //when the focus lost we pause the player and set prevPlayerState to the current state of player
             override fun onAudioFocusLost(Permanent: Boolean) {
-                Log.v("serviceDestoyes", "focus lost temp $Permanent")
-
                 isFocusLost = true
-                if (isPlaying()/*&&!prevPlayerState*/) {
+                if (player!!.isPlaying()/*&&!prevPlayerState*/) {
                     prevPlayerState = true
                 }
                 pause()
@@ -166,15 +164,24 @@ open class PlayerControlDelegate(private val context: Context,
 
 
     private fun retryIfStopped(): Boolean {
-        if (player!!.playbackState == ExoPlayer.STATE_IDLE) {
-            Log.v("registeringAudioSession", " control retry if stopped")
-
+        if (player!!.isPlayerStateIdle()) {
             player!!.seekTo(mediaPreferences.getCurrentTrack(), mediaPreferences.getCurrentPosition())
             player!!.playWhenReady = true
             player!!.prepare(mediaSource, false, false)
             return true
         }
         return false
+    }
+
+    override fun currentIndex() = currentIndex
+
+    override fun currentTag(): Any? {
+        return if (player!!.currentTag == null) {
+            if (songList != null)
+                songList?.get(currentIndex)
+            else null
+        } else
+            player!!.currentTag
     }
 
     /**
@@ -185,24 +192,19 @@ open class PlayerControlDelegate(private val context: Context,
             prevPlayerState = true
             requestFocus()
             isFocusPermanentLost = false
-        } else if (!isPlaying()) {
-            if (player!!.playbackState == ExoPlayer.STATE_ENDED)
+        } else if (!player!!.isPlaying()) {
+            if (player!!.isPlayerStateEnded())
                 player!!.seekTo(currentIndex, 0)
-            Log.v("registeringAudioSession", " control playing")
-
             player?.playWhenReady = true
         }
 
     }
 
-    private fun isPlaying() = player!!.playWhenReady
     /**
      * pause audio
      */
     override fun pause() {
-        if (isPlaying()) {
-            Log.v("registeringAudioSession", " control pausing")
-
+        if (player!!.isPlaying()) {
             player?.playWhenReady = false
         }
     }
@@ -235,7 +237,7 @@ open class PlayerControlDelegate(private val context: Context,
      */
     override fun changeAudioState() {
         if (!retryIfStopped()) {
-            if (isPlaying()) {
+            if (player!!.isPlaying()) {
                 pause()
             } else {
                 play()

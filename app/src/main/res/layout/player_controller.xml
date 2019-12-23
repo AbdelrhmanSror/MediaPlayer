@@ -94,13 +94,13 @@
             android:layout_marginBottom="8dp"
             android:background="@drawable/ripple_v21"
             android:elevation="8dp"
-            app:playPauseInitial="@{viewModel.playPauseStateInitial}"
             android:onClick="@{()->viewModel.onPlayPauseListener()}"
             app:backgroundTint="@color/blue"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/next"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@+id/prev"
+            app:playPauseDrawable="@{viewModel.playPauseDrawable}"
             app:playPauseAnimation="@{viewModel.playPauseState}"
             tools:srcCompat="@drawable/pause_play_media" />
 
