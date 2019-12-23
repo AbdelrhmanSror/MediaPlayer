@@ -11,18 +11,17 @@ internal fun AudioForegroundService.inject() {
             .inject(this)
 }
 
+@PerService
 @Component(modules = [
     MusicServiceModule::class,
     NotificationModule::class
 ])
-@PerService
 interface AudioForegroundServiceComponent {
 
     fun inject(instance: AudioForegroundService)
 
     @Component.Factory
     interface Factory {
-
         fun create(@BindsInstance instance: AudioForegroundService, @BindsInstance context: Context = instance): AudioForegroundServiceComponent
 
     }

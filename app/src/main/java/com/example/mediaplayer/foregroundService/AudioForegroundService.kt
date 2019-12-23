@@ -1,5 +1,6 @@
 package com.example.mediaplayer.foregroundService
 
+import android.app.Service
 import android.content.Intent
 import android.net.Uri
 import android.os.Binder
@@ -16,20 +17,16 @@ import com.example.mediaplayer.intent.NotificationAction
 import com.example.mediaplayer.intent.PlayerActions.ACTION_FOREGROUND
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.model.getMediaDescription
-import com.example.mediaplayer.shared.CustomScope
-import kotlinx.coroutines.CoroutineScope
 import javax.inject.Inject
 
 
-class AudioForegroundService @Inject constructor() : LifecycleService(),
-        IPlayerState,
-        CoroutineScope by CustomScope() {
+class AudioForegroundService @Inject constructor() : LifecycleService() {
     @Inject
     lateinit var mediaSession: MediaSessionCompat
     @Inject
     lateinit var audioPlayer: AudioPlayer
     // indicates how to behave if the service is killed.
-    private var mStartMode = START_STICKY
+    private var mStartMode = Service.START_NOT_STICKY
     // interface for clients that bind.
     private var mBinder: IBinder = SongBinder()
     //responsible for creating media player notification;
@@ -38,10 +35,18 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
 
 
     override fun onCreate() {
-        super.onCreate()
-        this.inject()
+        inject()
         // The service is being created.
-        audioPlayer.registerObserver(this)
+        super.onCreate()
+    }
+
+
+    /**
+     * for when user clear the recent screen and the player is not playing then we stop the service and clear every thing
+     */
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        audioPlayer.releaseIfPossible()
 
     }
 
@@ -99,8 +104,8 @@ class AudioForegroundService @Inject constructor() : LifecycleService(),
 
     override fun onStartCommand(intent: Intent?,
                                 flags: Int, startId: Int): Int {
-        // The service is starting, due to a call to startService().
         super.onStartCommand(intent, flags, startId)
+        // The service is starting, due to a call to startService().
         handleIntent(intent)
         return mStartMode
     }

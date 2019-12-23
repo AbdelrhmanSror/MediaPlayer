@@ -40,23 +40,21 @@ abstract class MusicServiceModule {
     internal abstract fun provideService(instance: AudioForegroundService): Service
 
 
-    /* @Binds
-     internal abstract fun provideMediaSessionCallback(instance: MediaSessionCallback): MediaSessionCompat.Callback*/
-
-
     @Module
     companion object {
         @Provides
+        @PerService
         @JvmStatic
         @ServiceLifecycle
         internal fun provideLifecycle(instance: AudioForegroundService): Lifecycle = instance.lifecycle
 
         @Provides
-        @JvmStatic
         @PerService
+        @JvmStatic
         internal fun provideMediaSession(instance: AudioForegroundService): MediaSessionCompat {
             return MediaSessionCompat(instance, instance.packageName)
         }
+
 
         @Provides
         @JvmStatic

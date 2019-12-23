@@ -2,7 +2,6 @@ package com.example.mediaplayer.audioPlayer
 
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.session.MediaSessionCompat
-import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompat
@@ -51,6 +50,7 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
 
     override fun onDestroy(owner: LifecycleOwner) {
         releasePlayerPermanently()
+
     }
 
     /**
@@ -125,9 +125,6 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
 
 
     override fun notifyObserver(iPlayerState: IPlayerState) {
-        //only notify observer if the player at state ready or ended so we guarantee that data is ready
-        Log.v("registeringAudioSession", " notify observer ${currentTag()} ")
-
         with(player!!) {
             iPlayerState.onAttached(AudioPlayerModel(
                     currentIndex(),
@@ -161,11 +158,12 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
     }
 
     /**
-     *will release the player if its release otherwise will update the release state
+     *will decide if its appropriate to release the player or not
      */
     override fun invalidate() {
-        if (isReleased && getCountOfMainObservers() == 0) {
+        if (isReleased && getCountOfMainObservers() == 0 && !isPlaying) {
             service.stopSelf()
+
         }
     }
 
@@ -187,7 +185,7 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
      *
      * this best for avoiding releasing player when ui is visible also to avoid preparing player again after that
      *
-     * if u want to release player immediately call [removeAllObservers] then [releaseIfPossible]
+     * if u want to release player immediately call [removeAllObservers] or just remove the main observer then [pause] then [releaseIfPossible]
      */
     fun releaseIfPossible() {
         player.let {

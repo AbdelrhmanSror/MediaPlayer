@@ -62,13 +62,6 @@ object NotificationActions {
                 .createPendingIntent()
     }
 
-    /*  private fun buildMediaPendingIntent(context: Context, action: Long): PendingIntent {
-          return MediaButtonReceiver.buildMediaButtonPendingIntent(
-                  context,
-                  ComponentName(context, NotificationIntentReceiver::class.java),
-                  action
-          )
-      }*/
     private fun buildMediaPendingIntent(context: Context, action: String): PendingIntent {
         val intent = Intent(context, AudioForegroundService::class.java)
         intent.action = action

@@ -26,7 +26,7 @@ import javax.inject.Inject
 
 class AudioForegroundNotificationManager @Inject constructor(private val service: AudioForegroundService,
                                                              player: AudioPlayer,
-                                                             private val notificationImp: INotification) :
+                                                             private val notificationImp: INotification) : IPlayerState,
         DefaultLifecycleObserver, CoroutineScope by CustomScope() {
 
     private var isForeground: Boolean = false
@@ -48,30 +48,27 @@ class AudioForegroundNotificationManager @Inject constructor(private val service
     }
 
 
-    private val playerListener = object : IPlayerState {
+    override fun onPlay() {
+        onNextState(true)
+    }
 
-        override fun onPlay() {
-            onNextState(true)
+    override fun onPause() {
+        onNextState(false)
+    }
+
+
+    override fun onAudioChanged(index: Int, currentInstance: Any?) {
+        currentInstance?.let {
+            onNextMetadata(currentInstance as SongModel)
+
         }
-
-        override fun onPause() {
-            onNextState(false)
-        }
-
-
-        override fun onAudioChanged(index: Int, currentInstance: Any?) {
-            currentInstance?.let {
-                onNextMetadata(currentInstance as SongModel)
-
-            }
-        }
-
     }
 
 
     init {
         createNotificationChannel()
-        player.registerObserver(playerListener)
+        player.registerObserver(this)
+        service.lifecycle.addObserver(this)
         onDataChanged.observeForever(observer)
     }
 
@@ -129,10 +126,9 @@ class AudioForegroundNotificationManager @Inject constructor(private val service
         }
     }
 
-
     override fun onDestroy(owner: LifecycleOwner) {
-        stopForeground()
         onDataChanged.removeObserver(observer)
+        stopForeground()
         notificationJob?.cancel()
     }
 
