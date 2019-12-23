@@ -19,6 +19,8 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.lifecycle.DefaultLifecycleObserver
+import com.example.mediaplayer.foregroundService.AudioForegroundService
 import javax.inject.Inject
 
 /**
@@ -26,7 +28,8 @@ import javax.inject.Inject
 
  */
 @RequiresApi(api = Build.VERSION_CODES.O)
-class MediaAudioFocus @Inject constructor(context: Context) : MediaAudioFocusCompat() {
+class MediaAudioFocus @Inject constructor(context: Context, service: AudioForegroundService) : MediaAudioFocusCompat(service)
+        , DefaultLifecycleObserver {
 
     private val focusLock = Any()
     private var audioFocusCallBacks: AudioFocusCallBacks? = null
@@ -49,11 +52,12 @@ class MediaAudioFocus @Inject constructor(context: Context) : MediaAudioFocusCom
         build()
     }
 
-    companion object {
-        fun create(context: Context): MediaAudioFocus {
-            return MediaAudioFocus(context)
-        }
+
+    override fun abandonAudioFocus() {
+        audioManager.abandonAudioFocusRequest(focusRequest)
+
     }
+
 
     override fun onAudioFocusChange(focusChange: Int) {
         when (focusChange) {

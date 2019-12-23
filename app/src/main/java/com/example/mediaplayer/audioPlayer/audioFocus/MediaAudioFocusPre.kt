@@ -15,13 +15,14 @@ package com.example.mediaplayer.audioPlayer.audioFocus
 
 import android.content.Context
 import android.media.AudioManager
+import com.example.mediaplayer.foregroundService.AudioForegroundService
 import javax.inject.Inject
 
 /**
  * worked on devices pre api 26 (oreo)
  */
 @Suppress("DEPRECATION")
-class MediaAudioFocusPre @Inject constructor(context: Context) : MediaAudioFocusCompat() {
+class MediaAudioFocusPre @Inject constructor(context: Context, service: AudioForegroundService) : MediaAudioFocusCompat(service) {
 
     private var audioFocusCallBacks: AudioFocusCallBacks? = null
 
@@ -33,11 +34,6 @@ class MediaAudioFocusPre @Inject constructor(context: Context) : MediaAudioFocus
             // Request permanent focus.
             AudioManager.AUDIOFOCUS_GAIN)
 
-    companion object {
-        fun create(context: Context): MediaAudioFocusPre {
-            return MediaAudioFocusPre(context)
-        }
-    }
 
 
     override fun requestAudioFocus(audioFocusCallBacks: AudioFocusCallBacks?) {
@@ -49,7 +45,8 @@ class MediaAudioFocusPre @Inject constructor(context: Context) : MediaAudioFocus
         }
     }
 
-    private fun abandonAudioFocus() {
+
+    override fun abandonAudioFocus() {
         audioManager.abandonAudioFocus(this)
 
     }

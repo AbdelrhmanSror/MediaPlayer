@@ -58,7 +58,10 @@ interface IPlayerControl {
     fun changeAudioState()
 
 
-    fun requestFocus()
+    /**
+     * request focus will return true if focus has been requested otherwise false because the focus is requested before
+     */
+    fun requestFocus(): Boolean
 
 
 }

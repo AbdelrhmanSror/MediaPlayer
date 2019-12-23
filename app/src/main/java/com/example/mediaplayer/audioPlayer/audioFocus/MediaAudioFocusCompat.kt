@@ -14,12 +14,22 @@
 package com.example.mediaplayer.audioPlayer.audioFocus
 
 import android.media.AudioManager
-import com.example.mediaplayer.audioPlayer.IPlayerState
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import com.example.mediaplayer.foregroundService.AudioForegroundService
 
-abstract class MediaAudioFocusCompat : AudioManager.OnAudioFocusChangeListener, IPlayerState {
+@Suppress("LeakingThis")
+abstract class MediaAudioFocusCompat(service: AudioForegroundService) : AudioManager.OnAudioFocusChangeListener, DefaultLifecycleObserver {
     abstract fun requestAudioFocus(audioFocusCallBacks: AudioFocusCallBacks? = null)
+    abstract fun abandonAudioFocus()
 
+    init {
+        service.lifecycle.addObserver(this)
+    }
 
+    override fun onDestroy(owner: LifecycleOwner) {
+        abandonAudioFocus()
+    }
 }
 
 interface AudioFocusCallBacks {
@@ -27,14 +37,3 @@ interface AudioFocusCallBacks {
     fun onAudioFocusLost(Permanent: Boolean)
 
 }
-/*
-
-object MediaAudioFocusCompatFactory {
-    fun init(context: Context): MediaAudioFocusCompat {
-        return when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> MediaAudioFocus.create(context)
-            else -> MediaAudioFocusPre.create(context)
-        }
-
-    }
-}*/

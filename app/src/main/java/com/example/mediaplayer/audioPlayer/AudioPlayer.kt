@@ -167,6 +167,11 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
         }
     }
 
+    /**
+     * call this if u want to release the player and every thing
+     * without taking in consideration the live main observers and current state of player
+     *
+     */
     private fun releasePlayerPermanently() {
         removeAllObservers()
         mediaSessionCompat.release()
