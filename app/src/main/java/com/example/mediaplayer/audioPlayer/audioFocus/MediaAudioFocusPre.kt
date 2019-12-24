@@ -22,7 +22,7 @@ import javax.inject.Inject
  * worked on devices pre api 26 (oreo)
  */
 @Suppress("DEPRECATION")
-class MediaAudioFocusPre @Inject constructor(context: Context, service: AudioForegroundService) : MediaAudioFocusCompat(service) {
+class MediaAudioFocusPre @Inject constructor(context: Context, service: AudioForegroundService) : MediaAudioFocusCompat {
 
     private var audioFocusCallBacks: AudioFocusCallBacks? = null
 

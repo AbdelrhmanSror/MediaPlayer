@@ -23,7 +23,6 @@ class OnAudioSessionIdChangeListener private constructor(service: AudioForegroun
         private var audioSessionId = -1
         private var isReset = false
         private var onAudioSessionIdChangeListener: OnAudioSessionIdChangeListener? = null
-
         fun createOrUpdate(service: AudioForegroundService, player: SimpleExoPlayer, updatedPlayerState: IPlayerState): OnAudioSessionIdChangeListener {
             observers.add(updatedPlayerState)
             if (audioSessionId > 0) {
@@ -64,7 +63,6 @@ class OnAudioSessionIdChangeListener private constructor(service: AudioForegroun
      * reset the audiosession when the service is destroyed
      */
     override fun onDestroy(owner: LifecycleOwner) {
-        // reset()
         onAudioSessionIdChangeListener = null
     }
 

@@ -64,8 +64,11 @@ class AudioForegroundNotificationManager @Inject constructor(private val service
         }
     }
 
-    override fun onStop() {
-        player.releaseIfPossible()
+
+    override fun onDestroy(owner: LifecycleOwner) {
+        onDataChanged.removeObserver(observer)
+        stopForeground()
+        notificationJob?.cancel()
     }
 
     init {
@@ -129,11 +132,6 @@ class AudioForegroundNotificationManager @Inject constructor(private val service
         }
     }
 
-    override fun onDestroy(owner: LifecycleOwner) {
-        onDataChanged.removeObserver(observer)
-        stopForeground()
-        notificationJob?.cancel()
-    }
 
     private fun onNextMetadata(metadata: SongModel) {
         onDataChanged.value = Event.Metadata(metadata)

@@ -165,6 +165,11 @@ class ChosenSongViewModel(application: Application,
         _playPauseState.value = (Event(false))
     }
 
+    override fun onStop() {
+        _playPauseState.value = (Event(false))
+
+    }
+
     override fun onShuffleModeChanged(enable: Boolean) {
         _shuffleMode.value = enable
     }

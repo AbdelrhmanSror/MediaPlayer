@@ -53,7 +53,6 @@ class AudioForegroundService @Inject constructor() : LifecycleService() {
 
     }
 
-
     fun registerObserver(iPlayerState: IPlayerState) {
         audioPlayer.registerObserver(iPlayerState
                 , audioSessionIdCallbackEnable = true
@@ -141,28 +140,28 @@ class AudioForegroundService @Inject constructor() : LifecycleService() {
         }
     }
 
-    private fun intentData(intent: Intent): Pair<ArrayList<SongModel>, Int> {
+    private fun setUpData(intent: Intent): Triple<ArrayList<SongModel>, ArrayList<Uri>, Int> {
         //playList of songs
         //getting the current playing song index
         with(intent) {
-            return getParcelableArrayListExtra<SongModel>(LIST_SONG)!! to getIntExtra(CHOSEN_SONG_INDEX, 0)
+            val songList = getParcelableArrayListExtra<SongModel>(LIST_SONG)!!
+            val index = getIntExtra(CHOSEN_SONG_INDEX, 0)
+            val songListUris: ArrayList<Uri> = arrayListOf()
+            for (item in songList) {
+                songListUris.add(item.audioUri)
+            }
+            return Triple(songList, songListUris, index)
         }
     }
 
 
     private fun setUpPlayerForeground(intent: Intent) {
-        with(intentData(intent))
+        with(setUpData(intent))
         {
-            val songListUris: ArrayList<Uri> = arrayListOf()
-            for (item in first) {
-                songListUris.add(item.audioUri)
-            }
-
-            audioPlayer.setUpPlayer(first, songListUris, second)
+            audioPlayer.setUpPlayer(first, second, third)
             audioPlayer.setCommandControl { index ->
                 first[index].getMediaDescription()
             }
-
         }
 
     }

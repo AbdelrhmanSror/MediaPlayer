@@ -112,13 +112,17 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
         setOnPlayerStateChangedListener(observers)
     }
 
-    override fun removeAllObservers() {
+    private fun triggerOnDetachCallbacks() {
         //iterating over all observer and call ondetach method
         observers.keys.forEach { observer ->
             observers[observer]?.forEach { listener ->
                 listener.onObserverDetach(observer)
             }
         }
+    }
+
+    override fun removeAllObservers() {
+        triggerOnDetachCallbacks()
         observers.clear()
     }
 
@@ -173,6 +177,7 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
      */
     private fun releasePlayerPermanently() {
         removeAllObservers()
+        triggerStoppingCallbacks()
         mediaSessionCompat.release()
         mediaSessionConnector.setPlayer(null)
         player?.release()

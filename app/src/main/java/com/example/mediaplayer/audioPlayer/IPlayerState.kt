@@ -39,6 +39,9 @@ interface IPlayerState {
     fun onPause() {}
 
     /**this is called when the player  is being stopped
+     *will  be called immediately if stopped through google assistant
+     * other wise will be called as soon as possible if it was appropriate
+     *
      */
     fun onStop() {}
 

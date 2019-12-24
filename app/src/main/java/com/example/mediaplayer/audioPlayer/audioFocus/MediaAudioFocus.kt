@@ -27,7 +27,7 @@ import javax.inject.Inject
 
  */
 @RequiresApi(api = Build.VERSION_CODES.O)
-class MediaAudioFocus @Inject constructor(service: AudioForegroundService) : MediaAudioFocusCompat(service) {
+class MediaAudioFocus @Inject constructor(service: AudioForegroundService) : MediaAudioFocusCompat {
 
     private val focusLock = Any()
     private var audioFocusCallBacks: AudioFocusCallBacks? = null

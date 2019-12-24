@@ -14,25 +14,13 @@
 package com.example.mediaplayer.audioPlayer.audioFocus
 
 import android.media.AudioManager
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import com.example.mediaplayer.foregroundService.AudioForegroundService
 
-@Suppress("LeakingThis")
-abstract class MediaAudioFocusCompat(service: AudioForegroundService)
-    : AudioManager.OnAudioFocusChangeListener, DefaultLifecycleObserver {
-    abstract fun requestAudioFocus(audioFocusCallBacks: AudioFocusCallBacks)
-    abstract fun abandonAudioFocus()
+interface MediaAudioFocusCompat
+    : AudioManager.OnAudioFocusChangeListener {
+    fun requestAudioFocus(audioFocusCallBacks: AudioFocusCallBacks)
+    fun abandonAudioFocus()
 
 
-    init {
-        service.lifecycle.addObserver(this)
-    }
-
-
-    override fun onDestroy(owner: LifecycleOwner) {
-        abandonAudioFocus()
-    }
 }
 
 interface AudioFocusCallBacks {

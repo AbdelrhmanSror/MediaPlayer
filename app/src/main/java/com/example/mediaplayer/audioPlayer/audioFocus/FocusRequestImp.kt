@@ -1,9 +1,12 @@
 package com.example.mediaplayer.audioPlayer.audioFocus
 
 import android.util.Log
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.example.mediaplayer.audioPlayer.AudioPlayer
 import com.example.mediaplayer.audioPlayer.AudioPlayerModel
 import com.example.mediaplayer.audioPlayer.IPlayerState
+import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.shared.CustomScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,14 +14,21 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class FocusRequestImp @Inject constructor(private val mediaAudioFocusCompat: MediaAudioFocusCompat,
-                                          private val player: AudioPlayer) : IPlayerState,
-        CoroutineScope by CustomScope(Dispatchers.Main) {
+class FocusRequestImp @Inject constructor(private val mediaAudioFocusCompat: MediaAudioFocusCompat
+                                          , service: AudioForegroundService
+                                          , private val player: AudioPlayer) : IPlayerState,
+        CoroutineScope by CustomScope(Dispatchers.Main), DefaultLifecycleObserver {
 
     private var isFocusLostAgain = false
     private var fromAudioFocus = false
 
+
+    override fun onDestroy(owner: LifecycleOwner) {
+        mediaAudioFocusCompat.abandonAudioFocus()
+    }
+
     init {
+        service.lifecycle.addObserver(this)
         player.registerObserver(this)
     }
 
@@ -29,7 +39,6 @@ class FocusRequestImp @Inject constructor(private val mediaAudioFocusCompat: Med
         mediaAudioFocusCompat.requestAudioFocus(object : AudioFocusCallBacks {
             //when the focus gained we start playing audio if it was previously running
             override fun onAudioFocusGained() {
-                Log.v("reuestingaudiofocus", "onAudioFocusGained1")
                 isFocusLostAgain = false
                 launch {
                     delay(2000)
@@ -72,4 +81,9 @@ class FocusRequestImp @Inject constructor(private val mediaAudioFocusCompat: Med
         }
     }
 
+    override fun onStop() {
+        Log.v("reuestingaudiofocus", "on stop abandon")
+        fromAudioFocus = false
+        mediaAudioFocusCompat.abandonAudioFocus()
+    }
 }

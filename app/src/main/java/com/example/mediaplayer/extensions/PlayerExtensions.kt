@@ -5,7 +5,7 @@ import com.google.android.exoplayer2.Player
 
 fun Player.isPlaying() = playWhenReady
 
-fun Player.isPlayerStateIdle() = ExoPlayer.STATE_IDLE == playbackState
+fun Player.isPlayerStopping() = ExoPlayer.STATE_IDLE == playbackState
 
 fun Player.isPlayerStateReady() = playbackState == ExoPlayer.STATE_READY
 

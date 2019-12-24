@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import com.example.mediaplayer.data.MediaPreferences
 import com.example.mediaplayer.extensions.isPlayerStateEnded
-import com.example.mediaplayer.extensions.isPlayerStateIdle
+import com.example.mediaplayer.extensions.isPlayerStopping
 import com.example.mediaplayer.extensions.isPlaying
 import com.example.mediaplayer.shared.CustomScope
 import com.google.android.exoplayer2.Player
@@ -114,34 +114,39 @@ open class PlayerControlDelegate(private val context: Context,
 
 
     private fun retryIfStopped(action: (() -> Unit)? = null): Boolean {
-        if (player!!.isPlayerStateIdle()) {
-            action?.invoke()
-            player!!.prepare(mediaSource, false, false)
-            return true
+        with(player!!) {
+            if (isPlayerStopping()) {
+                action?.invoke()
+                prepare(mediaSource, false, false)
+                return true
+            }
+            return false
         }
-        return false
     }
 
     override fun currentIndex() = currentIndex
 
     override fun currentTag(): Any? {
-        return if (player!!.currentTag == null) {
-            if (songList != null)
-                songList?.get(currentIndex)
-            else null
-        } else
-            player!!.currentTag
+        with(player!!) {
+            return if (currentTag == null) {
+                if (songList != null)
+                    songList?.get(currentIndex)
+                else null
+            } else currentTag
+        }
     }
 
     /**
      * play audio
      */
     override fun play() {
-        if (!player!!.isPlaying()) {
-            //for when player finish playing all tracks then the state will be ended so if user clicked play we repeat the same song again
-            if (player!!.isPlayerStateEnded())
-                player!!.seekTo(currentIndex, 0)
-            player?.playWhenReady = true
+        with(player!!) {
+            if (!isPlaying()) {
+                //for when player finish playing all tracks then the state will be ended so if user clicked play we repeat the same song again
+                if (isPlayerStateEnded())
+                    seekTo(currentIndex, 0)
+                playWhenReady = true
+            }
         }
     }
 
@@ -149,8 +154,10 @@ open class PlayerControlDelegate(private val context: Context,
      * pause audio
      */
     override fun pause() {
-        if (player!!.isPlaying()) {
-            player?.playWhenReady = false
+        with(player!!) {
+            if (isPlaying()) {
+                playWhenReady = false
+            }
         }
     }
 
@@ -158,13 +165,12 @@ open class PlayerControlDelegate(private val context: Context,
      * go to next audio
      */
     override fun next() {
-        val stopped = retryIfStopped {
-            player!!.seekTo(++currentIndex, 0)
-            player!!.playWhenReady = true
-        }
-        if (!stopped) {
-            player?.next()
-
+        with(player!!) {
+            val stopped = retryIfStopped {
+                seekTo(++currentIndex, 0)
+                playWhenReady = true
+            }
+            if (!stopped) next()
         }
 
     }
@@ -175,19 +181,18 @@ open class PlayerControlDelegate(private val context: Context,
      * and user pressed on previous button then we reset the player to the beginning
      */
     override fun previous() {
-        val stopped = retryIfStopped {
-            player!!.seekTo(--currentIndex, 0)
-            player!!.playWhenReady = true
-        }
-        if (!stopped) {
-            player?.apply {
+        with(player!!) {
+            val stopped = retryIfStopped {
+                seekTo(--currentIndex, 0)
+                playWhenReady = true
+            }
+            if (!stopped) {
                 when {
                     currentPosition > 3000 -> seekTo(0)
                     else -> previous()
                 }
             }
         }
-
 
     }
 
@@ -196,15 +201,17 @@ open class PlayerControlDelegate(private val context: Context,
      * to change the current state always use this method, if u tried to use play or pause method will cause unwanted behaviour
      */
     override fun changeAudioState() {
-        val stopped = retryIfStopped {
-            player!!.seekTo(mediaPreferences.getCurrentTrack(), mediaPreferences.getCurrentPosition())
-            player!!.playWhenReady = true
-        }
-        if (!stopped) {
-            if (player!!.isPlaying()) {
-                pause()
-            } else {
-                play()
+        with(player!!) {
+            val stopped = retryIfStopped {
+                seekTo(mediaPreferences.getCurrentTrack(), mediaPreferences.getCurrentPosition())
+                playWhenReady = true
+            }
+            if (!stopped) {
+                if (isPlaying()) {
+                    pause()
+                } else {
+                    play()
+                }
             }
         }
     }
