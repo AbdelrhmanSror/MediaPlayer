@@ -9,7 +9,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import com.example.mediaplayer.audioForegroundService.AudioForegroundService
-import com.example.mediaplayer.audioPlayer.IPlayerState
+import com.example.mediaplayer.audioPlayer.IPlayerObserver
 import com.example.mediaplayer.intent.CHANNEL_ID
 import com.example.mediaplayer.intent.NOTIFICATION_ID
 import com.example.mediaplayer.model.Event
@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class AudioForegroundNotificationManager @Inject constructor(private val service: AudioForegroundService,
-                                                             private val notificationImp: INotification) : IPlayerState,
+                                                             private val notificationImp: INotification) : IPlayerObserver,
         DefaultLifecycleObserver, CoroutineScope by CustomScope() {
 
     private var isForeground: Boolean = false

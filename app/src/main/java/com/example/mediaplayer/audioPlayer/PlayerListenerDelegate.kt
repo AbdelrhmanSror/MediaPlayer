@@ -21,7 +21,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 ) : CoroutineScope by CustomScope(Dispatchers.Main) {
     private lateinit var onPlayerStateChanged: Player.EventListener
 
-    private val onPlayerStateListListeners: HashMap<IPlayerState, ArrayList<IPlayerListener>> = HashMap()
+    private val onPlayerObserverListListeners: HashMap<IPlayerObserver, ArrayList<IPlayerListener>> = HashMap()
     private var currentAudioIndex = -1
     var isPlaying = true
         private set
@@ -50,8 +50,8 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
     }
 
     //handle the player when actions happen in notification
-    protected fun setOnPlayerStateChangedListener(observers: HashMap<IPlayerState, ArrayList<IPlayerListener>>) {
-        onPlayerStateListListeners.update(observers)
+    protected fun setOnPlayerStateChangedListener(observers: HashMap<IPlayerObserver, ArrayList<IPlayerListener>>) {
+        onPlayerObserverListListeners.update(observers)
         player!!.run {
             if (!::onPlayerStateChanged.isInitialized) {
                 onPlayerStateChanged = object : Player.EventListener {
@@ -162,7 +162,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                 //trigger onactiveplayer callback at first time
                 else if (isFirstTime && playWhenReady) {
                     isFirstTime = false
-                    onPlayerStateListListeners.forEach { entry ->
+                    onPlayerObserverListListeners.forEach { entry ->
                         entry.value.forEach {
                             it.onActivePlayer()
                         }
@@ -174,32 +174,32 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
     }
 
     private fun triggerShuffleModeChangedCallbacks(shuffleModeEnabled: Boolean) {
-        onPlayerStateListListeners.forEach {
+        onPlayerObserverListListeners.forEach {
             it.key.onShuffleModeChanged(shuffleModeEnabled)
         }
     }
 
     private fun triggerRepeatModeChangedCallbacks(repeatMode: Int) {
-        onPlayerStateListListeners.forEach {
+        onPlayerObserverListListeners.forEach {
             it.key.onRepeatModeChanged(repeatMode)
         }
     }
 
     private fun triggerDurationCallbacks(player: SimpleExoPlayer) {
-        onPlayerStateListListeners.forEach {
+        onPlayerObserverListListeners.forEach {
             it.key.onDurationChange(player.duration)
         }
     }
 
     private fun triggerTrackChangedCallbacks() {
-        onPlayerStateListListeners.forEach {
+        onPlayerObserverListListeners.forEach {
             it.key.onAudioChanged(currentAudioIndex, currentInstance)
 
         }
     }
 
     private fun triggerTracksEndedCallbacks() {
-        onPlayerStateListListeners.forEach {
+        onPlayerObserverListListeners.forEach {
             it.key.onAudioListCompleted()
 
         }
@@ -207,7 +207,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 
     private fun triggerStoppingCallbacks() {
         Log.v("playerstage", "onstop2")
-        onPlayerStateListListeners.forEach { entry ->
+        onPlayerObserverListListeners.forEach { entry ->
             entry.key.onStop()
             entry.value.forEach {
                 it.onPlayerStop()
@@ -216,7 +216,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
     }
 
     private fun triggerPausingCallbacks() {
-        onPlayerStateListListeners.forEach { entry ->
+        onPlayerObserverListListeners.forEach { entry ->
             entry.key.onPause()
             entry.value.forEach {
                 it.onInActivePlayer()
@@ -225,7 +225,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
     }
 
     private fun triggerPlayingCallbacks() {
-        onPlayerStateListListeners.forEach { entry ->
+        onPlayerObserverListListeners.forEach { entry ->
             entry.key.onPlay()
             entry.value.forEach {
                 it.onActivePlayer()
@@ -241,14 +241,14 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
         return Noisy.create(service, EventDispatcher(service))
     }
 
-    protected fun setAudioSessionChangeListener(updatedPlayerState: IPlayerState): IPlayerListener {
-        return OnAudioSessionIdChangeListener.createOrUpdate(service, player!!, updatedPlayerState)
+    protected fun setAudioSessionChangeListener(updatedPlayerObserver: IPlayerObserver): IPlayerListener {
+        return OnAudioSessionIdChangeListener.createOrUpdate(service, player!!, updatedPlayerObserver)
 
     }
 
-    protected fun setOnProgressChangedListener(iPlayerState: IPlayerState): IPlayerListener {
+    protected fun setOnProgressChangedListener(iPlayerObserver: IPlayerObserver): IPlayerListener {
         val onProgressChanged = OnAudioProgressChangeListener(player!!)
-        iPlayerState.onProgressChangedLiveData(onProgressChanged)
+        iPlayerObserver.onProgressChangedLiveData(onProgressChanged)
         return onProgressChanged
 
     }

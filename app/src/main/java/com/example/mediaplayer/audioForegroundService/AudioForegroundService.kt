@@ -8,8 +8,8 @@ import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.lifecycle.LifecycleService
-import com.example.mediaplayer.audioPlayer.AudioPlayer
-import com.example.mediaplayer.audioPlayer.IPlayerState
+import com.example.mediaplayer.audioPlayer.AudioIPlayer
+import com.example.mediaplayer.audioPlayer.IPlayerObserver
 import com.example.mediaplayer.audioPlayer.audioFocus.FocusRequestImp
 import com.example.mediaplayer.audioPlayer.notification.AudioForegroundNotificationManager
 import com.example.mediaplayer.di.inject
@@ -22,11 +22,11 @@ import com.example.mediaplayer.model.getMediaDescription
 import javax.inject.Inject
 
 
-class AudioForegroundService @Inject constructor() : LifecycleService(), IPlayerState {
+class AudioForegroundService @Inject constructor() : LifecycleService(), IPlayerObserver {
     @Inject
     lateinit var mediaSession: MediaSessionCompat
     @Inject
-    lateinit var audioAudioPlayer: AudioPlayer
+    lateinit var audioAudioPlayer: AudioIPlayer
     // indicates how to behave if the service is killed.
     private var mStartMode = Service.START_NOT_STICKY
     // interface for clients that bind.
@@ -60,15 +60,15 @@ class AudioForegroundService @Inject constructor() : LifecycleService(), IPlayer
 
     }
 
-    fun registerObserver(iPlayerState: IPlayerState) {
-        audioAudioPlayer.registerObserver(iPlayerState
+    fun registerObserver(iPlayerObserver: IPlayerObserver) {
+        audioAudioPlayer.registerObserver(iPlayerObserver
                 , audioSessionIdCallbackEnable = true
                 , progressCallBackEnabled = true
                 , isMainObserver = true)
     }
 
-    fun removeObserver(IPlayerState: IPlayerState) {
-        audioAudioPlayer.removeObserver(IPlayerState)
+    fun removeObserver(IPlayerObserver: IPlayerObserver) {
+        audioAudioPlayer.removeObserver(IPlayerObserver)
     }
 
     fun seekToSecond(second: Int) {

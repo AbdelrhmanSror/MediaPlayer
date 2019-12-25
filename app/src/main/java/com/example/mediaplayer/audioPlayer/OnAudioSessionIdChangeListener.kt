@@ -18,17 +18,17 @@ internal class OnAudioSessionIdChangeListener private constructor(service: Audio
         CoroutineScope by MainScope() {
     companion object {
         private const val DELAY = 500L
-        private var observers = HashSet<IPlayerState>()
+        private var observers = HashSet<IPlayerObserver>()
         private var audioSessionId = -1
         private var isReset = false
         private var onAudioSessionIdChangeListener: OnAudioSessionIdChangeListener? = null
         fun createOrUpdate(service: AudioForegroundService,
                            player: SimpleExoPlayer,
-                           updatedPlayerState: IPlayerState)
+                           updatedPlayerObserver: IPlayerObserver)
                 : OnAudioSessionIdChangeListener {
-            observers.add(updatedPlayerState)
+            observers.add(updatedPlayerObserver)
             if (audioSessionId > 0) {
-                updatedPlayerState.onAudioSessionId(audioSessionId)
+                updatedPlayerObserver.onAudioSessionId(audioSessionId)
             }
             return if (onAudioSessionIdChangeListener == null) {
                 onAudioSessionIdChangeListener = OnAudioSessionIdChangeListener(service, player)
@@ -77,8 +77,8 @@ internal class OnAudioSessionIdChangeListener private constructor(service: Audio
      * remove observer from list of observer that recieve audiosession event
      * when the current observer is removed from list of observer the observe player event
      */
-    override fun onObserverDetach(iPlayerState: IPlayerState) {
-        observers.remove(iPlayerState)
+    override fun onObserverDetach(iPlayerObserver: IPlayerObserver) {
+        observers.remove(iPlayerObserver)
     }
 
     private fun reset() {

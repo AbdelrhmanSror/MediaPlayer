@@ -16,7 +16,7 @@ interface IPlayerListener {
     /**
      * will be called when the corresponding observer is remove from list of observers
      */
-    fun onObserverDetach(iPlayerState: IPlayerState) {}
+    fun onObserverDetach(iPlayerObserver: IPlayerObserver) {}
 
     /**
      * this is called when the player  is being stopped

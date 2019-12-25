@@ -16,7 +16,7 @@ package com.example.mediaplayer.audioPlayer
 import androidx.lifecycle.MutableLiveData
 
 
-interface IPlayerState {
+interface IPlayerObserver {
     /**
      * this will be called when the player complete playing all the the audio file in the list and no other files to play
      */

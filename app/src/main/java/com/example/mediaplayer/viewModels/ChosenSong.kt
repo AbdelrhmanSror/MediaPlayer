@@ -10,7 +10,7 @@ import android.os.IBinder
 import androidx.lifecycle.*
 import com.example.mediaplayer.audioForegroundService.AudioForegroundService
 import com.example.mediaplayer.audioPlayer.AudioPlayerModel
-import com.example.mediaplayer.audioPlayer.IPlayerState
+import com.example.mediaplayer.audioPlayer.IPlayerObserver
 import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.extensions.startForeground
 import com.example.mediaplayer.intent.CHOSEN_SONG_INDEX
@@ -30,7 +30,7 @@ class ChosenSongViewModel(application: Application,
                           private val tracksRepository: TracksRepository,
                           private val songIndex: Int,
                           private val fromNotification: Boolean)
-    : AndroidViewModel(application), IPlayerState, CoroutineScope by CustomScope(Dispatchers.Main) {
+    : AndroidViewModel(application), IPlayerObserver, CoroutineScope by CustomScope(Dispatchers.Main) {
 
 
     private val mApplication = application

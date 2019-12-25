@@ -4,9 +4,9 @@ import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.example.mediaplayer.audioForegroundService.AudioForegroundService
-import com.example.mediaplayer.audioPlayer.AudioPlayer
+import com.example.mediaplayer.audioPlayer.AudioIPlayer
 import com.example.mediaplayer.audioPlayer.AudioPlayerModel
-import com.example.mediaplayer.audioPlayer.IPlayerState
+import com.example.mediaplayer.audioPlayer.IPlayerObserver
 import com.example.mediaplayer.shared.CustomScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 class FocusRequestImp @Inject constructor(private val mediaAudioFocusCompat: MediaAudioFocusCompat
                                           , service: AudioForegroundService
-                                          , private val player: AudioPlayer) : IPlayerState,
+                                          , private val player: AudioIPlayer) : IPlayerObserver,
         CoroutineScope by CustomScope(Dispatchers.Main), DefaultLifecycleObserver {
 
     private var isFocusLostAgain = false

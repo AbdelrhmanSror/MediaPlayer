@@ -5,7 +5,7 @@ import android.content.Context
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.lifecycle.Lifecycle
 import com.example.mediaplayer.audioForegroundService.AudioForegroundService
-import com.example.mediaplayer.audioPlayer.AudioPlayer
+import com.example.mediaplayer.audioPlayer.AudioIPlayer
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocus
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompat
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusPre
@@ -77,8 +77,8 @@ abstract class MusicServiceModule {
         @Provides
         @JvmStatic
         @PerService
-        internal fun providePlayer(service: AudioForegroundService, mediaSessionCompat: MediaSessionCompat, mediaPreferences: MediaPreferences): AudioPlayer {
-            return AudioPlayer(service, mediaSessionCompat, ExoPlayerFactory.newSimpleInstance(service), mediaPreferences)
+        internal fun providePlayer(service: AudioForegroundService, mediaSessionCompat: MediaSessionCompat, mediaPreferences: MediaPreferences): AudioIPlayer {
+            return AudioIPlayer(service, mediaSessionCompat, ExoPlayerFactory.newSimpleInstance(service), mediaPreferences)
         }
 
 
