@@ -15,7 +15,7 @@ package com.example.mediaplayer.audioPlayer.audioFocus
 
 import android.content.Context
 import android.media.AudioManager
-import com.example.mediaplayer.foregroundService.AudioForegroundService
+import com.example.mediaplayer.audioForegroundService.AudioForegroundService
 import javax.inject.Inject
 
 /**

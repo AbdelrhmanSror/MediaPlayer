@@ -19,7 +19,7 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.example.mediaplayer.foregroundService.AudioForegroundService
+import com.example.mediaplayer.audioForegroundService.AudioForegroundService
 import javax.inject.Inject
 
 /**

@@ -4,12 +4,12 @@ import android.app.Service
 import android.content.Context
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.lifecycle.Lifecycle
+import com.example.mediaplayer.audioForegroundService.AudioForegroundService
 import com.example.mediaplayer.audioPlayer.AudioPlayer
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocus
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompat
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusPre
 import com.example.mediaplayer.data.MediaPreferences
-import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.shared.isOreo
 import com.google.android.exoplayer2.ExoPlayerFactory
 import dagger.Binds

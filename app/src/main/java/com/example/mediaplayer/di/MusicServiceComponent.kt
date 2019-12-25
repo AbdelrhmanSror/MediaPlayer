@@ -1,8 +1,8 @@
 package com.example.mediaplayer.di
 
 import android.content.Context
+import com.example.mediaplayer.audioForegroundService.AudioForegroundService
 import com.example.mediaplayer.audioPlayer.notification.NotificationModule
-import com.example.mediaplayer.foregroundService.AudioForegroundService
 import dagger.BindsInstance
 import dagger.Component
 

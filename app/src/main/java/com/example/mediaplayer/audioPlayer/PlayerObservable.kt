@@ -13,19 +13,21 @@
 
 package com.example.mediaplayer.audioPlayer
 
-interface AudioPlayerObservable {
+interface PlayerObservable {
     fun registerObserver(iPlayerState: IPlayerState, audioSessionIdCallbackEnable: Boolean = false
                          , audioNoisyControlEnable: Boolean = true
                          , progressCallBackEnabled: Boolean = false,
                          isMainObserver: Boolean = false)
+
+    fun registerObservers(vararg iPlayerState: IPlayerState)
 
     fun removeAllObservers()
     fun getCountOfMainObservers(): Int
     fun removeObserver(iPlayerState: IPlayerState)
     fun notifyObserver(iPlayerState: IPlayerState)
     /**
-     *will be called to check all observers again if any thing has changed will update the observers
-     * the best place to call this after [removeAllObservers]
+     * will be called to check if it is appropriate to release player now
+     * the best place to call this after [removeAllObservers] if u want to release the player immediately
      */
     fun invalidate()
 }

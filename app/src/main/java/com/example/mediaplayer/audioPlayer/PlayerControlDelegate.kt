@@ -18,15 +18,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 
-open class PlayerControlDelegate(private val context: Context,
-                                 private var player: SimpleExoPlayer?,
-                                 private val mediaPreferences: MediaPreferences
+internal open class PlayerControlDelegate(private val context: Context,
+                                          private var player: SimpleExoPlayer?,
+                                          private val mediaPreferences: MediaPreferences
 ) : IPlayerControl, CoroutineScope by CustomScope(Dispatchers.Main) {
 
 
     private var songList: List<Any>? = null
     private var songListUris: List<Uri> = emptyList()
     private var currentIndex = 0
+    private var currentPosition = 0L
     private var repeatModeActivated: Boolean = false
         set(value) {
             if (value) {
@@ -74,7 +75,7 @@ open class PlayerControlDelegate(private val context: Context,
 
             }
         }
-        seekTo(index)
+        seekToIndex(index)
     }
 
 
@@ -95,7 +96,7 @@ open class PlayerControlDelegate(private val context: Context,
     /**
      * seek to different track
      */
-    override fun seekTo(index: Int) {
+    override fun seekToIndex(index: Int) {
         currentIndex = index
         player?.seekTo(index, 0)
         player!!.playWhenReady = true
@@ -110,21 +111,37 @@ open class PlayerControlDelegate(private val context: Context,
     override fun seekToSecond(second: Int) {
         player?.seekTo(currentIndex, second * 1000.toLong())
         retryIfStopped()
+
     }
 
 
-    private fun retryIfStopped(action: (() -> Unit)? = null): Boolean {
+    private fun retryIfStopped(retry: Boolean = true, action: ((index: Int, position: Long) -> Unit)? = null): Boolean {
         with(player!!) {
             if (isPlayerStopping()) {
-                action?.invoke()
-                prepare(mediaSource, false, false)
+                action?.invoke(mediaPreferences.getCurrentTrack(), mediaPreferences.getCurrentPosition())
+                if (::mediaSource.isInitialized && retry)
+                    prepare(mediaSource, false, false)
                 return true
             }
             return false
         }
     }
 
-    override fun currentIndex() = currentIndex
+    override fun currentIndex(): Int {
+        val stopped = retryIfStopped(false) { index, _ ->
+            currentIndex = index
+        }
+        return if (!stopped) player!!.currentWindowIndex
+        else currentIndex
+    }
+
+    override fun currentPosition(): Long {
+        val stopped = retryIfStopped(false) { _, position ->
+            currentPosition = position
+        }
+        return if (!stopped) player!!.currentPosition
+        else currentPosition
+    }
 
     override fun currentTag(): Any? {
         with(player!!) {
@@ -166,11 +183,15 @@ open class PlayerControlDelegate(private val context: Context,
      */
     override fun next() {
         with(player!!) {
-            val stopped = retryIfStopped {
-                seekTo(++currentIndex, 0)
+            val stopped = retryIfStopped { index, _ ->
+                currentIndex = index
+                seekTo(--currentIndex, 0)
                 playWhenReady = true
             }
-            if (!stopped) next()
+            if (!stopped) {
+                currentIndex++
+                next()
+            }
         }
 
     }
@@ -182,14 +203,18 @@ open class PlayerControlDelegate(private val context: Context,
      */
     override fun previous() {
         with(player!!) {
-            val stopped = retryIfStopped {
+            val stopped = retryIfStopped { index, _ ->
+                currentIndex = index
                 seekTo(--currentIndex, 0)
                 playWhenReady = true
             }
             if (!stopped) {
                 when {
                     currentPosition > 3000 -> seekTo(0)
-                    else -> previous()
+                    else -> {
+                        --currentIndex
+                        previous()
+                    }
                 }
             }
         }
@@ -202,8 +227,8 @@ open class PlayerControlDelegate(private val context: Context,
      */
     override fun changeAudioState() {
         with(player!!) {
-            val stopped = retryIfStopped {
-                seekTo(mediaPreferences.getCurrentTrack(), mediaPreferences.getCurrentPosition())
+            val stopped = retryIfStopped { index, position ->
+                seekTo(index, position)
                 playWhenReady = true
             }
             if (!stopped) {

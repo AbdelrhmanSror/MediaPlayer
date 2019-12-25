@@ -7,10 +7,9 @@ import android.content.IntentFilter
 import android.media.AudioManager
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.example.mediaplayer.foregroundService.AudioForegroundService
+import com.example.mediaplayer.audioForegroundService.AudioForegroundService
 
-@Suppress("UNCHECKED_CAST")
-class Noisy private constructor(private val service: AudioForegroundService,
+internal class Noisy private constructor(private val service: AudioForegroundService,
                                 eventDispatcher: EventDispatcher
 
 ) : IPlayerListener, DefaultLifecycleObserver {

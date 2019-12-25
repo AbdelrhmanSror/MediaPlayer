@@ -2,10 +2,11 @@ package com.example.mediaplayer.audioPlayer
 
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import com.example.mediaplayer.audioForegroundService.AudioForegroundService
 import com.example.mediaplayer.data.MediaPreferences
-import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
@@ -16,16 +17,17 @@ data class AudioPlayerModel(val currentIndex: Int,
                             val isPlaying: Boolean,
                             val shuffleModeEnabled: Boolean,
                             val repeatMode: Int,
-                            val currentInstance: Any? = null)
+                            val currentInstance: Any?)
 
 
 class AudioPlayer @Inject constructor(private val service: AudioForegroundService,
                                       private val mediaSessionCompat: MediaSessionCompat,
                                       private var player: SimpleExoPlayer?,
                                       private val mediaPreferences: MediaPreferences)
-    : PlayerListenerDelegate(service, player!!, mediaPreferences), DefaultLifecycleObserver,
+    : PlayerListenerDelegate(service, player!!, mediaPreferences),
+        DefaultLifecycleObserver,
         IPlayerControl by PlayerControlDelegate(service, player, mediaPreferences),
-        AudioPlayerObservable {
+        PlayerObservable {
 
 
     /**
@@ -38,6 +40,14 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
 
     private var isNoisyModeEnabled = false
 
+    /**
+     * to give flexibility if i want to do extra work while releasing the player
+     * if u want do any thing from service while releasing the player u could set  [extraRelease]
+     * so when player has got released this [extraRelease] will be called
+     */
+    @Suppress
+    var extraRelease: (() -> Unit)? = null
+
     private val mediaSessionConnector: MediaSessionConnector by lazy {
         MediaSessionConnector(mediaSessionCompat)
     }
@@ -48,8 +58,15 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
+        Log.v("playerstage", "ondestoy")
         releasePlayerPermanently()
 
+    }
+
+    override fun registerObservers(vararg iPlayerState: IPlayerState) {
+        iPlayerState.forEach {
+            registerObserver(it)
+        }
     }
 
     /**
@@ -128,12 +145,13 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
 
 
     override fun notifyObserver(iPlayerState: IPlayerState) {
+        Log.v("registeringAudioSession", " on attach")
         with(player!!) {
             iPlayerState.onAttached(AudioPlayerModel(
                     currentIndex(),
                     isPlaying,
-                    this.shuffleModeEnabled,
-                    this.repeatMode,
+                    shuffleModeEnabled,
+                    repeatMode,
                     currentTag()))
         }
 
@@ -177,9 +195,9 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
      */
     private fun releasePlayerPermanently() {
         removeAllObservers()
-        triggerStoppingCallbacks()
         mediaSessionCompat.release()
         mediaSessionConnector.setPlayer(null)
+        extraRelease?.invoke()
         player?.release()
         player = null
     }
@@ -194,7 +212,7 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
      *
      * this best for avoiding releasing player when ui is visible also to avoid preparing player again after that
      *
-     * if u want to release player immediately call [removeAllObservers] or just remove the main observer then [pause] then [releaseIfPossible]
+     * if u want to release player immediately call [removeAllObservers] or just remove the main observers then [pause] then [releaseIfPossible]
      */
     fun releaseIfPossible() {
         player.let {

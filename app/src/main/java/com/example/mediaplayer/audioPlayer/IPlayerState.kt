@@ -38,10 +38,10 @@ interface IPlayerState {
      */
     fun onPause() {}
 
-    /**this is called when the player  is being stopped
-     *will  be called immediately if stopped through google assistant
-     * other wise will be called as soon as possible if it was appropriate
-     *
+    /**
+     * this is called when the player  is being stopped ,will be called only if stopped through google assistant
+     * otherwise it has no effect.
+     * because we actually do not stop the player when receiving stop intent (if the ui visible) from notification for sake of re preparing player again
      */
     fun onStop() {}
 
@@ -64,7 +64,6 @@ interface IPlayerState {
 
     /**
      * will return live data to observe that will return the progress of current audio
-     * also will stop whenever there is no observer
      */
     fun onProgressChangedLiveData(progress: MutableLiveData<Long>) {}
 

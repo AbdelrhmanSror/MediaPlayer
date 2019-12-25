@@ -7,7 +7,7 @@ import android.os.Bundle
 import androidx.core.app.NotificationCompat
 import androidx.navigation.NavDeepLinkBuilder
 import com.example.mediaplayer.R
-import com.example.mediaplayer.foregroundService.AudioForegroundService
+import com.example.mediaplayer.audioForegroundService.AudioForegroundService
 import com.example.mediaplayer.intent.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.intent.NOTIFICATION_ID
 import com.example.mediaplayer.intent.NotificationAction

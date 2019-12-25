@@ -4,9 +4,22 @@ import android.net.Uri
 
 interface IPlayerControl {
 
+    /**
+     * return current player index
+     */
     fun currentIndex(): Int
 
+    /**
+     * return current player position in milliseconds
+     */
+    fun currentPosition(): Long
+
+    /**
+     * return current instance that refer to current playing audio
+     * that is passed when calling [setUpPlayer] if nothing passed will return null
+     */
     fun currentTag(): Any?
+
 
     fun setUpPlayer(audioList: List<Any>? = emptyList(), audioUris: List<Uri>, index: Int)
 
@@ -23,7 +36,7 @@ interface IPlayerControl {
     /**
      * seek to different track
      */
-    fun seekTo(index: Int)
+    fun seekToIndex(index: Int)
 
     /**
      * seek to different position
@@ -58,10 +71,4 @@ interface IPlayerControl {
     fun changeAudioState()
 
 
-    /**
-     * request focus will return true if focus has been requested otherwise false because the focus is requested before
-     *//*
-    fun requestFocus(): Boolean
-
-*/
 }

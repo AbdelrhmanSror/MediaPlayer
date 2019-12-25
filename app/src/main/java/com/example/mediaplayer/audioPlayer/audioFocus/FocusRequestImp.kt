@@ -3,10 +3,10 @@ package com.example.mediaplayer.audioPlayer.audioFocus
 import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import com.example.mediaplayer.audioForegroundService.AudioForegroundService
 import com.example.mediaplayer.audioPlayer.AudioPlayer
 import com.example.mediaplayer.audioPlayer.AudioPlayerModel
 import com.example.mediaplayer.audioPlayer.IPlayerState
-import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.shared.CustomScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

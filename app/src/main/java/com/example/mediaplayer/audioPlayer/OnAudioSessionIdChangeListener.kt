@@ -1,9 +1,8 @@
 package com.example.mediaplayer.audioPlayer
 
-import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.example.mediaplayer.foregroundService.AudioForegroundService
+import com.example.mediaplayer.audioForegroundService.AudioForegroundService
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.audio.AudioListener
 import kotlinx.coroutines.*
@@ -11,19 +10,22 @@ import kotlinx.coroutines.*
 /**
  *  register listeners for audio session id
  */
-class OnAudioSessionIdChangeListener private constructor(service: AudioForegroundService,
-                                                         private val player: SimpleExoPlayer)
+internal class OnAudioSessionIdChangeListener private constructor(service: AudioForegroundService,
+                                                                  private val player: SimpleExoPlayer)
     : AudioListener,
-        IPlayerListener, DefaultLifecycleObserver,
+        IPlayerListener,
+        DefaultLifecycleObserver,
         CoroutineScope by MainScope() {
-    @Suppress("UNCHECKED_CAST")
     companion object {
         private const val DELAY = 500L
         private var observers = HashSet<IPlayerState>()
         private var audioSessionId = -1
         private var isReset = false
         private var onAudioSessionIdChangeListener: OnAudioSessionIdChangeListener? = null
-        fun createOrUpdate(service: AudioForegroundService, player: SimpleExoPlayer, updatedPlayerState: IPlayerState): OnAudioSessionIdChangeListener {
+        fun createOrUpdate(service: AudioForegroundService,
+                           player: SimpleExoPlayer,
+                           updatedPlayerState: IPlayerState)
+                : OnAudioSessionIdChangeListener {
             observers.add(updatedPlayerState)
             if (audioSessionId > 0) {
                 updatedPlayerState.onAudioSessionId(audioSessionId)
@@ -31,9 +33,9 @@ class OnAudioSessionIdChangeListener private constructor(service: AudioForegroun
             return if (onAudioSessionIdChangeListener == null) {
                 onAudioSessionIdChangeListener = OnAudioSessionIdChangeListener(service, player)
                 player.addAudioListener(onAudioSessionIdChangeListener)
-                onAudioSessionIdChangeListener as OnAudioSessionIdChangeListener
+                onAudioSessionIdChangeListener!!
             } else {
-                onAudioSessionIdChangeListener as OnAudioSessionIdChangeListener
+                onAudioSessionIdChangeListener!!
             }
         }
     }
@@ -50,9 +52,7 @@ class OnAudioSessionIdChangeListener private constructor(service: AudioForegroun
      * when player become active we check if we reset everything or not if yes we add audio listener again
      */
     override fun onActivePlayer() {
-        Log.v("registeringAudioSession", "on active player1")
         if (isReset) {
-            Log.v("registeringAudioSession", "on active player2")
             isReset = false
             player.addAudioListener(onAudioSessionIdChangeListener)
         }

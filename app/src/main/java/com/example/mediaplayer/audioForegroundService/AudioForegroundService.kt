@@ -1,4 +1,4 @@
-package com.example.mediaplayer.foregroundService
+package com.example.mediaplayer.audioForegroundService
 
 import android.app.Service
 import android.content.Intent
@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
+import android.util.Log
 import androidx.lifecycle.LifecycleService
 import com.example.mediaplayer.audioPlayer.AudioPlayer
 import com.example.mediaplayer.audioPlayer.IPlayerState
@@ -21,11 +22,11 @@ import com.example.mediaplayer.model.getMediaDescription
 import javax.inject.Inject
 
 
-class AudioForegroundService @Inject constructor() : LifecycleService() {
+class AudioForegroundService @Inject constructor() : LifecycleService(), IPlayerState {
     @Inject
     lateinit var mediaSession: MediaSessionCompat
     @Inject
-    lateinit var audioPlayer: AudioPlayer
+    lateinit var audioAudioPlayer: AudioPlayer
     // indicates how to behave if the service is killed.
     private var mStartMode = Service.START_NOT_STICKY
     // interface for clients that bind.
@@ -36,10 +37,10 @@ class AudioForegroundService @Inject constructor() : LifecycleService() {
     @Inject
     lateinit var focusRequestImp: FocusRequestImp
 
-
     override fun onCreate() {
         inject()
         // The service is being created.
+        audioAudioPlayer.registerObservers(this, notificationManager)
         super.onCreate()
     }
 
@@ -49,50 +50,56 @@ class AudioForegroundService @Inject constructor() : LifecycleService() {
      */
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        audioPlayer.releaseIfPossible()
+        audioAudioPlayer.releaseIfPossible()
+
+    }
+
+    override fun onStop() {
+        Log.v("playerstage", "onstop")
+        audioAudioPlayer.releaseIfPossible()
 
     }
 
     fun registerObserver(iPlayerState: IPlayerState) {
-        audioPlayer.registerObserver(iPlayerState
+        audioAudioPlayer.registerObserver(iPlayerState
                 , audioSessionIdCallbackEnable = true
                 , progressCallBackEnabled = true
                 , isMainObserver = true)
     }
 
     fun removeObserver(IPlayerState: IPlayerState) {
-        audioPlayer.removeObserver(IPlayerState)
+        audioAudioPlayer.removeObserver(IPlayerState)
     }
 
     fun seekToSecond(second: Int) {
-        audioPlayer.seekToSecond(second)
+        audioAudioPlayer.seekToSecond(second)
     }
 
     fun changeRepeatMode() {
-        audioPlayer.repeatModeEnable()
+        audioAudioPlayer.repeatModeEnable()
     }
 
     fun changeShuffleMode() {
-        audioPlayer.shuffleModeEnable()
+        audioAudioPlayer.shuffleModeEnable()
     }
 
     fun changeAudioState() {
-        audioPlayer.changeAudioState()
+        audioAudioPlayer.changeAudioState()
 
     }
 
     fun goToPrevious() {
-        audioPlayer.previous()
+        audioAudioPlayer.previous()
 
     }
 
     fun goToNext() {
-        audioPlayer.next()
+        audioAudioPlayer.next()
 
     }
 
     fun seekTo(index: Int) {
-        audioPlayer.seekTo(index)
+        audioAudioPlayer.seekToIndex(index)
 
     }
 
@@ -124,16 +131,16 @@ class AudioForegroundService @Inject constructor() : LifecycleService() {
                     setUpPlayerForeground(intent)
                 }
                 NotificationAction.PLAY_PAUSE -> {
-                    audioPlayer.changeAudioState()
+                    audioAudioPlayer.changeAudioState()
                 }
                 NotificationAction.NEXT -> {
-                    audioPlayer.next()
+                    audioAudioPlayer.next()
                 }
                 NotificationAction.PREVIOUS -> {
-                    audioPlayer.previous()
+                    audioAudioPlayer.previous()
                 }
                 NotificationAction.STOP -> {
-                    audioPlayer.releaseIfPossible()
+                    audioAudioPlayer.releaseIfPossible()
                 }
 
             }
@@ -158,8 +165,8 @@ class AudioForegroundService @Inject constructor() : LifecycleService() {
     private fun setUpPlayerForeground(intent: Intent) {
         with(setUpData(intent))
         {
-            audioPlayer.setUpPlayer(first, second, third)
-            audioPlayer.setCommandControl { index ->
+            audioAudioPlayer.setUpPlayer(first, second, third)
+            audioAudioPlayer.setCommandControl { index ->
                 first[index].getMediaDescription()
             }
         }

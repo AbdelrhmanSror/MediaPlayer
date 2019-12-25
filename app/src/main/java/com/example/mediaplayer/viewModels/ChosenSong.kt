@@ -8,11 +8,11 @@ import android.content.ServiceConnection
 import android.media.audiofx.Visualizer
 import android.os.IBinder
 import androidx.lifecycle.*
+import com.example.mediaplayer.audioForegroundService.AudioForegroundService
 import com.example.mediaplayer.audioPlayer.AudioPlayerModel
 import com.example.mediaplayer.audioPlayer.IPlayerState
 import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.extensions.startForeground
-import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.intent.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.intent.LIST_SONG
 import com.example.mediaplayer.intent.PlayerActions.ACTION_FOREGROUND
@@ -156,6 +156,7 @@ class ChosenSongViewModel(application: Application,
             currentInstance?.let { instance -> _duration.value = (instance as SongModel).duration }
         }
     }
+
 
     override fun onPlay() {
         _playPauseState.value = (Event(true))

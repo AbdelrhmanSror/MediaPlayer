@@ -5,49 +5,33 @@ import com.example.mediaplayer.shared.CustomScope
 import com.google.android.exoplayer2.SimpleExoPlayer
 import kotlinx.coroutines.*
 
-class OnAudioProgressChangeListener(private val player: SimpleExoPlayer) :
+internal class OnAudioProgressChangeListener(private val player: SimpleExoPlayer) :
         MutableLiveData<Long>(),
         IPlayerListener, CoroutineScope by CustomScope(Dispatchers.Main) {
-    //to see if the ui is visible or not
-    private var isUiVisible = true
 
     private var job: Job? = null
-    override fun onInActivePlayer() {
-        stopTimer()
 
-    }
-
-    override fun onActivePlayer() {
-        if (isUiVisible) {
-            startTimer()
-        }
-
-    }
 
     override fun onInactive() {
-        isUiVisible = false
-        stopTimer()
+        job?.cancel()
 
     }
 
 
     override fun onActive() {
-        isUiVisible = true
         startTimer()
     }
 
 
     private fun startTimer() {
+        job?.cancel()
         job = launch {
             while (true) {
                 postValue(player.currentPosition)
-                delay(200)
+                delay(100)
             }
         }
     }
 
-    private fun stopTimer() {
-        job?.cancel()
-    }
 
 }

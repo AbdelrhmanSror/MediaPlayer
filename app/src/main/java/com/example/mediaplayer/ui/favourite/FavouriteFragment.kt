@@ -27,10 +27,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import com.example.mediaplayer.R
+import com.example.mediaplayer.audioForegroundService.AudioForegroundService
 import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.databinding.FragmentFavouriteBinding
 import com.example.mediaplayer.extensions.startForeground
-import com.example.mediaplayer.foregroundService.AudioForegroundService
 import com.example.mediaplayer.intent.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.intent.LIST_SONG
 import com.example.mediaplayer.intent.PlayerActions.ACTION_FOREGROUND

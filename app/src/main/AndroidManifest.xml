@@ -32,7 +32,7 @@
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
         <service
-            android:name=".foregroundService.AudioForegroundService"
+            android:name=".audioForegroundService.AudioForegroundService"
             android:enabled="true"
             android:exported="false" />
 
