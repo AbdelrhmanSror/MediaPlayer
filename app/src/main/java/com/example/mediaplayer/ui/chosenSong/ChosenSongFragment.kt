@@ -58,7 +58,7 @@ class ChosenSongFragment : DaggerFragment() {
 
             chosenSongIndex.observe(viewLifecycleOwner, Observer { event ->
                 event?.getContentIfNotHandled()?.let {
-                    setCurrentPositionRecyclerView(it, true)
+                    setCurrentPositionRecyclerView(it)
                     previousRecyclerViewPosition = it
                 }
             })
@@ -73,9 +73,9 @@ class ChosenSongFragment : DaggerFragment() {
         }
     }
 
-    private fun setCurrentPositionRecyclerView(index: Int, scrollEnabled: Boolean) {
-        songListAdapter.setCurrentSelectedPosition(index, scrollEnabled)
-        imageListAdapter.setCurrentSelectedPosition(index, scrollEnabled)
+    private fun setCurrentPositionRecyclerView(index: Int) {
+        songListAdapter.setCurrentSelectedPosition(index)
+        imageListAdapter.setCurrentSelectedPosition(index)
     }
 
     private fun setUpSongRecyclerView() {

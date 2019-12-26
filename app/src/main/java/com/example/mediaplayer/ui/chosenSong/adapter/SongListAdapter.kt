@@ -118,7 +118,7 @@ class SongListAdapter(private val viewModel: ChosenSongViewModel, private val re
             notifyItemChanged(lastSelectedItemPosition)
             notifyItemChanged(currentSelectedItemPosition)
             speed = 5f
-            scrollToPosition(position, true)
+            scrollToPosition(position)
         }
 
 

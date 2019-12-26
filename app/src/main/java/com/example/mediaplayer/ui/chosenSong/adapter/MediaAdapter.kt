@@ -28,6 +28,7 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recycle
     }
 
     private val listener = object : RecyclerView.OnScrollListener() {
+
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             if (!isLocked) {
                 launch {
@@ -43,7 +44,11 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recycle
         }
 
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+            if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
+                //unregister listener if user tried to drag and the item was meant to be scrolled
+                unRegisterScrollingListener(recyclerView)
 
+            }
             if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                 /**
                  * if the scroller did not scroll to the selected position we scroll again until we get it right
@@ -87,7 +92,6 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recycle
                 isSnapAttached = true
             }
         }
-
 
         smoothScroller.targetPosition = position
         layoutManager.startSmoothScroll(smoothScroller)
@@ -137,6 +141,7 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recycle
         }
     }
 
+
     private fun shouldScroll(position: Int): Boolean {
         if (position.coerceIn(firstVisibleItemPosition(), lastVisibleItemPosition()) != position) {
             return true
@@ -144,20 +149,10 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recycle
         return false
     }
 
-    /**
-     * [scrollAnyWay] if true will try to scroll if even the item is visible otherwise will do check before scrolling
-     * [position] u want to scroll to
-     */
-    protected fun scrollToPosition(position: Int, scrollAnyWay: Boolean = false) {
+
+    protected fun scrollToPosition(position: Int) {
         launch {
-            val distance = getDistance()
-            if (!scrollAnyWay) {
-                if (shouldScroll(position + distance)) {
-                    scrollTo(position + distance)
-                }
-            } else {
-                scrollTo(position + distance)
-            }
+            scrollTo(position + getDistance())
 
 
         }
