@@ -46,6 +46,7 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recycle
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
                 //unregister listener if user tried to drag and the item was meant to be scrolled
+                //also to avoid conflict between dragging(by user) and scrolling (by system) at same time
                 unRegisterScrollingListener(recyclerView)
 
             }
