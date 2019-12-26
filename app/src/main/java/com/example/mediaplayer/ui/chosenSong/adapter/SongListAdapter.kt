@@ -100,7 +100,6 @@ class SongListAdapter(private val viewModel: ChosenSongViewModel, private val re
     }
 
 
-
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
         updateCurrentSelectedView(holder.itemView, position)
@@ -119,7 +118,7 @@ class SongListAdapter(private val viewModel: ChosenSongViewModel, private val re
             notifyItemChanged(lastSelectedItemPosition)
             notifyItemChanged(currentSelectedItemPosition)
             speed = 5f
-            scrollToPosition(position)
+            scrollToPosition(position, true)
         }
 
 

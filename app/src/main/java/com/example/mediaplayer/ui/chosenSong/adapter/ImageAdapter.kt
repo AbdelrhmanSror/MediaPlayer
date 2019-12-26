@@ -13,6 +13,7 @@
 
 package com.example.mediaplayer.ui.chosenSong.adapter
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.ViewCompat
@@ -89,6 +90,7 @@ class ImageListAdapter(private val viewModel: ChosenSongViewModel, recyclerView:
             currentSelectedItemPosition = position
             //scroll to the current focused position
             if (scrollEnabled) {
+                Log.v("scrollingposition", "imagedapter scroll to $position")
                 speed = 1f
                 scrollToPosition(position)
             }

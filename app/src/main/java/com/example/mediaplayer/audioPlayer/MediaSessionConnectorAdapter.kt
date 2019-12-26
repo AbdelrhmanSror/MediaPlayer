@@ -2,7 +2,6 @@ package com.example.mediaplayer.audioPlayer
 
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.session.MediaSessionCompat
-import android.util.Log
 import com.google.android.exoplayer2.ControlDispatcher
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
@@ -21,7 +20,6 @@ class MediaSessionConnectorAdapter @Inject constructor(private val mediaSessionC
     inner class CustomControlDispatcher : ControlDispatcher {
 
         override fun dispatchSetPlayWhenReady(player: Player, playWhenReady: Boolean): Boolean {
-            Log.v("reuestingaudiofocus", "pausing control")
             if (playWhenReady) audioPlayer.play()
             else audioPlayer.pause()
             return false
@@ -43,7 +41,6 @@ class MediaSessionConnectorAdapter @Inject constructor(private val mediaSessionC
         }
 
         override fun dispatchStop(player: Player, reset: Boolean): Boolean {
-            Log.v("reuestingaudiofocus", "stopping control")
             audioPlayer.pause()
             audioPlayer.releaseIfPossible()
             return false

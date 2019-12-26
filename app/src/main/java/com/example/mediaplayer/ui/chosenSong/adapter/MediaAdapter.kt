@@ -14,7 +14,6 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recycle
     private var distance: Int = -1
     private var isSnapAttached = false
     private val snapHelper = LinearSnapHelper()
-    private var isFirstTime = true
     private var isLocked = false
     private var selectedPosition = 0
     private var isListenerRegistered = false
@@ -35,7 +34,7 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recycle
                 launch {
                     isLocked = true
                     delay(500)
-                    if (selectedPosition.coerceIn(firstVisibleItemPosition(), lastVisibleItemPosition()) != selectedPosition) {
+                    if (shouldScroll(selectedPosition)) {
                         scrollTo(selectedPosition)
                     }
                     isLocked = false
@@ -50,17 +49,16 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recycle
                 /**
                  * if the scroller did not scroll to the selected position we scroll again until we get it right
                  */
-                if (selectedPosition.coerceIn(firstVisibleItemPosition(), lastVisibleItemPosition()) != selectedPosition) {
+                if (shouldScroll(selectedPosition)) {
                     scrollTo(selectedPosition)
                 } else {
-                    if (isFirstTime)
-                        isFirstTime = false
-                    isListenerRegistered = false
-                    recyclerView.removeOnScrollListener(this)
+                    unRegisterScrollingListener(recyclerView)
                 }
             }
         }
     }
+
+
     private val smoothScroller: LinearSmoothScroller by lazy {
         object : LinearSmoothScroller(recyclerView.context) {
 
@@ -75,7 +73,7 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recycle
     }
 
 
-    private fun normalScrolling(position: Int) {
+    private fun startSmoothScrolling(position: Int) {
         //if position was the first or last then just scroll and disable snaphelper
         if (position <= 1 || position == itemCount - 1) {
             if (isSnapAttached) {
@@ -90,15 +88,12 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recycle
                 isSnapAttached = true
             }
         }
-        startSmoothScrolling(position)
-    }
 
-    private fun startSmoothScrolling(position: Int) {
+
         smoothScroller.targetPosition = position
         layoutManager.startSmoothScroll(smoothScroller)
-
-
     }
+
 
     /**
      *will make sure that number is in range of minNum to excluding maxNum
@@ -113,26 +108,27 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recycle
 
     private fun scrollTo(position: Int) {
         selectedPosition = position.approximate(0, itemCount)
-        if (isFirstTime) {
-            launch {
-                if (!isListenerRegistered) {
-                    delay(200)
-                    isListenerRegistered = true
-                    recyclerView.addOnScrollListener(listener)
-                }
-
-                normalScrolling(selectedPosition)
-            }
-        } else {
-            normalScrolling(selectedPosition)
+        launch {
+            listener.registerScrollingListener(recyclerView)
+            startSmoothScrolling(selectedPosition)
         }
-
     }
 
+    private fun RecyclerView.OnScrollListener.registerScrollingListener(recyclerView: RecyclerView) {
+        if (!isListenerRegistered) {
+            isListenerRegistered = true
+            recyclerView.addOnScrollListener(this)
+        }
+    }
+
+    private fun RecyclerView.OnScrollListener.unRegisterScrollingListener(recyclerView: RecyclerView) {
+        isListenerRegistered = false
+        recyclerView.removeOnScrollListener(this)
+    }
 
     private suspend fun getDistance(): Int {
         return if (distance == -1) {
-            delay(100)
+            delay(300)
             val firstPosition = firstVisibleItemPosition()
             val lastPosition = lastVisibleItemPosition()
             distance = abs((lastPosition - firstPosition) / 2)
@@ -142,9 +138,29 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recycle
         }
     }
 
-    protected fun scrollToPosition(position: Int) {
+    private fun shouldScroll(position: Int): Boolean {
+        if (position.coerceIn(firstVisibleItemPosition(), lastVisibleItemPosition()) != position) {
+            return true
+        }
+        return false
+    }
+
+    /**
+     * [scrollAnyWay] if true will try to scroll if even the item is visible otherwise will do check before scrolling
+     * [position] u want to scroll to
+     */
+    protected fun scrollToPosition(position: Int, scrollAnyWay: Boolean = false) {
         launch {
-            scrollTo(abs(position + getDistance()))
+            val distance = getDistance()
+            if (!scrollAnyWay) {
+                if (shouldScroll(position + distance)) {
+                    scrollTo(position + distance)
+                }
+            } else {
+                scrollTo(position + distance)
+            }
+
+
         }
     }
 }
