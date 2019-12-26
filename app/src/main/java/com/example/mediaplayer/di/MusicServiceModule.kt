@@ -5,13 +5,16 @@ import android.content.Context
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.lifecycle.Lifecycle
 import com.example.mediaplayer.audioForegroundService.AudioForegroundService
-import com.example.mediaplayer.audioPlayer.AudioIPlayer
+import com.example.mediaplayer.audioPlayer.AudioPlayer
+import com.example.mediaplayer.audioPlayer.MediaSessionConnectorAdapter
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocus
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusCompat
 import com.example.mediaplayer.audioPlayer.audioFocus.MediaAudioFocusPre
 import com.example.mediaplayer.data.MediaPreferences
 import com.example.mediaplayer.shared.isOreo
 import com.google.android.exoplayer2.ExoPlayerFactory
+import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import dagger.Binds
 import dagger.Lazy
 import dagger.Module
@@ -55,6 +58,13 @@ abstract class MusicServiceModule {
             return MediaSessionCompat(instance, instance.packageName)
         }
 
+        @Provides
+        @PerService
+        @JvmStatic
+        internal fun provideMediaSessionConnector(mediaSessionCompat: MediaSessionCompat): MediaSessionConnector {
+            return MediaSessionConnector(mediaSessionCompat)
+        }
+
 
         @Provides
         @JvmStatic
@@ -77,8 +87,22 @@ abstract class MusicServiceModule {
         @Provides
         @JvmStatic
         @PerService
-        internal fun providePlayer(service: AudioForegroundService, mediaSessionCompat: MediaSessionCompat, mediaPreferences: MediaPreferences): AudioIPlayer {
-            return AudioIPlayer(service, mediaSessionCompat, ExoPlayerFactory.newSimpleInstance(service), mediaPreferences)
+        internal fun provideExoPlayer(service: AudioForegroundService): SimpleExoPlayer {
+            return ExoPlayerFactory.newSimpleInstance(service)
+        }
+
+        @Provides
+        @JvmStatic
+        @PerService
+        internal fun provideAudioPlayer(service: AudioForegroundService, player: SimpleExoPlayer, mediaSessionConnectorAdapter: MediaSessionConnectorAdapter, mediaPreferences: MediaPreferences): AudioPlayer {
+            return AudioPlayer(service, mediaSessionConnectorAdapter, player, mediaPreferences)
+        }
+
+        @Provides
+        @JvmStatic
+        @PerService
+        internal fun provideMediaSessionConnectorAdapter(mediaSessionCompat: MediaSessionCompat, mediaSessionConnector: MediaSessionConnector): MediaSessionConnectorAdapter {
+            return MediaSessionConnectorAdapter(mediaSessionCompat, mediaSessionConnector)
         }
 
 

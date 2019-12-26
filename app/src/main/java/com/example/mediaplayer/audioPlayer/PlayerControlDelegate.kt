@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import com.example.mediaplayer.data.MediaPreferences
 import com.example.mediaplayer.extensions.isPlayerStateEnded
-import com.example.mediaplayer.extensions.isPlayerStopping
 import com.example.mediaplayer.extensions.isPlaying
 import com.example.mediaplayer.shared.CustomScope
 import com.google.android.exoplayer2.Player
@@ -26,8 +25,6 @@ internal open class PlayerControlDelegate(private val context: Context,
 
     private var songList: List<Any>? = null
     private var songListUris: List<Uri> = emptyList()
-    private var currentIndex = 0
-    private var currentPosition = 0L
     private var repeatModeActivated: Boolean = false
         set(value) {
             if (value) {
@@ -40,6 +37,7 @@ internal open class PlayerControlDelegate(private val context: Context,
         }
 
 
+    override var actionFromAudioFocus: Boolean = false
     private var shuffleModeActivated: Boolean = false
         set(value) {
             player?.shuffleModeEnabled = value
@@ -97,10 +95,9 @@ internal open class PlayerControlDelegate(private val context: Context,
      * seek to different track
      */
     override fun seekToIndex(index: Int) {
-        currentIndex = index
         player?.seekTo(index, 0)
         player!!.playWhenReady = true
-        retryIfStopped()
+        //retryIfStopped()
 
     }
 
@@ -109,45 +106,45 @@ internal open class PlayerControlDelegate(private val context: Context,
      * seek to different position
      */
     override fun seekToSecond(second: Int) {
-        player?.seekTo(currentIndex, second * 1000.toLong())
-        retryIfStopped()
+        player?.seekTo(second * 1000.toLong())
+        //retryIfStopped()
 
     }
 
 
-    private fun retryIfStopped(retry: Boolean = true, action: ((index: Int, position: Long) -> Unit)? = null): Boolean {
-        with(player!!) {
-            if (isPlayerStopping()) {
-                action?.invoke(mediaPreferences.getCurrentTrack(), mediaPreferences.getCurrentPosition())
-                if (::mediaSource.isInitialized && retry)
-                    prepare(mediaSource, false, false)
-                return true
-            }
-            return false
-        }
-    }
+    /*  private fun retryIfStopped(retry: Boolean = true, action: ((index: Int, position: Long) -> Unit)? = null): Boolean {
+          with(player!!) {
+              if (isPlayerStopping()) {
+                  action?.invoke(mediaPreferences.getCurrentTrack(), mediaPreferences.getCurrentPosition())
+                  if (::mediaSource.isInitialized && retry)
+                      prepare(mediaSource, false, false)
+                  return true
+              }
+              return false
+          }
+      }*/
 
     override fun currentIndex(): Int {
-        val stopped = retryIfStopped(false) { index, _ ->
-            currentIndex = index
-        }
-        return if (!stopped) player!!.currentWindowIndex
-        else currentIndex
+        /* val stopped = retryIfStopped(false) { index, _ ->
+             currentIndex = index
+         }*/
+        return /*if (!stopped)*/ player!!.currentWindowIndex
+        //  else currentIndex
     }
 
     override fun currentPosition(): Long {
-        val stopped = retryIfStopped(false) { _, position ->
-            currentPosition = position
-        }
-        return if (!stopped) player!!.currentPosition
-        else currentPosition
+        /*   val stopped = retryIfStopped(false) { _, position ->
+               currentPosition = position
+           }*/
+        return /*if (!stopped)*/ player!!.currentPosition
+        // else currentPosition
     }
 
     override fun currentTag(): Any? {
         with(player!!) {
             return if (currentTag == null) {
                 if (songList != null)
-                    songList?.get(currentIndex)
+                    songList?.get(currentWindowIndex)
                 else null
             } else currentTag
         }
@@ -156,12 +153,13 @@ internal open class PlayerControlDelegate(private val context: Context,
     /**
      * play audio
      */
-    override fun play() {
+    override fun play(fromAudioFocus: Boolean) {
+        actionFromAudioFocus = fromAudioFocus
         with(player!!) {
             if (!isPlaying()) {
                 //for when player finish playing all tracks then the state will be ended so if user clicked play we repeat the same song again
                 if (isPlayerStateEnded())
-                    seekTo(currentIndex, 0)
+                    seekTo(currentWindowIndex, 0)
                 playWhenReady = true
             }
         }
@@ -170,7 +168,8 @@ internal open class PlayerControlDelegate(private val context: Context,
     /**
      * pause audio
      */
-    override fun pause() {
+    override fun pause(fromAudioFocus: Boolean) {
+        actionFromAudioFocus = fromAudioFocus
         with(player!!) {
             if (isPlaying()) {
                 playWhenReady = false
@@ -183,15 +182,14 @@ internal open class PlayerControlDelegate(private val context: Context,
      */
     override fun next() {
         with(player!!) {
-            val stopped = retryIfStopped { index, _ ->
-                currentIndex = index
-                seekTo(--currentIndex, 0)
-                playWhenReady = true
-            }
-            if (!stopped) {
-                currentIndex++
-                next()
-            }
+            /*  val stopped = retryIfStopped { index, _ ->
+                  currentIndex = index
+                  seekTo(--currentIndex, 0)
+                  playWhenReady = true
+              }*/
+            // if (!stopped) {
+            next()
+            // }
         }
 
     }
@@ -203,42 +201,40 @@ internal open class PlayerControlDelegate(private val context: Context,
      */
     override fun previous() {
         with(player!!) {
-            val stopped = retryIfStopped { index, _ ->
+            /*val stopped = retryIfStopped { index, _ ->
                 currentIndex = index
                 seekTo(--currentIndex, 0)
                 playWhenReady = true
             }
-            if (!stopped) {
-                when {
-                    currentPosition > 3000 -> seekTo(0)
-                    else -> {
-                        --currentIndex
-                        previous()
-                    }
+            if (!stopped) {*/
+            when {
+                currentPosition > 3000 -> seekTo(0)
+                else -> {
+                    previous()
                 }
             }
         }
+        //}
 
     }
 
     /**
      * change the audio state from playing to pausing and vice verse
-     * to change the current state always use this method, if u tried to use play or pause method will cause unwanted behaviour
      */
     override fun changeAudioState() {
         with(player!!) {
-            val stopped = retryIfStopped { index, position ->
-                seekTo(index, position)
-                playWhenReady = true
-            }
-            if (!stopped) {
-                if (isPlaying()) {
-                    pause()
-                } else {
-                    play()
-                }
+            /* val stopped = retryIfStopped { index, position ->
+                 seekTo(index, position)
+                 playWhenReady = true
+             }*/
+            //  if (!stopped) {
+            if (isPlaying()) {
+                pause()
+            } else {
+                play()
             }
         }
+        //}
     }
 
 

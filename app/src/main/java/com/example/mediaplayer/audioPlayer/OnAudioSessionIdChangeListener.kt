@@ -10,8 +10,7 @@ import kotlinx.coroutines.*
 /**
  *  register listeners for audio session id
  */
-internal class OnAudioSessionIdChangeListener private constructor(service: AudioForegroundService,
-                                                                  private val player: SimpleExoPlayer)
+internal class OnAudioSessionIdChangeListener private constructor(service: AudioForegroundService)
     : AudioListener,
         IPlayerListener,
         DefaultLifecycleObserver,
@@ -20,7 +19,6 @@ internal class OnAudioSessionIdChangeListener private constructor(service: Audio
         private const val DELAY = 500L
         private var observers = HashSet<IPlayerObserver>()
         private var audioSessionId = -1
-        private var isReset = false
         private var onAudioSessionIdChangeListener: OnAudioSessionIdChangeListener? = null
         fun createOrUpdate(service: AudioForegroundService,
                            player: SimpleExoPlayer,
@@ -31,7 +29,7 @@ internal class OnAudioSessionIdChangeListener private constructor(service: Audio
                 updatedPlayerObserver.onAudioSessionId(audioSessionId)
             }
             return if (onAudioSessionIdChangeListener == null) {
-                onAudioSessionIdChangeListener = OnAudioSessionIdChangeListener(service, player)
+                onAudioSessionIdChangeListener = OnAudioSessionIdChangeListener(service)
                 player.addAudioListener(onAudioSessionIdChangeListener)
                 onAudioSessionIdChangeListener!!
             } else {
@@ -49,28 +47,11 @@ internal class OnAudioSessionIdChangeListener private constructor(service: Audio
     private var job: Job? = null
 
     /**
-     * when player become active we check if we reset everything or not if yes we add audio listener again
-     */
-    override fun onActivePlayer() {
-        if (isReset) {
-            isReset = false
-            player.addAudioListener(onAudioSessionIdChangeListener)
-        }
-
-    }
-
-    /**
      * reset the audiosession when the service is destroyed
      */
     override fun onDestroy(owner: LifecycleOwner) {
+        job?.cancel()
         onAudioSessionIdChangeListener = null
-    }
-
-    /**
-     * reset the audio session when the player stop
-     */
-    override fun onPlayerStop() {
-        reset()
     }
 
     /**
@@ -81,12 +62,6 @@ internal class OnAudioSessionIdChangeListener private constructor(service: Audio
         observers.remove(iPlayerObserver)
     }
 
-    private fun reset() {
-        isReset = true
-        audioSessionId = -1
-        player.removeAudioListener(onAudioSessionIdChangeListener)
-        job?.cancel()
-    }
 
     override fun onAudioSessionId(audioSessionId: Int) {
         Companion.audioSessionId = audioSessionId

@@ -18,10 +18,5 @@ interface IPlayerListener {
      */
     fun onObserverDetach(iPlayerObserver: IPlayerObserver) {}
 
-    /**
-     * this is called when the player  is being stopped
-     * will  be called immediately if stopped through google assistant
-     * because we actually do not stop the player when receiving stop intent (if the ui visible) from notification for sake of re preparing player again
-     */
-    fun onPlayerStop() {}
+
 }

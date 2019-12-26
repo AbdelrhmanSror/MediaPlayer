@@ -4,6 +4,7 @@ import android.net.Uri
 
 interface IPlayerControl {
 
+    var actionFromAudioFocus: Boolean
     /**
      * return current player index
      */
@@ -46,12 +47,12 @@ interface IPlayerControl {
     /**
      * play audio and reset runnable callback of Audio progress if it was initialized before
      */
-    fun play()
+    fun play(fromAudioFocus: Boolean = false)
 
     /**
      * pause audio and remove runnable callback of Audio progress if it is initialized
      */
-    fun pause()
+    fun pause(fromAudioFocus: Boolean = false)
 
     /**
      * go to next audio
@@ -67,6 +68,8 @@ interface IPlayerControl {
 
     /**
      * change the audio state from playing to pausing and vice verse
+     *
+     * to change the current state always use this method, if u tried to use play or pause method will cause unwanted behaviour
      */
     fun changeAudioState()
 

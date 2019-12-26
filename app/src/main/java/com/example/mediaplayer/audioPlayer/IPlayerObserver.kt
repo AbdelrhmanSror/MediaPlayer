@@ -39,13 +39,6 @@ interface IPlayerObserver {
     fun onPause() {}
 
     /**
-     * this is called when the player  is being stopped ,will be called only if stopped through google assistant
-     * otherwise it has no effect.
-     * because we actually do not stop the player when receiving stop intent (if the ui visible) from notification for sake of re preparing player again
-     */
-    fun onStop() {}
-
-    /**
      * this triggers whenever the audio track changes
      * also will trigger when the current audio track changes
      */

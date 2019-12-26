@@ -2,7 +2,6 @@ package com.example.mediaplayer.audioPlayer
 
 import android.util.Log
 import com.example.mediaplayer.audioForegroundService.AudioForegroundService
-import com.example.mediaplayer.data.MediaPreferences
 import com.example.mediaplayer.extensions.*
 import com.example.mediaplayer.shared.CustomScope
 import com.example.mediaplayer.shared.update
@@ -14,10 +13,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
-
 open class PlayerListenerDelegate(private val service: AudioForegroundService,
-                                  private val player: SimpleExoPlayer?,
-                                  private val mediaPreferences: MediaPreferences
+                                  private val player: SimpleExoPlayer?
 ) : CoroutineScope by CustomScope(Dispatchers.Main) {
     private lateinit var onPlayerStateChanged: Player.EventListener
 
@@ -31,10 +28,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
     private var durationHandled: Boolean = false
     //to prevent the callback of track ended to be called more than once at a time
     private var trackEndHandled = false
-    //to prevent the callback of track stopped to be called more than once at a time
-    private var stoppingHandled = false
-    private var isFirstTime: Boolean = true
-    private var isStopped = false
+
 
     /**
      * to indicate if the player is released or not so when the ui is not visible we release the player
@@ -60,11 +54,12 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                     }
 
                     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+                        Log.v("registeringAudioSession", " pausingsupose $playWhenReady $playbackState")
+
                         when {
                             isNewDurationReady(durationHandled) -> handleDurationChanging()
                             isPlayerPlaying() -> handlePlayerPlaying(playWhenReady)
                             isPlayerPausing() -> handlePlayerPausing(playWhenReady)
-                            isPlayerStopping() -> handlePlayerStopping()
                             isTracksEnded(trackEndHandled) -> handlePlayerTracksEnded()
                         }
                     }
@@ -99,22 +94,10 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
         player!!.playWhenReady = false
     }
 
-    private fun handlePlayerStopping() {
-        if (!stoppingHandled) {
-            isStopped = true
-            // Not playing because playback ended, the player is buffering, stopped or
-            // failed. Check playbackState and player.getPlaybackError for details.
-            mediaPreferences.apply {
-                setCurrentTrack(currentAudioIndex)
-                setCurrentPosition(playbackPosition)
-            }
-            triggerStoppingCallbacks()
-            stoppingHandled = true
-        }
-    }
 
     private fun handlePlayerPausing(playWhenReady: Boolean) {
         with(player!!) {
+            Log.v("registeringAudioSession", " pausing1  $playbackState")
             playbackPosition = currentPosition
             if (playWhenReady != isPlaying) {
                 Log.v("registeringAudioSession", " pausing")
@@ -129,12 +112,12 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
     }
 
     private fun handlePlayerPlaying(playWhenReady: Boolean) {
+        Log.v("registeringAudioSession", " playing1  ${player!!.playbackState} ")
+
         if (playWhenReady != isPlaying) {
             Log.v("registeringAudioSession", " playing  ")
             triggerPlayingCallbacks()
-            stoppingHandled = false
             trackEndHandled = false
-            isStopped = false
             isPlaying = playWhenReady
             // Active playback.
             //when player start again we start listening to  events of headphone
@@ -147,7 +130,6 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 
         with(player!!) {
             durationHandled = false
-            stoppingHandled = false
             if (isReleased) isReleased = false
             launch {
                 //give time for ui to prepare
@@ -157,17 +139,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                 currentInstance = player.currentTag
                 triggerTrackChangedCallbacks()
                 Log.v("registeringAudioSession", " tracking  $currentWindowIndex $playWhenReady ")
-                //if player was being stopped ,if track changed we trigger the playing callback as an indicator of ending stopping state
-                if (isStopped) triggerPlayingCallbacks()
-                //trigger onactiveplayer callback at first time
-                else if (isFirstTime && playWhenReady) {
-                    isFirstTime = false
-                    onPlayerObserverListListeners.forEach { entry ->
-                        entry.value.forEach {
-                            it.onActivePlayer()
-                        }
-                    }
-                }
+
 
             }
         }
@@ -202,16 +174,6 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
         onPlayerObserverListListeners.forEach {
             it.key.onAudioListCompleted()
 
-        }
-    }
-
-    private fun triggerStoppingCallbacks() {
-        Log.v("playerstage", "onstop2")
-        onPlayerObserverListListeners.forEach { entry ->
-            entry.key.onStop()
-            entry.value.forEach {
-                it.onPlayerStop()
-            }
         }
     }
 

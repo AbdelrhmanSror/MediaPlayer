@@ -37,6 +37,7 @@ class TracksRepository @Inject constructor(private val application: Application,
 
     private fun insertSongs(newListOfSongs: List<SongEntity>) {
         launch {
+            val time0 = System.currentTimeMillis()
             var oldlistOfSong = database.songDao().getAllSongs()
             val dao = database.songDao()
             //if there was any song deleted we update database based on that
@@ -49,17 +50,17 @@ class TracksRepository @Inject constructor(private val application: Application,
                 dao.getAllSongs()
             }
             //if there was any new song added we added to database
-            launch {
-                newListOfSongs.forEach {
-                    if (!oldlistOfSong.contains(it)) {
-                        dao.insert(it)
+            newListOfSongs.forEach {
+                if (!oldlistOfSong.contains(it)) {
+                    dao.insert(it)
 
-                    }
                 }
             }
 
+
         }
     }
+
 
     fun observeSongs(): LiveData<List<SongEntity>> {
         return database.songDao().getAllSongsLiveData()

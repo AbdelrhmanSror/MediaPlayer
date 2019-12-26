@@ -1,16 +1,12 @@
 package com.example.mediaplayer.audioPlayer
 
 import android.support.v4.media.MediaDescriptionCompat
-import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.example.mediaplayer.audioForegroundService.AudioForegroundService
 import com.example.mediaplayer.data.MediaPreferences
-import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
-import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
-import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import javax.inject.Inject
 
 data class AudioPlayerModel(val currentIndex: Int,
@@ -20,11 +16,11 @@ data class AudioPlayerModel(val currentIndex: Int,
                             val currentInstance: Any?)
 
 
-class AudioIPlayer @Inject constructor(private val service: AudioForegroundService,
-                                       private val mediaSessionCompat: MediaSessionCompat,
-                                       private var player: SimpleExoPlayer?,
-                                       private val mediaPreferences: MediaPreferences)
-    : PlayerListenerDelegate(service, player!!, mediaPreferences),
+class AudioPlayer @Inject constructor(private val service: AudioForegroundService,
+                                      private val mediaSessionConnectorAdapter: MediaSessionConnectorAdapter,
+                                      private var player: SimpleExoPlayer?,
+                                      private val mediaPreferences: MediaPreferences)
+    : PlayerListenerDelegate(service, player!!),
         DefaultLifecycleObserver,
         IPlayerControl by PlayerControlDelegate(service, player, mediaPreferences),
         IPlayerObservable {
@@ -47,10 +43,6 @@ class AudioIPlayer @Inject constructor(private val service: AudioForegroundServi
      */
     @Suppress
     var extraRelease: (() -> Unit)? = null
-
-    private val mediaSessionConnector: MediaSessionConnector by lazy {
-        MediaSessionConnector(mediaSessionCompat)
-    }
 
 
     init {
@@ -117,7 +109,7 @@ class AudioIPlayer @Inject constructor(private val service: AudioForegroundServi
      * NOTE: this will act as [releaseIfPossible] if there is only one observer so no need to call both together just one of them
      */
     override fun removeObserver(iPlayerObserver: IPlayerObserver) {
-        //calling onDatch fun of every listenr first
+        //calling onDatch fun of every listener first
         observers[iPlayerObserver]?.forEach {
             it.onObserverDetach(iPlayerObserver)
         }
@@ -163,15 +155,8 @@ class AudioIPlayer @Inject constructor(private val service: AudioForegroundServi
      * to control the player through headset or google assistant
      */
     fun setCommandControl(mediaDescriptionCompat: (Int) -> MediaDescriptionCompat) {
-        mediaSessionConnector.setPlayer(player)
-        mediaSessionCompat.isActive = true
-        val queueNavigator: TimelineQueueNavigator = object : TimelineQueueNavigator(mediaSessionCompat) {
-            override fun getMediaDescription(player: Player?, windowIndex: Int): MediaDescriptionCompat {
-                return mediaDescriptionCompat(windowIndex)
-            }
-
-        }
-        mediaSessionConnector.setQueueNavigator(queueNavigator)
+        mediaSessionConnectorAdapter.setPlayers(this, player!!)
+        mediaSessionConnectorAdapter.setQueueNavigator(mediaDescriptionCompat)
     }
 
     override fun getCountOfMainObservers(): Int {
@@ -195,8 +180,7 @@ class AudioIPlayer @Inject constructor(private val service: AudioForegroundServi
      */
     private fun releasePlayerPermanently() {
         removeAllObservers()
-        mediaSessionCompat.release()
-        mediaSessionConnector.setPlayer(null)
+        mediaSessionConnectorAdapter.release()
         extraRelease?.invoke()
         player?.release()
         player = null

@@ -46,9 +46,6 @@ internal class Noisy private constructor(private val service: AudioForegroundSer
         register()
     }
 
-    override fun onPlayerStop() {
-        unregister()
-    }
 
     override fun onInActivePlayer() {
         unregister()
