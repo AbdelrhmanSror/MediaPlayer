@@ -90,9 +90,11 @@ class SongListAdapter(private val viewModel: ChosenSongViewModel, private val re
 
         }
 
-
     }
 
+    init {
+        currentSelectedItemPosition = viewModel.previousRecyclerViewPosition
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
 
@@ -109,12 +111,10 @@ class SongListAdapter(private val viewModel: ChosenSongViewModel, private val re
     }
 
 
-    override fun setCurrentSelectedPosition(position: Int, scrollEnabled: Boolean) {
+    override fun setCurrentSelectedPosition(position: Int) {
         //update the current focused position
         if (currentSelectedItemPosition != position) {
             currentSelectedItemPosition = position
-            if (!scrollEnabled)
-                return
             notifyItemChanged(lastSelectedItemPosition)
             notifyItemChanged(currentSelectedItemPosition)
             speed = 5f

@@ -56,10 +56,6 @@ class ChosenSongFragment : DaggerFragment() {
         with(viewModel)
         {
 
-            //restore the previous recycler view position after configuration changes
-            if (viewModel.previousRecyclerViewPosition != -1) {
-                setCurrentPositionRecyclerView(viewModel.previousRecyclerViewPosition, false)
-            }
             chosenSongIndex.observe(viewLifecycleOwner, Observer { event ->
                 event?.getContentIfNotHandled()?.let {
                     setCurrentPositionRecyclerView(it, true)

@@ -18,8 +18,7 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recycle
     private var selectedPosition = 0
     private var isListenerRegistered = false
     var speed: Float = 8f//default is 25f (bigger = slower)
-    abstract fun setCurrentSelectedPosition(position: Int, scrollEnabled: Boolean)
-
+    abstract fun setCurrentSelectedPosition(position: Int)
     private fun firstVisibleItemPosition() = layoutManager.findFirstVisibleItemPosition()
     private fun lastVisibleItemPosition() = layoutManager.findLastVisibleItemPosition()
 
