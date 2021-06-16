@@ -1,10 +1,24 @@
+/*
+ * Copyright 2019 Abdelrhman Sror. All rights reserved.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package com.example.mediaplayer.repositry
 
 import android.app.Application
 import androidx.lifecycle.LiveData
 import com.example.mediaplayer.data.queires.Track
 import com.example.mediaplayer.database.PlayerDatabase
-import com.example.mediaplayer.database.SongEntity
+import com.example.mediaplayer.model.SongEntity
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.model.toFavouriteSongEntity
 import com.example.mediaplayer.model.toSongEntity
@@ -12,10 +26,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 
-class TracksRepository @Inject constructor(private val application: Application, private val database: PlayerDatabase) : CoroutineScope by CoroutineScope(Dispatchers.IO) {
+class TracksRepository constructor(private val application: Application, private val database: PlayerDatabase) : CoroutineScope by CoroutineScope(Dispatchers.IO) {
 
     fun getFavouriteSongs(): LiveData<List<SongEntity>> {
         return database.favouriteSongsDao().getAllFavouriteSong()

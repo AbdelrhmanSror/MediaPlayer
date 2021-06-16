@@ -1,3 +1,17 @@
+/*
+ * Copyright 2019 Abdelrhman Sror. All rights reserved.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package com.example.mediaplayer.audioForegroundService
 
 import android.app.Service
@@ -6,39 +20,36 @@ import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
 import androidx.lifecycle.LifecycleService
-import com.example.mediaplayer.audioPlayer.AudioPlayer
-import com.example.mediaplayer.audioPlayer.IPlayerObserver
-import com.example.mediaplayer.audioPlayer.audioFocus.FocusRequestImp
+import com.example.mediaplayer.audioPlayer.*
 import com.example.mediaplayer.audioPlayer.notification.AudioForegroundNotificationManager
-import com.example.mediaplayer.di.inject
 import com.example.mediaplayer.intent.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.intent.LIST_SONG
 import com.example.mediaplayer.intent.NotificationAction
 import com.example.mediaplayer.intent.PlayerActions.ACTION_FOREGROUND
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.model.getMediaDescription
-import javax.inject.Inject
 
 
-class AudioForegroundService @Inject constructor() : LifecycleService() {
+class AudioForegroundService : LifecycleService() {
 
-    @Inject
     lateinit var audioPlayer: AudioPlayer
+
     // indicates how to behave if the service is killed.
     private var mStartMode = Service.START_NOT_STICKY
+
     // interface for clients that bind.
     private var mBinder: IBinder = SongBinder()
+
     //responsible for creating media player notification;
-    @Inject
-    lateinit var notificationManager: AudioForegroundNotificationManager
-    @Inject
-    lateinit var focusRequestImp: FocusRequestImp
+    private lateinit var notificationManager: AudioForegroundNotificationManager
 
 
     override fun onCreate() {
-        inject()
+        audioPlayer = provideAudioPlayer(this)
+        notificationManager = provideNotificationManager(this)
         // The service is being created.
-        audioPlayer.registerObservers(notificationManager, focusRequestImp)
+        audioPlayer.registerObservers(notificationManager, provideFocusRequest(this, provideMediaAudioFocus(this), audioPlayer))
+
         super.onCreate()
     }
 
@@ -54,10 +65,7 @@ class AudioForegroundService @Inject constructor() : LifecycleService() {
 
 
     fun registerObserver(iPlayerObserver: IPlayerObserver) {
-        audioPlayer.registerObserver(iPlayerObserver
-                , audioSessionIdCallbackEnable = true
-                , progressCallBackEnabled = true
-                , isMainObserver = true)
+        audioPlayer.registerObserver(iPlayerObserver, audioSessionIdCallbackEnable = true, progressCallBackEnabled = true, isMainObserver = true)
     }
 
     fun removeObserver(IPlayerObserver: IPlayerObserver) {
@@ -91,11 +99,15 @@ class AudioForegroundService @Inject constructor() : LifecycleService() {
 
     }
 
+    //seeking to the next selected song
     fun seekTo(index: Int) {
         audioPlayer.seekToIndex(index)
 
     }
 
+    fun swapItems(first: Int, second: Int) {
+        audioPlayer.swapItems(first, second)
+    }
 
     internal inner class SongBinder : Binder() {
         val service: AudioForegroundService

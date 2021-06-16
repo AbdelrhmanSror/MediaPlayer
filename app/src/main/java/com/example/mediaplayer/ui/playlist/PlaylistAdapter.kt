@@ -1,3 +1,17 @@
+/*
+ * Copyright 2019 Abdelrhman Sror. All rights reserved.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package com.example.mediaplayer.ui.playlist
 
 
@@ -12,6 +26,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.mediaplayer.R
 import com.example.mediaplayer.databinding.PlaylistLayoutBinding
 import com.example.mediaplayer.model.SongModel
+import com.example.mediaplayer.ui.ClickType
 import com.example.mediaplayer.ui.OnItemClickListener
 import kotlinx.android.synthetic.main.playlist_layout.view.*
 
@@ -36,6 +51,8 @@ class PlaylistAdapter(private val itemListener: OnItemClickListener) : ListAdapt
     class ViewHolder(val binding: PlaylistLayoutBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: SongModel, listener: OnItemClickListener) {
             binding.playlistModel = item
+            binding.itemPosition = adapterPosition
+
             binding.spinner.setOnClickListener {
                 //creating a popup menu
                 val popup = PopupMenu(binding.spinner.context, binding.spinner)
@@ -44,16 +61,13 @@ class PlaylistAdapter(private val itemListener: OnItemClickListener) : ListAdapt
                 popup.setOnMenuItemClickListener { item ->
                     when (item.itemId) {
                         R.id.edit -> {
-                            Toast.makeText(binding.spinner.context, "edit", Toast.LENGTH_LONG).show()
-                            true
+                            onEdit()
                         }
                         R.id.delete -> {
-                            Toast.makeText(binding.spinner.context, "delete", Toast.LENGTH_LONG).show()
-                            true
+                            onDelete()
                         }
                         R.id.add_to_favourite -> {
-                            Toast.makeText(binding.spinner.context, "add to favourite", Toast.LENGTH_LONG).show()
-                            true
+                            addToFav(listener, adapterPosition)
                         }
                         else -> false
                     }
@@ -64,9 +78,26 @@ class PlaylistAdapter(private val itemListener: OnItemClickListener) : ListAdapt
                 popup.show()
 
             }
-            binding.root.playlistContainer.setOnClickListener { listener.onClick(adapterPosition) }
+            binding.root.playlistContainer.setOnClickListener { listener.onClick(ClickType.RUN, adapterPosition) }
         }
 
+        private fun onEdit(): Boolean {
+            Toast.makeText(binding.spinner.context, "edit", Toast.LENGTH_LONG).show()
+            return true
+
+        }
+
+        private fun onDelete(): Boolean {
+            Toast.makeText(binding.spinner.context, "delete", Toast.LENGTH_LONG).show()
+            return true
+        }
+
+        private fun addToFav(listener: OnItemClickListener, position: Int): Boolean {
+            listener.onClick(ClickType.FAVOURITE, position)
+            Toast.makeText(binding.spinner.context, "add to favourite", Toast.LENGTH_LONG).show()
+
+            return true
+        }
 
         /**
          * return the view that viewHolder will hold

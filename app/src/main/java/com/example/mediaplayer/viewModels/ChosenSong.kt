@@ -1,3 +1,17 @@
+/*
+ * Copyright 2019 Abdelrhman Sror. All rights reserved.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package com.example.mediaplayer.viewModels
 
 import android.app.Application
@@ -11,12 +25,12 @@ import androidx.lifecycle.*
 import com.example.mediaplayer.audioForegroundService.AudioForegroundService
 import com.example.mediaplayer.audioPlayer.AudioPlayerModel
 import com.example.mediaplayer.audioPlayer.IPlayerObserver
-import com.example.mediaplayer.database.toSongModel
 import com.example.mediaplayer.extensions.startForeground
 import com.example.mediaplayer.intent.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.intent.LIST_SONG
 import com.example.mediaplayer.intent.PlayerActions.ACTION_FOREGROUND
 import com.example.mediaplayer.model.SongModel
+import com.example.mediaplayer.model.toSongModel
 import com.example.mediaplayer.repositry.TracksRepository
 import com.example.mediaplayer.shared.CustomScope
 import com.example.mediaplayer.shared.Event
@@ -24,7 +38,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 class ChosenSongViewModel(application: Application,
                           private val tracksRepository: TracksRepository,
@@ -54,6 +67,7 @@ class ChosenSongViewModel(application: Application,
         }
         imageUris
     }
+
     //to observe when the current song track is changed
     private val _chosenSongIndex = MutableLiveData<Event<Int>>()
     val chosenSongIndex: LiveData<Event<Int>> = _chosenSongIndex
@@ -198,7 +212,7 @@ class ChosenSongViewModel(application: Application,
             override fun onFftDataCapture(p0: Visualizer?, p1: ByteArray?, p2: Int) {}
 
 
-        }, Visualizer.getMaxCaptureRate() / 2, true, false)
+        }, Visualizer.getMaxCaptureRate() / 3, true, false)
 
         visualizer?.enabled = true
     }
@@ -275,15 +289,16 @@ class ChosenSongViewModel(application: Application,
     }
 }
 
-class ChosenSongViewModelFactory @Inject constructor(private val application: Application,
-                                                     private val tracksRepository: TracksRepository)
+class ChosenSongViewModelFactory constructor(private val application: Application)
     : ViewModelProvider.Factory {
 
     private var chosenSongIndex: Int? = null
     private var fromNotification: Boolean? = null
-    fun setData(songIndex: Int, fromNotification: Boolean) {
+    private var tracksRepository: TracksRepository? = null
+    fun setData(songIndex: Int, fromNotification: Boolean, tracksRepository: TracksRepository) {
         chosenSongIndex = songIndex
         this.fromNotification = fromNotification
+        this.tracksRepository = tracksRepository
 
     }
 
@@ -291,7 +306,7 @@ class ChosenSongViewModelFactory @Inject constructor(private val application: Ap
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
 
         if (modelClass.isAssignableFrom(ChosenSongViewModel::class.java)) {
-            return ChosenSongViewModel(application, tracksRepository, chosenSongIndex!!, fromNotification!!) as T
+            return ChosenSongViewModel(application, tracksRepository!!, chosenSongIndex!!, fromNotification!!) as T
 
         }
         throw IllegalArgumentException("unknown class")

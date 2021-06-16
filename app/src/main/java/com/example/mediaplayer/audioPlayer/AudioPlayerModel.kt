@@ -12,17 +12,11 @@
  *
  */
 
-package com.example.mediaplayer.ui
+package com.example.mediaplayer.audioPlayer
 
 
-enum class ClickType {
-    EDIT, DELETE, FAVOURITE, RUN
-}
-
-/**
- * click listener for every item in recycler view
- */
-interface OnItemClickListener {
-    fun onClick(clickType: ClickType, itemClickIndex: Int) {}
-
-}
+data class AudioPlayerModel(val currentIndex: Int,
+                            val isPlaying: Boolean,
+                            val shuffleModeEnabled: Boolean,
+                            val repeatMode: Int,
+                            val currentInstance: Any?)

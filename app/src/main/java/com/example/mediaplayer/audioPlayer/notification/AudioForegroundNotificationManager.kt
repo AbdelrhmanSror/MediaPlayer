@@ -1,3 +1,17 @@
+/*
+ * Copyright 2019 Abdelrhman Sror. All rights reserved.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package com.example.mediaplayer.audioPlayer.notification
 
 import android.app.Notification
@@ -16,15 +30,14 @@ import com.example.mediaplayer.model.Event
 import com.example.mediaplayer.model.MusicNotificationModel
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.shared.CustomScope
-import com.example.mediaplayer.shared.isOreo
+import com.example.mediaplayer.shared.isOreoOrLater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-class AudioForegroundNotificationManager @Inject constructor(private val service: AudioForegroundService,
-                                                             private val notificationImp: INotification) : IPlayerObserver,
+class AudioForegroundNotificationManager constructor(private val service: AudioForegroundService,
+                                                     private val notificationImp: INotification) : IPlayerObserver,
         DefaultLifecycleObserver, CoroutineScope by CustomScope() {
 
     private var isForeground: Boolean = false
@@ -78,7 +91,7 @@ class AudioForegroundNotificationManager @Inject constructor(private val service
     //creating notification channel
     private fun createNotificationChannel() {
         val notifyManager = NotificationManagerCompat.from(service)
-        if (isOreo()) {
+        if (isOreoOrLater()) {
             // Create a ForegroundNotification
             val notificationChannel = NotificationChannel(CHANNEL_ID,
                     "Media Notification", NotificationManager.IMPORTANCE_HIGH).apply {
@@ -110,7 +123,7 @@ class AudioForegroundNotificationManager @Inject constructor(private val service
     private suspend fun publishNotification(state: MusicNotificationModel) {
         //require(state !== state) // to avoid concurrency problems a copy is passed
 
-        if (!isForeground && isOreo()) {
+        if (!isForeground && isOreoOrLater()) {
             // oreo needs to post notification immediately after calling startForegroundService
             issueNotification(state)
         } else {

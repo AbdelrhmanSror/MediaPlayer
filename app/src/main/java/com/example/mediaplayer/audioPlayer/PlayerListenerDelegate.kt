@@ -1,6 +1,19 @@
+/*
+ * Copyright 2019 Abdelrhman Sror. All rights reserved.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package com.example.mediaplayer.audioPlayer
 
-import android.util.Log
 import com.example.mediaplayer.audioForegroundService.AudioForegroundService
 import com.example.mediaplayer.extensions.*
 import com.example.mediaplayer.shared.CustomScope
@@ -18,14 +31,17 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 ) : CoroutineScope by CustomScope(Dispatchers.Main) {
     private lateinit var onPlayerStateChanged: Player.EventListener
 
-    private val onPlayerObserverListListeners: HashMap<IPlayerObserver, ArrayList<IPlayerListener>> = HashMap()
+    //list of observer that observer the player it could either be the visible ui application or notification or headset etc..
+    private val observers: HashMap<IPlayerObserver, ArrayList<IPlayerListener>> = HashMap()
     private var currentAudioIndex = -1
     var isPlaying = true
         private set
     private var currentInstance: Any? = null
     private var playbackPosition = 0L
+
     //to prevent the callback of duration to be called more than once at a time
     private var durationHandled: Boolean = false
+
     //to prevent the callback of track ended to be called more than once at a time
     private var trackEndHandled = false
 
@@ -45,18 +61,18 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 
     //handle the player when actions happen in notification
     protected fun setOnPlayerStateChangedListener(observers: HashMap<IPlayerObserver, ArrayList<IPlayerListener>>) {
-        onPlayerObserverListListeners.update(observers)
+        this.observers.update(observers)
         player!!.run {
             if (!::onPlayerStateChanged.isInitialized) {
                 onPlayerStateChanged = object : Player.EventListener {
                     override fun onPositionDiscontinuity(reason: Int) {
-                        if (isTrackChanged(currentAudioIndex, reason)) handleTrackChanged()
+                        if (isTrackChanged(currentAudioIndex, reason))
+                            handleTrackChanged()
                     }
 
                     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-                        Log.v("registeringAudioSession", " pausingsupose $playWhenReady $playbackState")
-
                         when {
+                            //when the player is ready to be setuped i go on and refelct theses on the ui
                             isNewDurationReady(durationHandled) -> handleDurationChanging()
                             isPlayerPlaying() -> handlePlayerPlaying(playWhenReady)
                             isPlayerPausing() -> handlePlayerPausing(playWhenReady)
@@ -77,6 +93,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
         }
     }
 
+    //when the user  change the position of seek bar ,it reflects that on text box
     private fun handleDurationChanging() {
         launch {
             //give time for player to prepare duration value
@@ -88,7 +105,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 
     private fun handlePlayerTracksEnded() {
         triggerPausingCallbacks()
-        triggerTracksEndedCallbacks()
+        noOtherAudiosToPlay()
         trackEndHandled = true
         isPlaying = false
         player!!.playWhenReady = false
@@ -97,10 +114,8 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
 
     private fun handlePlayerPausing(playWhenReady: Boolean) {
         with(player!!) {
-            Log.v("registeringAudioSession", " pausing1  $playbackState")
             playbackPosition = currentPosition
             if (playWhenReady != isPlaying) {
-                Log.v("registeringAudioSession", " pausing")
                 triggerPausingCallbacks()
                 isPlaying = playWhenReady
                 // Paused by app.
@@ -112,10 +127,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
     }
 
     private fun handlePlayerPlaying(playWhenReady: Boolean) {
-        Log.v("registeringAudioSession", " playing1  ${player!!.playbackState} ")
-
         if (playWhenReady != isPlaying) {
-            Log.v("registeringAudioSession", " playing  ")
             triggerPlayingCallbacks()
             trackEndHandled = false
             isPlaying = playWhenReady
@@ -138,7 +150,6 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
                 currentAudioIndex = currentWindowIndex
                 currentInstance = player.currentTag
                 triggerTrackChangedCallbacks()
-                Log.v("registeringAudioSession", " tracking  $currentWindowIndex $playWhenReady ")
 
 
             }
@@ -146,39 +157,39 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
     }
 
     private fun triggerShuffleModeChangedCallbacks(shuffleModeEnabled: Boolean) {
-        onPlayerObserverListListeners.forEach {
+        observers.forEach {
             it.key.onShuffleModeChanged(shuffleModeEnabled)
         }
     }
 
     private fun triggerRepeatModeChangedCallbacks(repeatMode: Int) {
-        onPlayerObserverListListeners.forEach {
+        observers.forEach {
             it.key.onRepeatModeChanged(repeatMode)
         }
     }
 
     private fun triggerDurationCallbacks(player: SimpleExoPlayer) {
-        onPlayerObserverListListeners.forEach {
+        observers.forEach {
             it.key.onDurationChange(player.duration)
         }
     }
 
     private fun triggerTrackChangedCallbacks() {
-        onPlayerObserverListListeners.forEach {
+        observers.forEach {
             it.key.onAudioChanged(currentAudioIndex, currentInstance)
 
         }
     }
 
-    private fun triggerTracksEndedCallbacks() {
-        onPlayerObserverListListeners.forEach {
+    private fun noOtherAudiosToPlay() {
+        observers.forEach {
             it.key.onAudioListCompleted()
 
         }
     }
 
     private fun triggerPausingCallbacks() {
-        onPlayerObserverListListeners.forEach { entry ->
+        observers.forEach { entry ->
             entry.key.onPause()
             entry.value.forEach {
                 it.onInActivePlayer()
@@ -187,7 +198,7 @@ open class PlayerListenerDelegate(private val service: AudioForegroundService,
     }
 
     private fun triggerPlayingCallbacks() {
-        onPlayerObserverListListeners.forEach { entry ->
+        observers.forEach { entry ->
             entry.key.onPlay()
             entry.value.forEach {
                 it.onActivePlayer()

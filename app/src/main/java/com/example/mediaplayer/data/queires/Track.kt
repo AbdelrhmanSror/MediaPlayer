@@ -1,14 +1,15 @@
 /*
  * Copyright 2019 Abdelrhman Sror. All rights reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
  */
 
 @file:Suppress("DEPRECATION")
@@ -21,7 +22,6 @@ import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
 import android.provider.MediaStore.Audio.Media.*
-import android.util.Log
 import androidx.core.database.getStringOrNull
 import com.example.mediaplayer.data.queires.Columns.ALBUM_ARTIST
 import com.example.mediaplayer.model.SongModel
@@ -83,8 +83,6 @@ class Track(private val application: Context) {
                     val dateModified = getLong(dateModifiedColumn)
                     val audioUri = ContentUris.withAppendedId(EXTERNAL_CONTENT_URI, id)
                     val imageUri = ContentUris.withAppendedId(artWorkUri, albumId).toString()
-                    Log.v("tracks", " ${id} ${title} ${albumId}  ${artist}  ${artistId} ")
-
                     playLists.add(SongModel(id, title, artist, audioUri, imageUri, duration, albumId, artistId, album, albumArtist, dateAdded, dateModified))
                 } while (moveToNext())
                 close()

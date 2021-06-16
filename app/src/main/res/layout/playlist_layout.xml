@@ -1,76 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright 2019 Abdelrhman Sror. All rights reserved.
+  ~  Licensed under the Apache License, Version 2.0 (the "License");
+  ~  you may not use this file except in compliance with the License.
+  ~  You may obtain a copy of the License at
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~  Unless required by applicable law or agreed to in writing, software
+  ~  distributed under the License is distributed on an "AS IS" BASIS,
+  ~  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~  See the License for the specific language governing permissions and
+  ~  limitations under the License.
+  ~
+  -->
+
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="64dp"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
 
-        <androidx.cardview.widget.CardView
+        >
+
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/playlistContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?android:attr/selectableItemBackground"
-            app:cardCornerRadius="@dimen/medium_horizontal_spacing"
-            app:cardElevation="@dimen/small_vertical_spacing"
-            app:cardUseCompatPadding="true">
+            android:background="?android:colorBackground"
+            android:paddingStart="@dimen/large_horizontal_spacing"
+            android:paddingEnd="@dimen/large_horizontal_spacing"
+            android:paddingBottom="@dimen/medium_vertical_spacing">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="@dimen/large_vertical_spacing"
-                android:layout_marginBottom="@dimen/large_vertical_spacing"
-                android:layout_marginStart="@dimen/large_horizontal_spacing"
-                android:layout_marginEnd="@dimen/medium_horizontal_spacing"
-                android:orientation="horizontal">
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/AlbumArtContainer"
+                android:layout_width="@dimen/song_cover_size"
+                android:layout_height="@dimen/song_cover_size"
+                android:layout_marginTop="@dimen/small_vertical_spacing"
+                android:layout_marginBottom="@dimen/small_vertical_spacing"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="0dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
                 <ImageView
                     android:id="@+id/AlbumArt"
-                    android:layout_gravity="center_vertical"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    app:circularImageUri="@{playlistModel.albumCoverUri}"
+                    android:layout_width="@dimen/song_cover_size"
+                    android:layout_height="@dimen/song_cover_size"
+                    android:scaleType="centerCrop"
+                    app:imageUri="@{playlistModel.albumCoverUri}"
                     tools:srcCompat="@drawable/default_image" />
+            </com.google.android.material.card.MaterialCardView>
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/medium_vertical_spacing"
-                    android:layout_marginEnd="@dimen/medium_vertical_spacing"
-                    android:layout_weight="3"
-                    android:layout_gravity="center_vertical"
-                    android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/title"
-                        android:textSize="16sp"
-                        style="@style/media_title_style"
-                        android:text="@{playlistModel.title}"
-                        tools:text="StarBoy" />
+            <TextView
 
-                    <TextView
-                        android:id="@+id/actor"
+                android:id="@+id/index"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="@{@string/song_number(String.valueOf(itemPosition+1))}"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@+id/title"
+                app:layout_constraintStart_toEndOf="@+id/AlbumArtContainer"
+                app:layout_constraintTop_toTopOf="@+id/title"
+                tools:layout_marginStart="8dp"
+                tools:text="1" />
 
-                        style="@style/media_subtitle_style"
-                        android:text="@{playlistModel.artist}"
-                        tools:text="Calvin Harris" />
+            <TextView
+                android:id="@+id/title"
+                style="@style/Song.MainText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/medium_horizontal_spacing"
+                android:text="@{playlistModel.title}"
+                app:layout_constraintBottom_toTopOf="@+id/actor"
+                app:layout_constraintEnd_toStartOf="@+id/spinner"
+                app:layout_constraintStart_toEndOf="@+id/index"
+                app:layout_constraintTop_toTopOf="@+id/AlbumArtContainer"
+                tools:text="StarBoy" />
 
-                </LinearLayout>
+            <TextView
+                android:id="@+id/actor"
+                style="@style/Song.SecondaryText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/medium_horizontal_spacing"
+                android:layout_marginEnd="@dimen/small_horizontal_spacing"
+                android:text="@{playlistModel.artist}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/spinner"
+                app:layout_constraintStart_toEndOf="@+id/index"
+                app:layout_constraintTop_toBottomOf="@+id/title"
+                app:layout_goneMarginStart="0dp"
+                tools:text="Calvin Harris" />
 
-                <com.example.mediaplayer.customViews.CustomDropDownMenu
-                    android:id="@+id/spinner"
-                    app:drawable="@drawable/ic_more_vert_black_24dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:dropDownMenu="@menu/track_option_menu"
-                    android:layout_gravity="center_vertical"
-                    android:backgroundTint="@color/white" />
+            <com.example.mediaplayer.customViews.CustomDropDownMenu
+                android:id="@+id/spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:backgroundTint="@color/white"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="12dp"
+                app:drawable="@drawable/ic_more_vert_black_24dp"
+                app:dropDownMenu="@menu/track_option_menu"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/AlbumArtContainer" />
 
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </RelativeLayout>
 
     <data>
@@ -78,6 +124,10 @@
         <variable
             name="playlistModel"
             type="com.example.mediaplayer.model.SongModel" />
+
+        <variable
+            name="itemPosition"
+            type="Integer" />
 
         <variable
             name="arrayRes"

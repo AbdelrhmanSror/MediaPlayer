@@ -1,3 +1,17 @@
+/*
+ * Copyright 2019 Abdelrhman Sror. All rights reserved.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package com.example.mediaplayer.ui.chosenSong.adapter
 
 import android.util.DisplayMetrics
@@ -9,6 +23,46 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
+
+interface ItemTouchHelperAdapter {
+    fun onItemMove(fromPosition: Int, toPosition: Int): Boolean
+
+}
+
+
+class SimpleItemTouchHelperCallback(private val mAdapter: ItemTouchHelperAdapter) : ItemTouchHelper.Callback() {
+
+    override fun isLongPressDragEnabled(): Boolean {
+        return true
+    }
+
+    override fun isItemViewSwipeEnabled(): Boolean {
+        return true
+    }
+
+    override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int { // Set movement flags based on the layout manager
+        val dragFlags = ItemTouchHelper.UP or ItemTouchHelper.DOWN
+        val swipeFlags = ItemTouchHelper.START or ItemTouchHelper.END
+        return makeMovementFlags(dragFlags, swipeFlags)
+
+    }
+
+    override fun onMove(recyclerView: RecyclerView, source: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+        if (source.itemViewType != target.itemViewType) {
+            return false
+        }
+        // Notify the adapter of the move
+        mAdapter.onItemMove(source.adapterPosition, target.adapterPosition)
+        return true
+    }
+
+
+    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+        //not implemented
+    }
+
+}
+
 abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recyclerView: RecyclerView, private val layoutManager: LinearLayoutManager, diffUtil: DiffUtil.ItemCallback<T>) :
         ListAdapter<T, VH>(diffUtil), CoroutineScope by CustomScope(Dispatchers.Main) {
     private var distance: Int = -1
@@ -18,6 +72,8 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recycle
     private var selectedPosition = 0
     private var isListenerRegistered = false
     var speed: Float = 8f//default is 25f (bigger = slower)
+
+    lateinit var itemTouchHelper: ItemTouchHelper
     abstract fun setCurrentSelectedPosition(position: Int)
     private fun firstVisibleItemPosition() = layoutManager.findFirstVisibleItemPosition()
     private fun lastVisibleItemPosition() = layoutManager.findLastVisibleItemPosition()
@@ -157,5 +213,12 @@ abstract class MediaAdapter<VH : RecyclerView.ViewHolder, T>(private val recycle
 
 
         }
+    }
+
+    protected fun enableDragAndDrop(itemTouchHelperAdapter: ItemTouchHelperAdapter) {
+        val callback: ItemTouchHelper.Callback = SimpleItemTouchHelperCallback(itemTouchHelperAdapter)
+        itemTouchHelper = ItemTouchHelper(callback)
+        itemTouchHelper.attachToRecyclerView(recyclerView)
+
     }
 }

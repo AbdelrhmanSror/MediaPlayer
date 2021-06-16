@@ -1,3 +1,18 @@
+/*
+ * Copyright 2019 Abdelrhman Sror. All rights reserved.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+/*
 package com.example.mediaplayer.customViews
 
 import android.animation.AnimatorSet
@@ -31,9 +46,11 @@ class EqualizerView : LinearLayout {
     private var foregroundColor = 0
     private var duration = 0
 
-    /*private val bars: Array<ObjectAnimator> by lazy {
+    */
+/*private val bars: Array<ObjectAnimator> by lazy {
         getBar()
-    }*/
+    }*//*
+
 
     constructor(context: Context?) : super(context) {
         initViews()
@@ -102,7 +119,8 @@ class EqualizerView : LinearLayout {
         binding.musicBar5.setPivot()
     }
 
-   /* private fun getBar(): Array<ObjectAnimator> {
+   */
+/* private fun getBar(): Array<ObjectAnimator> {
         val scaleYbar1 = ObjectAnimator.ofFloat(binding.musicBar1, "scaleY", 0.2f, 0.8f, 0.1f, 0.1f, 0.3f, 0.1f, 0.2f, 0.8f, 0.7f, 0.2f, 0.4f, 0.9f, 0.7f, 0.6f, 0.1f, 0.3f, 0.1f, 0.4f, 0.1f, 0.8f, 0.7f, 0.9f, 0.5f, 0.6f, 0.3f, 0.1f)
         scaleYbar1.repeatCount = ValueAnimator.INFINITE
         val scaleYbar2 = ObjectAnimator.ofFloat(binding.musicBar2, "scaleY", 0.2f, 0.5f, 1.0f, 0.5f, 0.3f, 0.1f, 0.2f, 0.3f, 0.5f, 0.1f, 0.6f, 0.5f, 0.3f, 0.7f, 0.8f, 0.9f, 0.3f, 0.1f, 0.5f, 0.3f, 0.6f, 1.0f, 0.6f, 0.7f, 0.4f, 0.1f)
@@ -114,11 +132,14 @@ class EqualizerView : LinearLayout {
         val scaleYbar5 = ObjectAnimator.ofFloat(binding.musicBar5, "scaleY", 0.2f, 0.5f, 1.0f, 0.5f, 0.3f, 0.1f, 0.2f, 0.3f, 0.5f, 0.1f, 0.6f, 0.5f, 0.3f, 0.7f, 0.8f, 0.9f, 0.3f, 0.1f, 0.5f, 0.3f, 0.6f, 1.0f, 0.6f, 0.7f, 0.4f, 0.1f)
         scaleYbar5.repeatCount = ValueAnimator.INFINITE
         return arrayOf(scaleYbar1, scaleYbar2, scaleYbar3, scaleYbar4, scaleYbar5)
-    }*/
+    }*//*
 
-    /**
-     * remember to make invalidate
-     */
+
+    */
+/**
+ * remember to make invalidate
+ *//*
+
     private fun getBarByteArray(byteArray: ByteArray): Array<ObjectAnimator> {
         val x0: List<Float> = byteArray.asList().subList(0, 202).map {
             Log.v("animtinvalue","${ ( ((abs((it ).toFloat()) / 128)*10).toInt()).toFloat()/10}")
@@ -181,7 +202,8 @@ class EqualizerView : LinearLayout {
     }
 
 
-    /* fun animateBars() {
+    */
+/* fun animateBars() {
         isAnimating = true
         if (!::playingSet.isInitialized) {
             playingSet = AnimatorSet()
@@ -201,7 +223,8 @@ class EqualizerView : LinearLayout {
             }
         }
     }
-*/
+*//*
+
     fun stopBars() {
         if (::playingSet.isInitialized && playingSet.isRunning && playingSet.isStarted) {
             playingSet.pause()
@@ -222,4 +245,4 @@ class EqualizerView : LinearLayout {
         isAnimating = false
     }
 
-}
+}*/

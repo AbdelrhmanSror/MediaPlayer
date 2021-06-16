@@ -12,17 +12,13 @@
  *
  */
 
-package com.example.mediaplayer.ui
+package com.example.mediaplayer.repositry
 
+import android.app.Application
+import com.example.mediaplayer.database.PlayerDatabase
 
-enum class ClickType {
-    EDIT, DELETE, FAVOURITE, RUN
+object TrackRepositoryFactory {
+    fun provideTrackRepository(application: Application, database: PlayerDatabase) = TracksRepository(application, database)
 }
 
-/**
- * click listener for every item in recycler view
- */
-interface OnItemClickListener {
-    fun onClick(clickType: ClickType, itemClickIndex: Int) {}
-
-}
+fun provideTrackRepository(context: Application, database: PlayerDatabase) = TrackRepositoryFactory.provideTrackRepository(context, database)

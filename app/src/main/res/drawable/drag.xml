@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><!--
+<!--
   ~ Copyright 2019 Abdelrhman Sror. All rights reserved.
   ~  Licensed under the Apache License, Version 2.0 (the "License");
   ~  you may not use this file except in compliance with the License.
@@ -11,7 +11,13 @@
   ~  limitations under the License.
   ~
   -->
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:color="@color/design_default_color_primary" android:state_checked="true" />
-    <item android:state_checked="false" android:color="@android:color/darker_gray" />
-</selector>
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24.0"
+    android:viewportHeight="24.0">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M20,9H4v2h16V9zM4,15h16v-2H4v2z" />
+</vector>

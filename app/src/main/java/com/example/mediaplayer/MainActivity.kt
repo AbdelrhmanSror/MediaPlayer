@@ -1,6 +1,21 @@
+/*
+ * Copyright 2019 Abdelrhman Sror. All rights reserved.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package com.example.mediaplayer
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -12,9 +27,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.mediaplayer.databinding.ActivityMainBinding
-import com.example.mediaplayer.extensions.disableActionBarTitle
 import com.example.mediaplayer.permissions.AudioPermission
-import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 
 class MainActivity : AppCompatActivity() {
@@ -33,30 +46,23 @@ class MainActivity : AppCompatActivity() {
             //reference to nav controller
             appBarConfiguration = AppBarConfiguration.Builder(setOf(R.id.playListFragment, R.id.favouriteFragment)).build()
             //reference to toolBar
+
             val toolbar = binding.toolbar
             //set toolbar as default action bar
             setSupportActionBar(toolbar)
-            setupActionBarWithNavController(navController, appBarConfiguration)
-            //to disable the action bar title and use my own custom title.
-            this.disableActionBarTitle()
-            binding.bottomNavView.setupWithNavController(navController)
-            setUpPlayListBottomSheet()
-            //to control the appearanve of bottom nav
             setUpBottomNavAppearance()
 
-            navigateToStartDestination()
+            setupActionBarWithNavController(navController, appBarConfiguration)
+            //to disable the action bar title and use my own custom title.
+            // this.disableActionBarTitle()
+            binding.bottomNavView.setupWithNavController(navController)
+            //setUpPlayListBottomSheet()
+            //to control the appearanve of bottom nav
+
+            // navigateToStartDestination()
         }
         audioPermission.checkPermission()
 
-
-    }
-
-    private fun setUpPlayListBottomSheet() {
-        binding.bottomSheetLayout.visibility = View.GONE
-        val bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheetLayout)
-        binding.bottomSheetLayout.setOnClickListener {
-            bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-        }
 
     }
 
@@ -71,28 +77,32 @@ class MainActivity : AppCompatActivity() {
             if (nd.id == R.id.playListFragment || nd.id == R.id.favouriteFragment) {
                 with(binding.bottomNavView)
                 {
-                    //visibility = View.VISIBLE
-                    animate()
-                            .alpha(1f)
+                    Log.v("navigationchanged", "visible")
+                    supportActionBar?.show()
+
+                    visibility = View.VISIBLE
+
                 }
             } else {
                 with(binding.bottomNavView)
                 {
+                    Log.v("navigationchanged", "invisible")
+                    supportActionBar?.hide()
+
                     visibility = View.GONE
-                    animate()
-                            .alpha(1f)
+
                 }
             }
         }
     }
 
-    private fun navigateToStartDestination() {
-        val inflater = navController.navInflater
-        val graph = inflater.inflate(R.navigation.navigaion)
-        //show the bottom nav view after permission is granted
-        graph.startDestination = R.id.playListFragment
-        navController.setGraph(graph, null)
-    }
+    /* private fun navigateToStartDestination() {
+         val inflater = navController.navInflater
+         val graph = inflater.inflate(R.navigation.navigaion)
+         //show the bottom nav view after permission is granted
+         graph.startDestination = R.id.playListFragment
+         navController.setGraph(graph, null)
+     }*/
 
 
     override fun onRequestPermissionsResult(

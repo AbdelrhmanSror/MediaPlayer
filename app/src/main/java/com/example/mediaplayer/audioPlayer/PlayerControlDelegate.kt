@@ -1,15 +1,27 @@
+/*
+ * Copyright 2019 Abdelrhman Sror. All rights reserved.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package com.example.mediaplayer.audioPlayer
 
 import android.content.Context
 import android.net.Uri
-import com.example.mediaplayer.data.MediaPreferences
 import com.example.mediaplayer.extensions.isPlayerStateEnded
 import com.example.mediaplayer.extensions.isPlaying
 import com.example.mediaplayer.shared.CustomScope
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
-import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
@@ -18,8 +30,7 @@ import kotlinx.coroutines.Dispatchers
 
 
 internal open class PlayerControlDelegate(private val context: Context,
-                                          private var player: SimpleExoPlayer?,
-                                          private val mediaPreferences: MediaPreferences
+                                          private var player: SimpleExoPlayer?
 ) : IPlayerControl, CoroutineScope by CustomScope(Dispatchers.Main) {
 
 
@@ -45,11 +56,15 @@ internal open class PlayerControlDelegate(private val context: Context,
         }
 
 
-    private lateinit var mediaSource: MediaSource
+    private lateinit var mediaSource: ConcatenatingMediaSource
 
+    override fun swapItems(first: Int, second: Int) {
+        if (::mediaSource.isInitialized)
+            mediaSource.moveMediaSource(first, second)
+    }
 
     //creating concatenating media source for media player to play_notification
-    private fun buildMediaSource(): MediaSource {
+    private fun buildMediaSource(): ConcatenatingMediaSource {
         // Produces DataSource instances through which media data is loaded.
         val dataSourceFactory = DefaultDataSourceFactory(context,
                 Util.getUserAgent(context, "MediaPlayer"))
@@ -58,7 +73,6 @@ internal open class PlayerControlDelegate(private val context: Context,
             concatenatingMediaSource.addMediaSource(ProgressiveMediaSource.Factory(dataSourceFactory).setTag(songList?.get(item))
                     .createMediaSource(songListUris[item]))
         }
-
         return concatenatingMediaSource
     }
 

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2019 Abdelrhman Sror. All rights reserved.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package com.example.mediaplayer.audioPlayer
 
 import android.support.v4.media.MediaDescriptionCompat
@@ -7,22 +21,15 @@ import androidx.lifecycle.LifecycleOwner
 import com.example.mediaplayer.audioForegroundService.AudioForegroundService
 import com.example.mediaplayer.data.MediaPreferences
 import com.google.android.exoplayer2.SimpleExoPlayer
-import javax.inject.Inject
-
-data class AudioPlayerModel(val currentIndex: Int,
-                            val isPlaying: Boolean,
-                            val shuffleModeEnabled: Boolean,
-                            val repeatMode: Int,
-                            val currentInstance: Any?)
 
 
-class AudioPlayer @Inject constructor(private val service: AudioForegroundService,
-                                      private val mediaSessionConnectorAdapter: MediaSessionConnectorAdapter,
-                                      private var player: SimpleExoPlayer?,
-                                      private val mediaPreferences: MediaPreferences)
+class AudioPlayer constructor(private val service: AudioForegroundService,
+                              private val mediaSessionConnectorAdapter: MediaSessionConnectorAdapter,
+                              private var player: SimpleExoPlayer?,
+                              private val mediaPreferences: MediaPreferences)
     : PlayerListenerDelegate(service, player!!),
         DefaultLifecycleObserver,
-        IPlayerControl by PlayerControlDelegate(service, player, mediaPreferences),
+        IPlayerControl by PlayerControlDelegate(service, player),
         IPlayerObservable {
 
 
@@ -75,7 +82,7 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
             mainObservers.add(iPlayerObserver)
         if (!observers.containsKey(iPlayerObserver)) {
             //only setup noisy filter once
-            if (!isNoisyModeEnabled && audioNoisyControlEnable) {
+            if (noisyIsNotEnabled(audioNoisyControlEnable)) {
                 isNoisyModeEnabled = true
                 observers[iPlayerObserver] = getListOfListeners(audioSessionIdCallbackEnable, iPlayerObserver, true, progressCallBackEnabled)
             } else
@@ -83,7 +90,11 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
             notifyObserver(iPlayerObserver)
             setOnPlayerStateChangedListener(observers)
         }
+        Log.v("observers", "$observers")
     }
+
+    private fun noisyIsNotEnabled(audioNoisyControlEnable: Boolean) =
+            !isNoisyModeEnabled && audioNoisyControlEnable
 
     /**
      * get list of listeners that is registered to be triggered
@@ -113,7 +124,7 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
         observers[iPlayerObserver]?.forEach {
             it.onObserverDetach(iPlayerObserver)
         }
-        //removing the observers
+        //removing the observer
         mainObservers.remove(iPlayerObserver)
         observers.remove(iPlayerObserver)
         invalidate()
@@ -137,7 +148,6 @@ class AudioPlayer @Inject constructor(private val service: AudioForegroundServic
 
 
     override fun notifyObserver(iPlayerObserver: IPlayerObserver) {
-        Log.v("registeringAudioSession", " on attach")
         with(player!!) {
             iPlayerObserver.onAttached(AudioPlayerModel(
                     currentIndex(),

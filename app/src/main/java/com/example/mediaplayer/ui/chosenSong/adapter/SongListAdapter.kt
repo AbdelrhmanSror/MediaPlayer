@@ -1,20 +1,20 @@
 /*
  * Copyright 2019 Abdelrhman Sror. All rights reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
  */
 
 package com.example.mediaplayer.ui.chosenSong.adapter
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,7 +23,6 @@ import com.example.mediaplayer.databinding.ChosenSongListLayoutBinding
 import com.example.mediaplayer.extensions.startFavouriteAnimation
 import com.example.mediaplayer.model.SongModel
 import com.example.mediaplayer.viewModels.ChosenSongViewModel
-import kotlinx.android.synthetic.main.chosen_song_list_layout.view.*
 
 
 /*
@@ -39,7 +38,8 @@ import kotlinx.android.synthetic.main.chosen_song_list_layout.view.*
  * limitations under the License.
  */
 
-class SongListAdapter(private val viewModel: ChosenSongViewModel, private val recyclerView: RecyclerView, layoutManager: LinearLayoutManager) :
+class SongListAdapter(private val viewModel: ChosenSongViewModel, private val recyclerView: RecyclerView,
+                      layoutManager: LinearLayoutManager) :
         MediaAdapter<SongListAdapter.ViewHolder, SongModel>(recyclerView, layoutManager, DiffCallBack) {
 
     private var lastSelectedItemPosition: Int = 0
@@ -64,6 +64,10 @@ class SongListAdapter(private val viewModel: ChosenSongViewModel, private val re
 
     }
 
+
+    init {
+        currentSelectedItemPosition = viewModel.previousRecyclerViewPosition
+    }
 
     class ViewHolder(val binding: ChosenSongListLayoutBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: SongModel, viewModel: ChosenSongViewModel) {
@@ -104,7 +108,7 @@ class SongListAdapter(private val viewModel: ChosenSongViewModel, private val re
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
-        updateCurrentSelectedView(holder.itemView, position)
+        // updateCurrentSelectedView(holder.itemView, position)
         holder.bind(getItem(position), viewModel)
 
 
@@ -125,45 +129,40 @@ class SongListAdapter(private val viewModel: ChosenSongViewModel, private val re
     }
 
 
-    // update the current view and remove any state was existed before recycling
-    private fun updateCurrentSelectedView(item: View, position: Int) {
-        // Log.v("playpausestate", "$equalizerEnabled  $position  rec upcu")
+    /* // update the current view and remove any state was existed before recycling
+     private fun updateCurrentSelectedView(item: View, position: Int) {
+         // Log.v("playpausestate", "$equalizerEnabled  $position  rec upcu")
 
-        if (position == currentSelectedItemPosition) {
-            item.divider.visibility = View.VISIBLE
-            item.wave_form_anim.visibility = View.VISIBLE
-            //item.equalizer_anim.visibility = View.VISIBLE
-            lastSelectedItemPosition = position
-
-
-        } else {
-            item.divider.visibility = View.GONE
-            item.wave_form_anim.visibility = View.GONE
-            //item.equalizer_anim.visibility = View.GONE
-            item.equalizer_anim.stopBars()
+         if (position == currentSelectedItemPosition) {
+             item.divider.visibility = View.VISIBLE
+             //item.wave_form_anim.visibility = View.VISIBLE
+             item.equalizer_anim.visibility = View.VISIBLE
+             lastSelectedItemPosition = position
 
 
-        }
-    }
+         } else {
+             item.divider.visibility = View.GONE
+             //item.wave_form_anim.visibility = View.GONE
+             item.equalizer_anim.visibility = View.GONE
+             item.equalizer_anim.stopBars()
 
 
-    fun equalizerEnabled(byteArray: ByteArray) {
-        equalizerEnabled = true
-        recyclerView.findViewHolderForAdapterPosition(currentSelectedItemPosition)?.itemView?.equalizer_anim?.apply {
-            if (byteArray[0].compareTo(-128) == 0) this.stopBars() else this.animateBars(byteArray)
-        }
+         }
+     }
+ */
 
-    }
+    /* fun equalizerEnabled(byteArray: ByteArray) {
+         equalizerEnabled = true
+         recyclerView.findViewHolderForAdapterPosition(currentSelectedItemPosition)?.itemView?.equalizer_anim?.apply {
+             if (byteArray[0].compareTo(-128) == 0) this.stopBars() else this.animateBars(byteArray)
+         }
 
-    fun visualizerEnabled(byteArray: ByteArray) {
-        visualizerEnabled = true
-        recyclerView.findViewHolderForAdapterPosition(currentSelectedItemPosition)?.itemView?.wave_form_anim?.apply {
-            this.updateVisualizer(byteArray)
-        }
+     }
+ */
 
-    }
 
 
 }
+
 
 

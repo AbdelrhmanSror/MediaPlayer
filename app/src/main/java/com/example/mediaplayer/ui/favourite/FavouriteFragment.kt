@@ -1,14 +1,15 @@
 /*
  * Copyright 2019 Abdelrhman Sror. All rights reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
  */
 
 package com.example.mediaplayer.ui.favourite
@@ -21,36 +22,36 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import com.example.mediaplayer.R
 import com.example.mediaplayer.audioForegroundService.AudioForegroundService
-import com.example.mediaplayer.database.toSongModel
+import com.example.mediaplayer.database.provideDatabase
 import com.example.mediaplayer.databinding.FragmentFavouriteBinding
 import com.example.mediaplayer.extensions.startForeground
 import com.example.mediaplayer.intent.CHOSEN_SONG_INDEX
 import com.example.mediaplayer.intent.LIST_SONG
 import com.example.mediaplayer.intent.PlayerActions.ACTION_FOREGROUND
 import com.example.mediaplayer.model.SongModel
+import com.example.mediaplayer.model.toSongModel
+import com.example.mediaplayer.repositry.provideTrackRepository
+import com.example.mediaplayer.ui.ClickType
 import com.example.mediaplayer.ui.OnItemClickListener
 import com.example.mediaplayer.viewModels.FavouriteSongViewModel
-import dagger.android.support.DaggerFragment
+import com.example.mediaplayer.viewModels.FavouriteSongViewModelFactory
+import com.example.mediaplayer.viewModels.createViewModel
+import com.example.mediaplayer.viewModels.createViewModelFactory
 import java.util.*
-import javax.inject.Inject
 
 /**
  * A simple [Fragment] subclass.
  */
-class FavouriteFragment : DaggerFragment() {
+class FavouriteFragment : Fragment() {
 
+    lateinit var viewModelFactory: FavouriteSongViewModelFactory
 
-    @Inject
-    lateinit var viewModelFactory: ViewModelProvider.Factory
-
-    private val viewModel by viewModels<FavouriteSongViewModel> { viewModelFactory }
+    private lateinit var viewModel: FavouriteSongViewModel
 
     private lateinit var binding: FragmentFavouriteBinding
     private lateinit var navController: NavController
@@ -60,6 +61,9 @@ class FavouriteFragment : DaggerFragment() {
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         binding = FragmentFavouriteBinding.inflate(inflater)
+        viewModelFactory = createViewModelFactory(requireActivity().application)!!
+        viewModelFactory.setData(provideTrackRepository(requireActivity().application, provideDatabase(requireActivity())))
+        viewModel = createViewModel(this, viewModelFactory)
         //find the nav controller so i can use it to navigate
         navController = Navigation.findNavController(Objects.requireNonNull<FragmentActivity>(activity), R.id.nav_host_fragment)
         prepareMusicList()
@@ -82,7 +86,7 @@ class FavouriteFragment : DaggerFragment() {
     private fun setUpPlayList() {
         //creating adapter and set it with the playlists
         val adapter = FavouriteSongAdapter(object : OnItemClickListener {
-            override fun onClick(itemClickIndex: Int) {
+            override fun onClick(clickType: ClickType, itemClickIndex: Int) {
                 startForeground(playList, itemClickIndex)
 
             }
